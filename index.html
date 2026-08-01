@@ -1,0 +1,1025 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ИРИС — прототип помощника пациента</title>
+  <meta name="description" content="Мобильный прототип ИРИС: помощник пациента ГКБ №1 им. Н.И. Пирогова.">
+  <style>
+    :root {
+      --bg: #eef7f6;
+      --paper: #fbfffe;
+      --panel: #ffffff;
+      --panel-2: #e6f3f1;
+      --medical: #0c6f78;
+      --medical-2: #064d59;
+      --scrub: #21a6a6;
+      --iris: #6f5bd6;
+      --iris-2: #4b3a9d;
+      --sage: #4f9b7e;
+      --sand: #f3dfb8;
+      --danger: #c9445b;
+      --ink: #133039;
+      --white: #ffffff;
+      --muted: rgba(19, 48, 57, .68);
+      --muted-on-dark: rgba(255, 255, 255, .78);
+      --soft: rgba(12, 111, 120, .1);
+      --line: rgba(12, 111, 120, .16);
+      --radius: 28px;
+      --tap: 68px;
+      --shadow: 0 24px 70px rgba(15, 84, 91, .18);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.36) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.36) 1px, transparent 1px),
+        radial-gradient(900px 520px at 78% -6%, rgba(33, 166, 166, .24), transparent 62%),
+        radial-gradient(720px 420px at 6% 20%, rgba(111, 91, 214, .15), transparent 58%),
+        linear-gradient(180deg, #f7fcfb 0%, #eaf6f5 54%, #dff0ef 100%);
+      background-size: 42px 42px, 42px 42px, auto, auto, auto;
+      color: var(--ink);
+    }
+
+    button, input, textarea { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .app {
+      min-height: 100vh;
+      padding: 18px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1180px;
+      min-height: calc(100vh - 36px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .intro {
+      max-width: 760px;
+    }
+
+    .brandline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--medical);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+    }
+
+    .spark {
+      width: 13px;
+      height: 13px;
+      display: inline-block;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 7vw, 72px);
+      line-height: 1.02;
+      font-weight: 620;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      max-width: 720px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: clamp(18px, 2.8vw, 23px);
+      line-height: 1.55;
+    }
+
+    .glass {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .72);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(18px);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, .86), var(--shadow);
+    }
+
+    .glass::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(12,111,120,.14) 42%, rgba(255,255,255,.78));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .noise::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .2;
+      mix-blend-mode: multiply;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-size: 220px 220px;
+    }
+
+    .pill {
+      min-height: 56px;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 22px;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--medical), var(--medical-2));
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .pill.glass {
+      background:
+        linear-gradient(135deg, rgba(12,111,120,.94), rgba(6,77,89,.94)),
+        rgba(255,255,255,.42);
+      color: var(--white);
+    }
+
+    .clinical-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .chip {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 13px;
+      border-radius: 999px;
+      color: var(--medical-2);
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(12,111,120,.14);
+      box-shadow: 0 10px 24px rgba(15,84,91,.08);
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .chip svg {
+      width: 19px;
+      height: 19px;
+      color: var(--scrub);
+    }
+
+    .grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr) minmax(0, 1fr);
+      gap: 18px;
+      min-height: 0;
+    }
+
+    .card {
+      border-radius: var(--radius);
+      min-height: 220px;
+      padding: 24px;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      right: 22px;
+      top: 22px;
+      width: 28px;
+      height: 28px;
+      opacity: .18;
+      background:
+        linear-gradient(var(--medical), var(--medical)) center / 8px 100% no-repeat,
+        linear-gradient(var(--medical), var(--medical)) center / 100% 8px no-repeat;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .primary-card::after,
+    .media-card::after,
+    .emergency::after {
+      background:
+        linear-gradient(#fff, #fff) center / 8px 100% no-repeat,
+        linear-gradient(#fff, #fff) center / 100% 8px no-repeat;
+      opacity: .2;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      margin-bottom: 20px;
+      color: rgba(12, 111, 120, .72);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    .primary-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background:
+        linear-gradient(150deg, rgba(6, 77, 89, .96), rgba(12, 111, 120, .9) 46%, rgba(75, 58, 157, .82)),
+        radial-gradient(420px 280px at 50% 0%, rgba(255, 255, 255, .24), transparent 65%);
+      color: var(--white);
+    }
+
+    .primary-card .card-title {
+      color: rgba(255,255,255,.76);
+    }
+
+    .primary-card .muted,
+    .media-card .muted,
+    .emergency .muted {
+      color: var(--muted-on-dark);
+    }
+
+    .iris-mark {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 32% 28%, rgba(255,255,255,.7), transparent 25%),
+        conic-gradient(from 210deg, #ffffff, #bdeee7, #7f6ee3, #2f8f98, #ffffff);
+      box-shadow: 0 22px 52px rgba(12, 111, 120, .42);
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--medical-2);
+    }
+
+    .big-text {
+      margin: 0;
+      font-size: clamp(28px, 5.5vw, 48px);
+      line-height: 1.08;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.52;
+    }
+
+    .actions {
+      display: grid;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .action {
+      width: 100%;
+      min-height: var(--tap);
+      border: 0;
+      border-radius: 22px;
+      padding: 18px;
+      color: var(--white);
+      background: rgba(255, 255, 255, .13);
+      cursor: pointer;
+      text-align: left;
+      display: grid;
+      grid-template-columns: 58px 1fr auto;
+      gap: 15px;
+      align-items: center;
+      transition: transform .12s ease, background .12s ease;
+    }
+
+    .action:active { transform: scale(.985); }
+    .action:hover { background: rgba(255,255,255,.2); }
+    .action:focus-visible, .pill:focus-visible, .nav-btn:focus-visible, input:focus, textarea:focus {
+      outline: 3px solid var(--sage);
+      outline-offset: 3px;
+    }
+
+    .icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: rgba(255,255,255,.18);
+    }
+
+    .action strong {
+      display: block;
+      font-size: 23px;
+      line-height: 1.18;
+      margin-bottom: 4px;
+    }
+
+    .action span span {
+      color: inherit;
+      opacity: .72;
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .arrow {
+      color: rgba(255,255,255,.62);
+      font-size: 28px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 18px;
+      grid-template-rows: auto 1fr;
+    }
+
+    .notice-card {
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.82), rgba(230,243,241,.76)),
+        radial-gradient(220px 180px at 95% 0%, rgba(33,166,166,.16), transparent 70%);
+      color: var(--ink);
+    }
+
+    .notice-card p {
+      margin: 0;
+      color: rgba(19,48,57,.82);
+      font-size: 20px;
+      line-height: 1.55;
+    }
+
+    .emergency {
+      background:
+        linear-gradient(145deg, rgba(180, 48, 69, .96), rgba(102, 23, 42, .94)),
+        radial-gradient(240px 200px at 90% 0%, rgba(255,255,255,.2), transparent 70%);
+      color: var(--white);
+    }
+
+    .emergency .card-title {
+      color: rgba(255,255,255,.76);
+    }
+
+    .emergency .pill {
+      margin-top: 18px;
+      background: rgba(255,255,255,.16);
+    }
+
+    .media-card {
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(360px 260px at 80% 4%, rgba(150, 232, 217, .24), transparent 65%),
+        linear-gradient(150deg, #073b46, #0b5f68 58%, #143240);
+      color: var(--white);
+    }
+
+    .media-card .card-title {
+      color: rgba(255,255,255,.76);
+    }
+
+    .media-list {
+      display: grid;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .media-row {
+      width: 100%;
+      min-height: 76px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 20px;
+      padding: 12px;
+      color: var(--white);
+      background: rgba(255,255,255,.12);
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 13px;
+      text-align: left;
+      align-items: center;
+    }
+
+    .media-row strong {
+      display: block;
+      font-size: 19px;
+      line-height: 1.22;
+    }
+
+    .media-row small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted-on-dark);
+      font-size: 16px;
+    }
+
+    .marquee {
+      width: calc(100% + 48px);
+      margin: 20px -24px 0;
+      overflow: hidden;
+      mask-image: linear-gradient(to right, transparent, black 9%, black 91%, transparent);
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      gap: 12px;
+      animation: marquee-left 24s linear infinite;
+    }
+
+    .tile {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.22);
+      flex: none;
+    }
+
+    @keyframes marquee-left {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .panel {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 20;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.34) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.34) 1px, transparent 1px),
+        radial-gradient(900px 520px at 78% -6%, rgba(33, 166, 166, .24), transparent 62%),
+        #eef7f6;
+      background-size: 42px 42px, 42px 42px, auto, auto;
+      padding: 16px;
+      overflow: auto;
+    }
+
+    .panel.open { display: block; }
+
+    .panel-inner {
+      max-width: 760px;
+      min-height: calc(100vh - 32px);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .nav {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: 4px 0 8px;
+      background: linear-gradient(180deg, rgba(238,247,246,.96) 70%, rgba(238,247,246,0));
+    }
+
+    .nav-btn {
+      min-height: 56px;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 18px;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--medical), var(--medical-2));
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .nav-title {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .screen {
+      border-radius: 30px;
+      padding: 24px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      color: var(--ink);
+    }
+
+    .screen .action {
+      color: var(--ink);
+      background: rgba(255,255,255,.84);
+      border: 1px solid rgba(12,111,120,.12);
+      box-shadow: 0 12px 30px rgba(15,84,91,.1);
+    }
+
+    .screen .action:hover {
+      background: #ffffff;
+    }
+
+    .screen .icon {
+      color: var(--medical-2);
+      background: linear-gradient(145deg, rgba(33,166,166,.16), rgba(111,91,214,.12));
+      border: 1px solid rgba(12,111,120,.1);
+    }
+
+    .screen .arrow {
+      color: rgba(12,111,120,.48);
+    }
+
+    .screen .media-row {
+      color: var(--ink);
+      background: rgba(255,255,255,.84);
+      border: 1px solid rgba(12,111,120,.12);
+      box-shadow: 0 12px 30px rgba(15,84,91,.1);
+    }
+
+    .screen .media-row small {
+      color: var(--muted);
+    }
+
+    .screen h2 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 7vw, 44px);
+      line-height: 1.08;
+      font-weight: 650;
+    }
+
+    .screen > p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.55;
+    }
+
+    .step-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .video-box {
+      aspect-ratio: 16 / 10;
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      margin: 20px 0;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(12,111,120,.24), rgba(111,91,214,.18)),
+        radial-gradient(320px 220px at 70% 20%, rgba(255,255,255,.72), transparent 70%),
+        #d8efec;
+    }
+
+    .play {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,.72);
+      border: 1px solid rgba(12,111,120,.18);
+      color: var(--medical-2);
+      font-size: 42px;
+      padding-left: 6px;
+    }
+
+    .warn {
+      display: grid;
+      gap: 12px;
+      margin: 16px 0 0;
+      padding: 18px;
+      border-radius: 24px;
+      background: rgba(201, 68, 91, .1);
+      border: 1px solid rgba(201, 68, 91, .28);
+    }
+
+    .warn div {
+      display: flex;
+      gap: 12px;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    input, textarea {
+      width: 100%;
+      min-height: 64px;
+      border: 1px solid var(--line);
+      border-radius: 18px 26px 18px 26px;
+      padding: 16px 18px;
+      color: var(--ink);
+      background: rgba(255,255,255,.78);
+      font-size: 20px;
+    }
+
+    textarea { min-height: 150px; resize: vertical; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      max-width: min(90vw, 520px);
+      border-radius: 999px;
+      padding: 15px 22px;
+      color: #0a0a0a;
+      background: var(--sage);
+      font-size: 18px;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+      z-index: 30;
+    }
+
+    .toast.show { opacity: 1; }
+
+    svg {
+      width: 29px;
+      height: 29px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .stack { grid-template-rows: none; }
+      .topbar { flex-direction: column; }
+      .pill { width: 100%; }
+      .card { min-height: auto; }
+    }
+
+    @media (max-width: 520px) {
+      .app { padding: 12px; }
+      .shell { min-height: calc(100vh - 24px); }
+      .topbar { gap: 10px; }
+      .brandline { font-size: 11px; }
+      .intro p { font-size: 18px; }
+      .card, .screen { padding: 20px; border-radius: 26px; }
+      .action { grid-template-columns: 54px 1fr; padding: 15px; }
+      .action .arrow { display: none; }
+      .action strong { font-size: 21px; }
+      .action span span { font-size: 16px; }
+      .nav-title { display: none; }
+      .nav-btn { flex: 1; }
+      .screen > p, .warn div { font-size: 19px; }
+    }
+
+    @media (min-width: 1180px) {
+      .app {
+        padding: 32px;
+      }
+
+      .shell {
+        max-width: 1360px;
+        min-height: calc(100vh - 64px);
+        gap: 24px;
+      }
+
+      .topbar {
+        align-items: flex-end;
+      }
+
+      .intro {
+        max-width: 880px;
+      }
+
+      h1 {
+        font-size: clamp(58px, 5vw, 86px);
+      }
+
+      .intro p {
+        max-width: 790px;
+        font-size: 23px;
+      }
+
+      .grid {
+        grid-template-columns: minmax(360px, 1.05fr) minmax(310px, .82fr) minmax(360px, 1fr);
+        gap: 24px;
+      }
+
+      .card {
+        min-height: 260px;
+        padding: 30px;
+      }
+
+      .action {
+        min-height: 104px;
+      }
+
+      .panel-inner {
+        max-width: 900px;
+      }
+
+      .screen {
+        padding: 38px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+    <symbol id="hi-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3z"></path></symbol>
+    <symbol id="hi-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.3"></rect><rect x="14" y="4" width="6" height="6" rx="1.3"></rect><rect x="4" y="14" width="6" height="6" rx="1.3"></rect><path d="M14 14h2.5v2.5H14z"></path><path d="M19.5 14v5.5H14"></path><path d="M18 18h2"></path></symbol>
+    <symbol id="hi-patient-band" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="3"></rect><path d="M8 10v4"></path><path d="M6 12h4"></path><path d="M13 10h5"></path><path d="M13 14h3"></path></symbol>
+    <symbol id="hi-video-education" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="m10 9 5 3-5 3V9z"></path><path d="M6 19v2"></path><path d="M18 19v2"></path></symbol>
+    <symbol id="hi-care-path" viewBox="0 0 24 24"><path d="M6 4h9l3 3v13H6z"></path><path d="M14 4v4h4"></path><path d="M9 11h6"></path><path d="M9 15h4"></path><path d="M10.5 20a3.5 3.5 0 0 0 7 0"></path></symbol>
+    <symbol id="hi-hospital" viewBox="0 0 24 24"><path d="M4 21h16"></path><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path><path d="M10 8h4"></path><path d="M12 6v4"></path><path d="M9 14h1"></path><path d="M14 14h1"></path><path d="M10 21v-4h4v4"></path></symbol>
+    <symbol id="hi-outpatient" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2"></circle><path d="M5 21v-2a6.5 6.5 0 0 1 13 0v2"></path><path d="M18 8h3"></path><path d="M19.5 6.5v3"></path></symbol>
+    <symbol id="hi-surgery" viewBox="0 0 24 24"><path d="M4 20 20 4"></path><path d="m14 4 6 6"></path><path d="M11 7 7 3"></path><path d="m4 6 4 4"></path><path d="M6 18h8"></path><path d="M10 14v8"></path></symbol>
+    <symbol id="hi-hospital-bed" viewBox="0 0 24 24"><path d="M3 6v14"></path><path d="M21 11v9"></path><path d="M3 14h18"></path><path d="M7 14v-3a3 3 0 0 1 3-3h2a4 4 0 0 1 4 4v2"></path><path d="M3 20h18"></path></symbol>
+    <symbol id="hi-discharge" viewBox="0 0 24 24"><path d="M5 21V5h9"></path><path d="M14 3h6v6"></path><path d="m20 3-9 9"></path><path d="M9 17h6"></path><path d="M9 13h2"></path></symbol>
+    <symbol id="hi-crutch" viewBox="0 0 24 24"><path d="M8 21 16 3"></path><path d="M12 12h6"></path><path d="M15 21V3"></path><path d="M12 6h7"></path></symbol>
+    <symbol id="hi-joints" viewBox="0 0 24 24"><path d="M8 4c3 2 4 4 4 8s-1 6-4 8"></path><path d="M16 4c-3 2-4 4-4 8s1 6 4 8"></path><circle cx="12" cy="12" r="2.5"></circle><path d="M5 9h4"></path><path d="M15 15h4"></path></symbol>
+    <symbol id="hi-stairs" viewBox="0 0 24 24"><path d="M3 20h18"></path><path d="M4 16h4v4"></path><path d="M8 12h4v8"></path><path d="M12 8h4v12"></path><path d="M16 4h4v16"></path></symbol>
+    <symbol id="hi-wheelchair" viewBox="0 0 24 24"><circle cx="9" cy="18" r="3"></circle><path d="M10 5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path><path d="M10 7v5h5l3 6"></path><path d="M7 12h6"></path><path d="M18 18h3"></path></symbol>
+    <symbol id="hi-alert" viewBox="0 0 24 24"><path d="M12 3 2.8 19a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3z"></path><path d="M12 9v5"></path><path d="M12 18h.01"></path></symbol>
+    <symbol id="hi-question" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.7 2.7 0 1 1 4.9 1.6c-.8 1-2.4 1.4-2.4 3.2"></path><path d="M12 17.5h.01"></path></symbol>
+    <symbol id="hi-arrow-left" viewBox="0 0 24 24"><path d="M15 18 9 12l6-6"></path></symbol>
+    <symbol id="hi-check" viewBox="0 0 24 24"><path d="M20 7 9 18l-5-5"></path></symbol>
+  </svg>
+  <div class="app">
+    <main class="shell" aria-label="Прототип ИРИС">
+      <header class="topbar">
+        <div class="intro">
+          <div class="brandline">
+            <svg class="spark" aria-hidden="true"><use href="#hi-spark"></use></svg>
+            ГКБ №1 им. Н.И. Пирогова
+            <svg class="spark" aria-hidden="true"><use href="#hi-spark"></use></svg>
+          </div>
+          <h1>ИРИС помогает пациенту не потеряться в больнице</h1>
+          <p>Сканируйте QR-код, выбирайте свой этап и смотрите понятные памятки или видео восстановления. Крупно, спокойно, без регистрации.</p>
+          <div class="clinical-chips" aria-label="Ключевые свойства прототипа">
+            <span class="chip"><svg aria-hidden="true"><use href="#hi-qr"></use></svg>QR в палате</span>
+            <span class="chip"><svg aria-hidden="true"><use href="#hi-patient-band"></use></svg>Без регистрации</span>
+            <span class="chip"><svg aria-hidden="true"><use href="#hi-video-education"></use></svg>Видео восстановления</span>
+          </div>
+        </div>
+        <button class="pill glass" data-open="steps">Провести по шагам</button>
+      </header>
+
+      <section class="grid">
+        <article class="card primary-card glass noise">
+          <div>
+            <div class="card-title">
+              <svg class="spark" aria-hidden="true"><use href="#hi-spark"></use></svg>
+              Помощник пациента
+              <svg class="spark" aria-hidden="true"><use href="#hi-spark"></use></svg>
+            </div>
+            <div class="iris-mark">И</div>
+            <p class="big-text">Что Вам нужно сейчас?</p>
+            <p class="muted">Выберите один из двух понятных путей. Если плохо или боль усиливается, зовите медсестру.</p>
+          </div>
+          <div class="actions">
+            <button class="action glass" data-open="steps">
+              <span class="icon"><svg aria-hidden="true"><use href="#hi-care-path"></use></svg></span>
+              <span><strong>Провести по шагам</strong><span>Подскажу, что делать на Вашем этапе</span></span>
+              <span class="arrow">›</span>
+            </button>
+            <button class="action glass" data-open="media">
+              <span class="icon"><svg aria-hidden="true"><use href="#hi-video-education"></use></svg></span>
+              <span><strong>Видео и памятки</strong><span>Открыть сразу, без вопросов</span></span>
+              <span class="arrow">›</span>
+            </button>
+          </div>
+        </article>
+
+        <div class="stack">
+          <article class="card notice-card glass noise">
+            <div class="card-title" style="justify-content:flex-start">Больничный сценарий</div>
+            <p>ИРИС не пытается быть врачом. Он показывает памятки отделения, видео восстановления и помогает быстро найти следующий шаг.</p>
+          </article>
+          <article class="card emergency glass noise">
+            <div class="card-title" style="justify-content:flex-start">Если стало плохо</div>
+            <p class="big-text" style="font-size:34px">Сразу позовите медсестру</p>
+            <p class="muted">Боль, одышка, головокружение, кровотечение, онемение или падение.</p>
+            <button class="pill" data-open="emergency">Что считать срочным</button>
+          </article>
+        </div>
+
+        <article class="card media-card glass noise">
+          <div>
+            <div class="card-title">
+              <svg class="spark" aria-hidden="true"><use href="#hi-spark"></use></svg>
+              Медиатека
+              <svg class="spark" aria-hidden="true"><use href="#hi-spark"></use></svg>
+            </div>
+            <p class="big-text">Короткие видео восстановления</p>
+            <div class="marquee" aria-hidden="true">
+              <div class="marquee-track">
+                <span class="tile"><svg aria-hidden="true"><use href="#hi-hospital-bed"></use></svg></span>
+                <span class="tile"><svg aria-hidden="true"><use href="#hi-crutch"></use></svg></span>
+                <span class="tile"><svg aria-hidden="true"><use href="#hi-joints"></use></svg></span>
+                <span class="tile"><svg aria-hidden="true"><use href="#hi-wheelchair"></use></svg></span>
+                <span class="tile"><svg aria-hidden="true"><use href="#hi-stairs"></use></svg></span>
+                <span class="tile"><svg aria-hidden="true"><use href="#hi-surgery"></use></svg></span>
+                <span class="tile"><svg aria-hidden="true"><use href="#hi-patient-band"></use></svg></span>
+                <span class="tile"><svg aria-hidden="true"><use href="#hi-video-education"></use></svg></span>
+              </div>
+            </div>
+          </div>
+          <div class="media-list">
+            <button class="media-row" data-video="bed"><span class="icon"><svg aria-hidden="true"><use href="#hi-hospital-bed"></use></svg></span><span><strong>Как встать с кровати</strong><small>1 мин 30 сек</small></span></button>
+            <button class="media-row" data-video="crutches"><span class="icon"><svg aria-hidden="true"><use href="#hi-crutch"></use></svg></span><span><strong>Как ходить с костылями</strong><small>30 сек</small></span></button>
+            <button class="media-row" data-video="stairs"><span class="icon"><svg aria-hidden="true"><use href="#hi-stairs"></use></svg></span><span><strong>Как ходить по лестнице</strong><small>1 мин 15 сек</small></span></button>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <section class="panel" id="panel" aria-modal="true" role="dialog" aria-label="Экран ИРИС">
+    <div class="panel-inner">
+      <nav class="nav">
+        <button class="nav-btn" id="backBtn">Назад</button>
+        <button class="nav-btn" id="homeBtn">В начало</button>
+        <span class="nav-title" id="navTitle">ИРИС</span>
+      </nav>
+      <div class="screen glass noise" id="screen"></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast">Спасибо, вопрос записан</div>
+
+  <script>
+    const panel = document.getElementById('panel');
+    const screen = document.getElementById('screen');
+    const navTitle = document.getElementById('navTitle');
+    const toast = document.getElementById('toast');
+    const stack = [];
+
+    const stages = [
+      ['consult', 'Ещё не обращался', 'Запись, документы, обследование'],
+      ['prepare', 'Готовлюсь к операции', 'Что взять с собой и что посмотреть'],
+      ['hospital', 'Я в больнице', 'День госпитализации, операция, после неё'],
+      ['discharge', 'Выписываюсь домой', 'Выписка, правила, реабилитация'],
+      ['rehab', 'Реабилитация', 'Как пройти восстановление в ГКБ №1']
+    ];
+
+    const videos = {
+      bed: ['Как встать с кровати', 'Короткое видео показывает безопасный порядок движений: повернуться, опустить ноги, встать с опорой.'],
+      crutches: ['Как ходить с костылями', 'Показываем темп, длину шага и положение головы, чтобы не терять равновесие.'],
+      stairs: ['Как ходить по лестнице', 'Главное правило: приставной шаг и двухсторонняя опора при подъёме и спуске.'],
+      chair: ['Как вставать со стула', 'Проверяем высоту стула, положение ноги и безопасную опору руками.'],
+      car: ['Как сесть в машину', 'Переднее сиденье, спинка назад, без резкого сгибания ноги.']
+    };
+
+    function icon(name) {
+      const icons = {
+        consult: 'hi-outpatient',
+        prepare: 'hi-surgery',
+        hospital: 'hi-hospital',
+        discharge: 'hi-discharge',
+        rehab: 'hi-crutch',
+        question: 'hi-question',
+        media: 'hi-video-education',
+        bed: 'hi-hospital-bed',
+        crutches: 'hi-crutch',
+        stairs: 'hi-stairs',
+        chair: 'hi-joints',
+        car: 'hi-wheelchair',
+        back: 'hi-arrow-left'
+      };
+      return '<svg aria-hidden="true"><use href="#' + (icons[name] || icons.question) + '"></use></svg>';
+    }
+
+    function openPanel(id, push = true) {
+      panel.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      if (push) stack.push(id);
+      render(id);
+    }
+
+    function closePanel() {
+      panel.classList.remove('open');
+      document.body.style.overflow = '';
+      stack.length = 0;
+    }
+
+    function render(id) {
+      const titleMap = { steps: 'Этапы', media: 'Видео', emergency: 'Срочно', ask: 'Вопрос' };
+      navTitle.textContent = titleMap[id] || 'ИРИС';
+
+      if (id === 'steps') {
+        screen.innerHTML = '<h2>На каком Вы этапе?</h2><p>Нажмите на большую карточку. Не нужно ничего вводить.</p><div class="step-grid">'
+          + stages.map(s => '<button class="action glass" data-stage="' + s[0] + '"><span class="icon">' + icon(s[0]) + '</span><span><strong>' + s[1] + '</strong><span>' + s[2] + '</span></span><span class="arrow">›</span></button>').join('')
+          + '</div>';
+        screen.querySelectorAll('[data-stage]').forEach(btn => btn.onclick = () => openPanel('stage:' + btn.dataset.stage));
+        return;
+      }
+
+      if (id.indexOf('stage:') === 0) {
+        const key = id.split(':')[1];
+        const found = stages.find(s => s[0] === key);
+        const name = found ? found[1] : 'Ваш этап';
+        screen.innerHTML = '<h2>' + name + '</h2><p>Здесь пациент видит только ближайшие действия, без длинного общего меню.</p><div class="step-grid">'
+          + '<button class="action glass"><span class="icon">' + icon('prepare') + '</span><span><strong>Что сделать сейчас</strong><span>Короткая памятка на 3-5 пунктов</span></span><span class="arrow">›</span></button>'
+          + '<button class="action glass" data-open-inner="media"><span class="icon">' + icon('media') + '</span><span><strong>Видео и памятки</strong><span>Показать подходящие материалы</span></span><span class="arrow">›</span></button>'
+          + '<button class="action glass" data-open-inner="ask"><span class="icon">' + icon('question') + '</span><span><strong>Не нашёл нужное</strong><span>Оставить вопрос для команды</span></span><span class="arrow">›</span></button>'
+          + '</div>';
+        screen.querySelectorAll('[data-open-inner]').forEach(btn => btn.onclick = () => openPanel(btn.dataset.openInner));
+        return;
+      }
+
+      if (id === 'media') {
+        screen.innerHTML = '<h2>Видео и памятки</h2><p>Выберите ролик. В будущем здесь появится выбор отделения и операции.</p><div class="media-list">'
+          + Object.entries(videos).map(([key, v]) => '<button class="media-row" data-video="' + key + '"><span class="icon">' + icon(key) + '</span><span><strong>' + v[0] + '</strong><small>Короткое обучающее видео</small></span></button>').join('')
+          + '</div>';
+        screen.querySelectorAll('[data-video]').forEach(btn => btn.onclick = () => openPanel('video:' + btn.dataset.video));
+        return;
+      }
+
+      if (id.indexOf('video:') === 0) {
+        const key = id.split(':')[1];
+        const v = videos[key] || videos.bed;
+        screen.innerHTML = '<h2>' + v[0] + '</h2><p>' + v[1] + '</p><div class="video-box"><div class="play">▶</div></div><div class="warn"><div><strong>Важно:</strong> если при движении появилась резкая боль, остановитесь и позовите медсестру.</div></div><div class="actions"><button class="action glass" data-open-inner="media"><span class="icon">' + icon('back') + '</span><span><strong>К списку видео</strong><span>Вернуться в медиатеку</span></span><span class="arrow">›</span></button></div>';
+        screen.querySelector('[data-open-inner]').onclick = () => openPanel('media');
+        return;
+      }
+
+      if (id === 'emergency') {
+        screen.innerHTML = '<h2>Когда срочно звать помощь</h2><p>Этот экран должен быть доступен с главной страницы одним нажатием.</p><div class="warn"><div>Резкая или усиливающаяся боль.</div><div>Одышка, сильная слабость, головокружение.</div><div>Кровотечение, падение, онемение ноги.</div><div>Температура или резкое ухудшение состояния.</div></div>';
+        return;
+      }
+
+      if (id === 'ask') {
+        screen.innerHTML = '<h2>Не нашли нужное?</h2><p>Напишите, какой информации не хватило. В прототипе это демонстрация будущей формы.</p><form class="form" id="askForm"><label>Ваш вопрос<textarea placeholder="Например: можно ли спать на боку"></textarea></label><label>Как связаться, если нужно<input placeholder="Телефон или имя, можно не указывать"></label><button class="pill glass" type="submit">Отправить вопрос</button></form>';
+        document.getElementById('askForm').onsubmit = (e) => {
+          e.preventDefault();
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2400);
+        };
+      }
+    }
+
+    document.querySelectorAll('[data-open]').forEach(btn => btn.onclick = () => openPanel(btn.dataset.open));
+    document.querySelectorAll('[data-video]').forEach(btn => btn.onclick = () => openPanel('video:' + btn.dataset.video));
+    document.getElementById('homeBtn').onclick = closePanel;
+    document.getElementById('backBtn').onclick = () => {
+      stack.pop();
+      const prev = stack[stack.length - 1];
+      if (!prev) closePanel();
+      else render(prev);
+    };
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+    });
+  </script>
+</body>
+</html>

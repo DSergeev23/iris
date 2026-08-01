@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ИРИС — вариант 3</title>
+  <meta name="description" content="Вариант 3 прототипа ИРИС: мобильный медицинский помощник пациента.">
+  <style>
+    @font-face {
+      font-family: "Mazzard H";
+      font-weight: 400;
+      font-style: normal;
+      src: url("https://db.onlinewebfonts.com/t/eb5b5ee332420add9a40ee988cb6ac37.woff2") format("woff2");
+    }
+
+    @font-face {
+      font-family: "Mazzard H";
+      font-weight: 500;
+      font-style: normal;
+      src: url("https://db.onlinewebfonts.com/t/875fffdfa62169a0f131e90f37f1faf4.woff2") format("woff2");
+    }
+
+    :root {
+      --ink: #143036;
+      --muted: #5e777d;
+      --muted-2: #8aa0a5;
+      --bg: #effaf8;
+      --panel: #ffffff;
+      --line: rgba(20, 96, 108, .15);
+      --teal: #087985;
+      --teal-dark: #055763;
+      --mint: #2dd8c3;
+      --mint-soft: #dffbf6;
+      --blue-soft: #e7f2ff;
+      --violet-soft: #f0edff;
+      --warning: #bd2641;
+      --warning-soft: #fff0f3;
+      --shadow: 0 22px 60px rgba(7, 74, 84, .13);
+      --soft-shadow: 0 12px 34px rgba(7, 74, 84, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Mazzard H", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 15% 4%, rgba(45,216,195,.25), transparent 26%),
+        radial-gradient(circle at 86% 0%, rgba(80,160,255,.18), transparent 25%),
+        linear-gradient(180deg, #f7fffd, var(--bg));
+    }
+
+    .shell {
+      width: min(100%, 1160px);
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .topbar {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(255,255,255,.82);
+      box-shadow: var(--soft-shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 50px;
+      height: 50px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: var(--teal);
+      color: #fff;
+      box-shadow: inset 0 0 0 8px rgba(255,255,255,.12);
+      overflow: hidden;
+    }
+
+    .brand-mark svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .brand-name {
+      display: block;
+      color: var(--teal-dark);
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 500;
+      letter-spacing: .02em;
+    }
+
+    .brand-sub {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .qr-chip {
+      min-height: 44px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border: 1px solid rgba(8,121,133,.17);
+      border-radius: 999px;
+      background: var(--mint-soft);
+      color: var(--teal-dark);
+      font-size: 15px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .qr-chip svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    .layout {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 18px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 34px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .status {
+      display: grid;
+      gap: 12px;
+    }
+
+    .badge {
+      width: fit-content;
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 13px;
+      border-radius: 999px;
+      background: var(--mint-soft);
+      color: var(--teal-dark);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .badge svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(34px, 7.5vw, 58px);
+      line-height: 1.04;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .accent {
+      color: var(--teal);
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(19px, 3vw, 23px);
+      line-height: 1.45;
+    }
+
+    .patient-card {
+      display: grid;
+      grid-template-columns: 58px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 15px;
+      border: 1px solid rgba(8,121,133,.14);
+      border-radius: 26px;
+      background: linear-gradient(135deg, #f6fffd, #edf8ff);
+    }
+
+    .patient-icon {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 22px;
+      background: #fff;
+      color: var(--teal);
+      box-shadow: var(--soft-shadow);
+      overflow: hidden;
+    }
+
+    .patient-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .patient-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.15;
+      font-weight: 500;
+    }
+
+    .patient-copy span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .primary-card {
+      width: 100%;
+      min-height: 148px;
+      display: grid;
+      grid-template-columns: 64px 1fr 50px;
+      align-items: center;
+      gap: 14px;
+      padding: 18px;
+      border: 0;
+      border-radius: 30px;
+      background: linear-gradient(135deg, var(--mint), #8df3e7);
+      color: #073f45;
+      box-shadow: 0 24px 56px rgba(45,216,195,.3);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .primary-card .tile-icon {
+      background: rgba(255,255,255,.82);
+      color: var(--teal-dark);
+    }
+
+    .primary-card strong {
+      display: block;
+      font-size: clamp(26px, 6vw, 38px);
+      line-height: 1;
+      font-weight: 500;
+    }
+
+    .primary-card .card-copy > span {
+      display: block;
+      margin-top: 8px;
+      color: rgba(7,63,69,.76);
+      font-size: 17px;
+      line-height: 1.32;
+    }
+
+    .arrow {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255,255,255,.8);
+      color: var(--teal-dark);
+    }
+
+    .arrow svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .tiles {
+      display: grid;
+      gap: 12px;
+    }
+
+    .tile {
+      width: 100%;
+      min-height: 112px;
+      display: grid;
+      grid-template-columns: 58px 1fr 42px;
+      align-items: center;
+      gap: 13px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: #fff;
+      box-shadow: var(--soft-shadow);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .tile.emergency {
+      border-color: rgba(189,38,65,.18);
+      background: linear-gradient(135deg, #fff, var(--warning-soft));
+    }
+
+    .tile-icon {
+      width: 58px;
+      height: 58px;
+      display: grid;
+      place-items: center;
+      border-radius: 21px;
+      background: var(--mint-soft);
+      color: var(--teal);
+      overflow: hidden;
+    }
+
+    .tile.emergency .tile-icon {
+      background: #fff;
+      color: var(--warning);
+    }
+
+    .tile-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .tile strong {
+      display: block;
+      color: var(--ink);
+      font-size: 23px;
+      line-height: 1.1;
+      font-weight: 500;
+    }
+
+    .tile .tile-copy > span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.32;
+    }
+
+    .tile .mini-arrow {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--mint-soft);
+      color: var(--teal);
+    }
+
+    .tile.emergency .mini-arrow {
+      background: #fff;
+      color: var(--warning);
+    }
+
+    .tile .mini-arrow svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    .guide {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: rgba(255,255,255,.72);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .guide h2 {
+      margin: 0;
+      color: var(--teal-dark);
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 500;
+    }
+
+    .steps {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .steps li {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 11px;
+      align-items: start;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .steps b {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #fff;
+      color: var(--teal);
+      box-shadow: var(--soft-shadow);
+      font-weight: 500;
+    }
+
+    .steps strong {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 500;
+    }
+
+    .panel {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      overflow: auto;
+      background: var(--bg);
+    }
+
+    .panel.open { display: block; }
+
+    .panel-inner {
+      width: min(100%, 760px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 16px 16px 38px;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+      padding: 8px 0 18px;
+      background: linear-gradient(180deg, var(--bg) 70%, rgba(239,250,248,0));
+    }
+
+    .nav-btn {
+      min-height: 58px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--teal);
+      color: #fff;
+      padding: 13px 20px;
+      font-size: 19px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .screen {
+      min-height: 70vh;
+      padding: clamp(22px, 5vw, 34px);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: rgba(255,255,255,.94);
+      box-shadow: var(--shadow);
+    }
+
+    .screen h2 {
+      margin: 0 0 12px;
+      color: var(--teal);
+      font-size: clamp(34px, 8vw, 54px);
+      line-height: 1.02;
+      font-weight: 500;
+    }
+
+    .screen > p {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 21px;
+      line-height: 1.5;
+    }
+
+    .step-grid,
+    .media-list,
+    .form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .option,
+    .media-row {
+      width: 100%;
+      min-height: 92px;
+      display: grid;
+      grid-template-columns: 62px 1fr auto;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .option svg,
+    .media-row svg {
+      width: 50px;
+      height: 50px;
+      padding: 10px;
+      border-radius: 18px;
+      background: var(--mint-soft);
+      color: var(--teal);
+    }
+
+    .option strong,
+    .media-row strong {
+      display: block;
+      color: var(--ink);
+      font-size: 23px;
+      line-height: 1.12;
+      font-weight: 500;
+    }
+
+    .option small,
+    .media-row small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .video-box {
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      margin: 22px 0;
+      border-radius: 28px;
+      background: linear-gradient(135deg, var(--mint-soft), var(--blue-soft));
+      overflow: hidden;
+      position: relative;
+    }
+
+    .video-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,.42) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.42) 1px, transparent 1px);
+      background-size: 34px 34px;
+    }
+
+    .play {
+      position: relative;
+      z-index: 1;
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #fff;
+      color: var(--teal);
+      font-size: 42px;
+      padding-left: 6px;
+      box-shadow: var(--shadow);
+    }
+
+    .warn {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 8px solid var(--warning);
+      border-radius: 18px;
+      background: var(--warning-soft);
+      color: var(--ink);
+      font-size: 21px;
+      line-height: 1.45;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 500;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      min-height: 64px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: #fff;
+      padding: 16px;
+      color: var(--ink);
+      font-size: 20px;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 60;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: var(--teal);
+      color: #fff;
+      padding: 15px 20px;
+      font-size: 18px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; }
+
+    svg {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: block;
+      overflow: hidden;
+    }
+
+    button:focus-visible,
+    input:focus,
+    textarea:focus {
+      outline: 4px solid rgba(45,216,195,.42);
+      outline-offset: 3px;
+    }
+
+    @media (min-width: 760px) {
+      .qr-chip { display: inline-flex; }
+
+      .layout {
+        grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr);
+        align-items: start;
+      }
+
+      .tiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tile.emergency {
+        grid-column: span 2;
+      }
+    }
+
+    @media (min-width: 1080px) {
+      .page {
+        padding: 28px;
+      }
+
+      .hero {
+        min-height: 100%;
+        align-content: space-between;
+      }
+    }
+
+    @media (min-width: 1180px) {
+      .page {
+        padding: 34px;
+      }
+
+      .shell {
+        width: min(100%, 1360px);
+        gap: 24px;
+      }
+
+      .topbar {
+        min-height: 84px;
+        padding: 14px;
+      }
+
+      .layout {
+        grid-template-columns: minmax(520px, 1.08fr) minmax(340px, .72fr) minmax(360px, .78fr);
+        align-items: stretch;
+        gap: 24px;
+      }
+
+      .hero {
+        min-height: 620px;
+        padding: 34px;
+      }
+
+      .guide {
+        min-height: 620px;
+        align-content: start;
+        padding: 28px;
+      }
+
+      .tiles {
+        grid-template-columns: 1fr;
+        align-content: stretch;
+      }
+
+      .tile,
+      .tile.emergency {
+        grid-column: auto;
+        min-height: 190px;
+        align-content: center;
+      }
+
+      .primary-card {
+        min-height: 176px;
+      }
+
+      h1 {
+        font-size: clamp(54px, 4.8vw, 76px);
+      }
+
+      .lead {
+        max-width: 720px;
+      }
+
+      .panel-inner {
+        max-width: 900px;
+      }
+
+      .screen {
+        padding: 38px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .page {
+        padding: 12px;
+      }
+
+      .topbar,
+      .hero,
+      .guide {
+        border-radius: 26px;
+      }
+
+      .hero {
+        padding: 18px;
+      }
+
+      .brand-name {
+        font-size: 25px;
+      }
+
+      .primary-card,
+      .tile {
+        grid-template-columns: 56px 1fr 40px;
+      }
+
+      .primary-card {
+        min-height: 138px;
+        padding: 16px;
+      }
+
+      .tile {
+        min-height: 104px;
+      }
+
+      .arrow {
+        width: 42px;
+        height: 42px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+    <symbol id="i-qr" viewBox="0 0 24 24"><rect x="6" y="6" width="4" height="4" rx=".7"></rect><rect x="14" y="6" width="4" height="4" rx=".7"></rect><rect x="6" y="14" width="4" height="4" rx=".7"></rect><path d="M14 14h1.6v1.6H14z"></path><path d="M18 14v4h-4"></path><path d="M4.8 8V5.8h2.2"></path><path d="M17 5.8h2.2V8"></path><path d="M4.8 16v2.2h2.2"></path><path d="M17 18.2h2.2V16"></path></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="5" y="6.5" width="14" height="11" rx="2"></rect><path d="m11 10 4 2-4 2z"></path></symbol>
+    <symbol id="i-path" viewBox="0 0 24 24"><rect x="6.5" y="5" width="11" height="14" rx="2"></rect><path d="M9.5 9h5"></path><path d="M9.5 12h4"></path><path d="m9.5 15.2 1.2 1.2 3.8-3.8"></path></symbol>
+    <symbol id="i-checklist" viewBox="0 0 24 24"><rect x="6.5" y="5" width="11" height="14" rx="2"></rect><path d="m9.5 9.2 1 1 2-2"></path><path d="M14 9.2h1.2"></path><path d="m9.5 14.4 1 1 2-2"></path><path d="M14 14.4h1.2"></path></symbol>
+    <symbol id="i-hospital" viewBox="0 0 24 24"><rect x="6.5" y="5" width="11" height="14" rx="2"></rect><path d="M10 9h4"></path><path d="M12 7v4"></path><path d="M10.2 19v-3.5h3.6V19"></path></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 6v14"></path><path d="M21 11v9"></path><path d="M3 14h18"></path><path d="M7 14v-3h6a4 4 0 0 1 4 4"></path></symbol>
+    <symbol id="i-crutch" viewBox="0 0 24 24"><path d="M8 21 16 3"></path><path d="M12 12h6"></path><path d="M15 21V3"></path></symbol>
+    <symbol id="i-stairs" viewBox="0 0 24 24"><path d="M3 20h18"></path><path d="M4 16h4v4"></path><path d="M8 12h4v8"></path><path d="M12 8h4v12"></path><path d="M16 4h4v16"></path></symbol>
+    <symbol id="i-chair" viewBox="0 0 24 24"><path d="M8 4c3 2 4 4 4 8s-1 6-4 8"></path><path d="M16 4c-3 2-4 4-4 8s1 6 4 8"></path><circle cx="12" cy="12" r="2.5"></circle></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><circle cx="9" cy="18" r="3"></circle><path d="M10 5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path><path d="M10 7v5h5l3 6"></path><path d="M18 18h3"></path></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 6 5.5 18h13z"></path><path d="M12 10v3.5"></path><path d="M12 16h.01"></path></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M6 6.5h12v9H10l-4 3z"></path><path d="M12 9v4"></path><path d="M10 11h4"></path></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h13"></path><path d="m13 6 6 6-6 6"></path></symbol>
+  </svg>
+
+  <main class="page">
+    <div class="shell">
+      <header class="topbar" aria-label="Шапка ИРИС">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"><svg><use href="#i-hospital"></use></svg></span>
+          <span>
+            <span class="brand-name">ИРИС</span>
+            <span class="brand-sub">помощник пациента в больнице</span>
+          </span>
+        </div>
+        <span class="qr-chip"><svg aria-hidden="true"><use href="#i-qr"></use></svg> открыто по QR</span>
+      </header>
+
+      <section class="layout" aria-label="Главный экран ИРИС">
+        <section class="hero">
+          <div class="status">
+            <span class="badge"><svg aria-hidden="true"><use href="#i-checklist"></use></svg> Сегодня в стационаре</span>
+            <h1>Что делать дальше?</h1>
+            <p class="lead">Выберите свой этап лечения. ИРИС покажет ближайшие действия, видео и важные подсказки крупным текстом.</p>
+          </div>
+
+          <div class="patient-card">
+            <span class="patient-icon"><svg aria-hidden="true"><use href="#i-qr"></use></svg></span>
+            <div class="patient-copy">
+              <strong>Регистрация не нужна</strong>
+              <span>Достаточно открыть QR-код рядом с палатой.</span>
+            </div>
+          </div>
+
+          <button class="primary-card" data-open="steps">
+            <span class="tile-icon"><svg aria-hidden="true"><use href="#i-path"></use></svg></span>
+            <span class="card-copy"><strong>Провести по шагам</strong><span>Начните отсюда, если не знаете, какой раздел нужен.</span></span>
+            <span class="arrow"><svg aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </button>
+        </section>
+
+        <aside class="guide" aria-label="Как пользоваться">
+          <h2>Как пользоваться</h2>
+          <ol class="steps">
+            <li><b>1</b><span><strong>Выберите этап</strong> До операции, в больнице, выписка или реабилитация.</span></li>
+            <li><b>2</b><span><strong>Откройте памятку</strong> На экране останутся только ближайшие действия.</span></li>
+            <li><b>3</b><span><strong>Посмотрите видео</strong> Короткие ролики по безопасному движению.</span></li>
+          </ol>
+        </aside>
+
+        <section class="tiles" aria-label="Быстрые действия">
+          <button class="tile emergency" data-open="emergency">
+            <span class="tile-icon"><svg aria-hidden="true"><use href="#i-alert"></use></svg></span>
+            <span class="tile-copy"><strong>Если стало плохо</strong><span>Когда нужно сразу позвать медсестру или врача.</span></span>
+            <span class="mini-arrow"><svg aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </button>
+
+          <button class="tile" data-open="media">
+            <span class="tile-icon"><svg aria-hidden="true"><use href="#i-video"></use></svg></span>
+            <span class="tile-copy"><strong>Видео и памятки</strong><span>Кровать, костыли, лестница, стул, машина.</span></span>
+            <span class="mini-arrow"><svg aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </button>
+
+          <button class="tile" data-open="ask">
+            <span class="tile-icon"><svg aria-hidden="true"><use href="#i-chat"></use></svg></span>
+            <span class="tile-copy"><strong>Задать вопрос</strong><span>Напишите, какой информации не хватило.</span></span>
+            <span class="mini-arrow"><svg aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+          </button>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <section class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Экран ИРИС">
+    <div class="panel-inner">
+      <nav class="nav">
+        <button class="nav-btn" id="backBtn">Назад</button>
+        <button class="nav-btn" id="homeBtn">В начало</button>
+      </nav>
+      <div class="screen" id="screen"></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast">Спасибо, вопрос записан</div>
+
+  <script>
+    const panel = document.getElementById('panel');
+    const screen = document.getElementById('screen');
+    const toast = document.getElementById('toast');
+    const stack = [];
+
+    const stages = [
+      ['consult', 'Ещё не обращался', 'Запись, документы, обследование', 'i-hospital'],
+      ['prepare', 'Готовлюсь к операции', 'Что взять с собой и что посмотреть', 'i-checklist'],
+      ['hospital', 'Я в больнице', 'Госпитализация, операция, после неё', 'i-bed'],
+      ['discharge', 'Выписываюсь домой', 'Выписка, правила, реабилитация', 'i-path'],
+      ['rehab', 'Реабилитация', 'Как пройти восстановление в ГКБ №1', 'i-crutch']
+    ];
+
+    const videos = {
+      bed: ['Как встать с кровати', 'Короткое видео показывает безопасный порядок движений: повернуться, опустить ноги, встать с опорой.', 'i-bed'],
+      crutches: ['Как ходить с костылями', 'Показываем темп, длину шага и положение головы, чтобы не терять равновесие.', 'i-crutch'],
+      stairs: ['Как ходить по лестнице', 'Главное правило: приставной шаг и двухсторонняя опора при подъёме и спуске.', 'i-stairs'],
+      chair: ['Как вставать со стула', 'Проверяем высоту стула, положение ноги и безопасную опору руками.', 'i-chair'],
+      car: ['Как сесть в машину', 'Переднее сиденье, спинка назад, без резкого сгибания ноги.', 'i-car']
+    };
+
+    function useIcon(id) {
+      return '<svg aria-hidden="true"><use href="#' + id + '"></use></svg>';
+    }
+
+    function optionHtml(id, title, desc, icon) {
+      return '<button class="option" data-next="' + id + '">' + useIcon(icon) + '<span><strong>' + title + '</strong><small>' + desc + '</small></span><span>+</span></button>';
+    }
+
+    function openPanel(id, push = true) {
+      panel.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      if (push) stack.push(id);
+      render(id);
+    }
+
+    function closePanel() {
+      panel.classList.remove('open');
+      document.body.style.overflow = '';
+      stack.length = 0;
+    }
+
+    function render(id) {
+      if (id === 'steps') {
+        screen.innerHTML = '<h2>На каком Вы этапе?</h2><p>Выберите крупную карточку. Ничего вводить не нужно.</p><div class="step-grid">' + stages.map(s => optionHtml('stage:' + s[0], s[1], s[2], s[3])).join('') + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id.indexOf('stage:') === 0) {
+        const key = id.split(':')[1];
+        const item = stages.find(s => s[0] === key) || stages[0];
+        screen.innerHTML = '<h2>' + item[1] + '</h2><p>Здесь остаются только ближайшие действия пациента: памятка, видео и возможность оставить вопрос.</p><div class="step-grid">'
+          + optionHtml('todo', 'Что сделать сейчас', 'Короткая памятка на 3-5 пунктов', 'i-checklist')
+          + optionHtml('media', 'Видео и памятки', 'Показать подходящие материалы', 'i-video')
+          + optionHtml('ask', 'Задать вопрос', 'Оставить вопрос для команды', 'i-chat')
+          + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id === 'media') {
+        screen.innerHTML = '<h2>Видео и памятки</h2><p>Выберите ролик. Позже здесь появится выбор отделения и операции.</p><div class="media-list">'
+          + Object.entries(videos).map(([key, v]) => '<button class="media-row" data-next="video:' + key + '">' + useIcon(v[2]) + '<span><strong>' + v[0] + '</strong><small>Короткое обучающее видео</small></span><span>+</span></button>').join('')
+          + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id.indexOf('video:') === 0) {
+        const key = id.split(':')[1];
+        const v = videos[key] || videos.bed;
+        screen.innerHTML = '<h2>' + v[0] + '</h2><p>' + v[1] + '</p><div class="video-box"><div class="play">▶</div></div><div class="warn"><strong>Важно:</strong> если при движении появилась резкая боль, остановитесь и позовите медсестру.</div><div class="step-grid" style="margin-top:18px">' + optionHtml('media', 'К списку видео', 'Вернуться в медиатеку', 'i-video') + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id === 'emergency') {
+        screen.innerHTML = '<h2>Когда срочно звать помощь</h2><p>Этот экран должен быть доступен с главной страницы одним нажатием.</p><div class="warn">Резкая боль, одышка, сильная слабость, головокружение, кровотечение, падение, онемение ноги, температура или резкое ухудшение состояния.</div>';
+        return;
+      }
+
+      if (id === 'ask') {
+        screen.innerHTML = '<h2>Задать вопрос</h2><p>Напишите, какой информации не хватило. Это демонстрация будущей формы сбора вопросов.</p><form class="form" id="askForm"><label>Ваш вопрос<textarea placeholder="Например: можно ли спать на боку"></textarea></label><label>Как связаться, если нужно<input placeholder="Телефон или имя, можно не указывать"></label><button class="nav-btn" type="submit">Отправить вопрос</button></form>';
+        document.getElementById('askForm').onsubmit = e => {
+          e.preventDefault();
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2400);
+        };
+        return;
+      }
+
+      screen.innerHTML = '<h2>Что сделать сейчас</h2><p>Пример короткой памятки: проверьте документы, посмотрите нужное видео, при боли или ухудшении состояния позовите медсестру.</p>';
+    }
+
+    function bindOptions() {
+      screen.querySelectorAll('[data-next]').forEach(btn => {
+        btn.onclick = () => openPanel(btn.dataset.next);
+      });
+    }
+
+    document.querySelectorAll('[data-open]').forEach(btn => {
+      btn.onclick = () => openPanel(btn.dataset.open);
+    });
+
+    document.getElementById('homeBtn').onclick = closePanel;
+    document.getElementById('backBtn').onclick = () => {
+      stack.pop();
+      const prev = stack[stack.length - 1];
+      if (!prev) closePanel();
+      else render(prev);
+    };
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+    });
+  </script>
+</body>
+</html>

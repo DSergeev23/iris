@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ИРИС — вариант 2</title>
+  <meta name="description" content="Вариант 2 прототипа ИРИС: графичный белый интерфейс помощника пациента.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=DM+Sans:500,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #123033;
+      --white: #ffffff;
+      --paper: #f5fbfa;
+      --mist: #ecf8f6;
+      --ink-60: rgba(18, 48, 51, .68);
+      --ink-40: rgba(18, 48, 51, .45);
+      --ink-20: rgba(18, 48, 51, .18);
+      --line: rgba(15, 106, 116, .18);
+      --teal: #d7f3ef;
+      --teal-deep: #0a6874;
+      --teal-dark: #064e59;
+      --aqua: #bfeee8;
+      --blue: #d9ecff;
+      --iris: #e8e4ff;
+      --sand: #fff5dc;
+      --red: #b4233f;
+      --red-soft: #fff0f2;
+      --shadow: 0 24px 70px rgba(8, 78, 86, .12);
+      --ease: cubic-bezier(.22, 1, .36, 1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      background: var(--white);
+      color: var(--black);
+      font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--black);
+      background: var(--paper);
+    }
+
+    button, input, textarea { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    @keyframes marqueeProjects {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    @keyframes floatSquare {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(4deg); }
+    }
+
+    .marquee-projects { animation: marqueeProjects 28s linear infinite; }
+    .marquee-projects:hover { animation-play-state: paused; }
+
+    .page {
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(191,238,232,.55), transparent 34%),
+        radial-gradient(circle at 92% 2%, rgba(217,236,255,.72), transparent 30%),
+        linear-gradient(90deg, rgba(10,104,116,.055) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(10,104,116,.055) 1px, transparent 1px),
+        var(--paper);
+      background-size: auto, auto, 48px 48px, 48px 48px, auto;
+    }
+
+    .hero {
+      position: relative;
+      padding: 26px 24px 42px;
+      overflow: hidden;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 3;
+      max-width: 1180px;
+      min-height: 78px;
+      margin: 0 auto 42px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border: 1px solid rgba(15,106,116,.16);
+      background: rgba(255,255,255,.78);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      background: var(--teal-deep);
+      color: var(--white);
+      box-shadow: inset 0 0 0 8px rgba(255,255,255,.12);
+    }
+
+    .brand-mark svg {
+      width: 31px;
+      height: 31px;
+      stroke-width: 2;
+    }
+
+    .brand-name {
+      display: block;
+      font-size: clamp(1.35rem, 6vw, 2rem);
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: var(--teal-dark);
+    }
+
+    .brand-sub {
+      display: block;
+      margin-top: 5px;
+      color: var(--ink-60);
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .topbar-pill {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 13px;
+      color: var(--teal-dark);
+      background: var(--mist);
+      border: 1px solid rgba(10,104,116,.18);
+      white-space: nowrap;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .topbar-pill svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2;
+    }
+
+    .float-layer {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .sq {
+      position: absolute;
+      display: block;
+      background: var(--teal-deep);
+      animation: floatSquare 4s ease-in-out infinite;
+    }
+
+    .sq:nth-child(1) { left: 6%; top: 20%; width: 12px; height: 12px; animation-delay: 0s; }
+    .sq:nth-child(2) { left: 12%; top: 32%; width: 8px; height: 8px; animation-delay: .3s; }
+    .sq:nth-child(3) { left: 8%; top: 44%; width: 6px; height: 6px; animation-delay: .6s; }
+    .sq:nth-child(4) { left: 88%; top: 18%; width: 10px; height: 10px; animation-delay: .9s; }
+    .sq:nth-child(5) { left: 92%; top: 30%; width: 14px; height: 14px; animation-delay: 1.2s; }
+    .sq:nth-child(6) { left: 85%; top: 42%; width: 7px; height: 7px; animation-delay: 1.5s; }
+    .sq:nth-child(7) { left: 90%; top: 52%; width: 5px; height: 5px; animation-delay: 1.8s; }
+    .sq:nth-child(8) { left: 14%; top: 56%; width: 5px; height: 5px; animation-delay: 2.1s; }
+
+    .hero-inner {
+      position: relative;
+      max-width: 1180px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 20px;
+      background: var(--white);
+      color: var(--teal-dark);
+      border: 1px solid rgba(10,104,116,.18);
+      box-shadow: 0 12px 34px rgba(8,78,86,.08);
+      padding: 10px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    .badge svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2;
+    }
+
+    h1 {
+      margin: 0 auto;
+      max-width: 820px;
+      font-size: clamp(2rem, 7.2vw, 4.9rem);
+      line-height: 1.06;
+      font-weight: 700;
+      letter-spacing: 0;
+      color: var(--teal-dark);
+    }
+
+    .ghost { color: #438990; }
+
+    .lead {
+      max-width: 670px;
+      margin: 22px auto 0;
+      color: var(--ink-60);
+      font-size: clamp(18px, 2.8vw, 22px);
+      line-height: 1.58;
+    }
+
+    .quick {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 26px;
+    }
+
+    .quick span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.82);
+      padding: 10px 15px;
+      font-size: 16px;
+      color: var(--teal-dark);
+      font-weight: 600;
+      box-shadow: 0 10px 26px rgba(8,78,86,.06);
+    }
+
+    .quick svg {
+      color: var(--teal-deep);
+      stroke-width: 2;
+    }
+
+    .cases {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px 64px;
+      display: grid;
+      gap: 16px;
+    }
+
+    @media (min-width: 760px) {
+      .cases { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .case {
+      position: relative;
+      min-height: 430px;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--black);
+      cursor: pointer;
+      text-align: left;
+      padding: 0;
+      display: block;
+    }
+
+    .case:focus-visible,
+    .footer-cta:focus-visible,
+    .nav-btn:focus-visible,
+    input:focus,
+    textarea:focus {
+      outline: 3px solid var(--teal-deep);
+      outline-offset: 4px;
+    }
+
+    .case-bg {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .case-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 70% 16%, rgba(255,255,255,.9), transparent 26%),
+        linear-gradient(135deg, var(--case-a), var(--case-b));
+    }
+
+    .case-bg::after {
+      content: "";
+      position: absolute;
+      width: min(58%, 270px);
+      aspect-ratio: 1;
+      background: rgba(255,255,255,.58);
+      border: 1px solid rgba(10,104,116,.1);
+      box-shadow: 0 24px 80px rgba(8,78,86,.1);
+      transform: rotate(8deg);
+      z-index: 0;
+    }
+
+    .case-bg svg {
+      position: relative;
+      width: min(47%, 220px);
+      height: auto;
+      color: var(--teal-dark);
+      stroke-width: 1.85;
+      z-index: 1;
+    }
+
+    .pixel-grid {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .pixel {
+      background: rgba(10,104,116,.78);
+      opacity: 0;
+      transform: scale(0);
+      transition-property: opacity, transform;
+      transition-duration: .25s;
+      transition-timing-function: var(--ease);
+    }
+
+    .case:hover .pixel,
+    .case:focus-visible .pixel {
+      opacity: 1;
+      transform: scale(1);
+      transition-delay: calc(var(--d) * 18ms);
+    }
+
+    .mini-squares {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    .mini {
+      position: absolute;
+      width: var(--s);
+      height: var(--s);
+      left: var(--x);
+      top: var(--y);
+      background: var(--teal-deep);
+      transition: transform .38s var(--ease);
+    }
+
+    .case:hover .mini:nth-child(odd) { transform: translate(12px, -10px); }
+    .case:hover .mini:nth-child(even) { transform: translate(-10px, 12px); }
+
+    .plus {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      z-index: 10;
+      width: 44px;
+      height: 44px;
+      border: 2px solid rgba(255,255,255,.75);
+      color: var(--white);
+      display: grid;
+      place-items: center;
+      font-size: 30px;
+      line-height: 1;
+      background: var(--teal-deep);
+    }
+
+    .plate {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      z-index: 20;
+      max-width: min(88%, 430px);
+      background: var(--white);
+      padding: 17px 20px 18px;
+      border-top: 2px solid rgba(10,104,116,.18);
+      border-right: 2px solid rgba(10,104,116,.18);
+      box-shadow: 0 -10px 36px rgba(8,78,86,.08);
+    }
+
+    .plate-title {
+      margin: 0;
+      font-size: clamp(1.55rem, 5.8vw, 2.55rem);
+      line-height: 1.02;
+      font-weight: 500;
+      letter-spacing: 0;
+      color: var(--teal-dark);
+    }
+
+    .plate-desc {
+      display: block;
+      max-width: 310px;
+      margin-top: 8px;
+      color: rgba(18,48,51,.72);
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    .plate-meta {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-top: 13px;
+      color: rgba(18,48,51,.72);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .plate-meta b {
+      color: var(--black);
+      font-weight: 500;
+    }
+
+    .footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 34px;
+    }
+
+    @media (min-width: 820px) {
+      .footer {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+      }
+    }
+
+    .footer-left {
+      max-width: 450px;
+    }
+
+    .mini-plus {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--line);
+      background: var(--teal);
+      color: var(--teal-dark);
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      font-size: 20px;
+    }
+
+    .footer-left p {
+      margin: 0;
+      color: var(--ink-60);
+      font-size: 16px;
+      line-height: 1.75;
+    }
+
+    .footer-cta {
+      margin-top: 24px;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      display: inline-flex;
+      align-items: flex-end;
+      cursor: pointer;
+      color: var(--white);
+    }
+
+    .footer-cta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--teal-deep);
+      color: var(--white);
+      padding: 14px 16px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .arrow-badge {
+      width: 30px;
+      height: 30px;
+      margin-bottom: 28px;
+      background: var(--teal-deep);
+      display: grid;
+      place-items: center;
+      transition: margin-bottom .3s var(--ease);
+    }
+
+    .footer-cta:hover .arrow-badge { margin-bottom: 42px; }
+
+    .arrow-badge svg {
+      width: 18px;
+      height: 18px;
+      color: var(--white);
+    }
+
+    .logos {
+      flex: 1;
+      overflow: hidden;
+      border-top: 1px solid var(--line);
+    }
+
+    @media (min-width: 820px) {
+      .logos {
+        border-top: 0;
+        margin-left: 50px;
+      }
+    }
+
+    .marquee {
+      overflow: hidden;
+      padding: 22px 0;
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+    }
+
+    .logo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: none;
+      padding: 0 30px;
+      color: var(--teal-dark);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+
+    .logo-item svg {
+      width: 22px;
+      height: 22px;
+      color: var(--teal-deep);
+    }
+
+    .panel {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      overflow: auto;
+      background: var(--paper);
+    }
+
+    .panel.open { display: block; }
+
+    .panel-inner {
+      min-height: 100vh;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 18px 18px 42px;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+      padding: 8px 0 18px;
+      background: linear-gradient(180deg, var(--paper) 70%, rgba(245,251,250,0));
+    }
+
+    .nav-btn {
+      min-height: 56px;
+      border: 1px solid var(--line);
+      background: var(--teal-deep);
+      color: var(--white);
+      padding: 12px 18px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .screen {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.86);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      min-height: 70vh;
+    }
+
+    .screen h2 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 8vw, 4rem);
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0;
+      color: var(--teal-dark);
+    }
+
+    .screen > p {
+      margin: 0 0 24px;
+      color: var(--ink-60);
+      font-size: 20px;
+      line-height: 1.65;
+    }
+
+    .step-grid,
+    .media-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .option,
+    .media-row {
+      width: 100%;
+      min-height: 92px;
+      border: 1px solid var(--line);
+      background: var(--white);
+      color: var(--black);
+      display: grid;
+      grid-template-columns: 66px 1fr auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .option svg,
+    .media-row svg {
+      width: 48px;
+      height: 48px;
+      color: var(--black);
+      background: var(--teal);
+      border: 1px solid rgba(0,0,0,.1);
+      padding: 10px;
+    }
+
+    .option strong,
+    .media-row strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 500;
+    }
+
+    .option small,
+    .media-row small {
+      display: block;
+      margin-top: 5px;
+      color: var(--ink-60);
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .video-box {
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      margin: 22px 0;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, var(--teal), var(--blue)),
+        var(--paper);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, rgba(0,0,0,.06) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(0,0,0,.06) 1px, transparent 1px);
+      background-size: 34px 34px;
+    }
+
+    .play {
+      position: relative;
+      z-index: 1;
+      width: 90px;
+      height: 90px;
+      background: var(--teal-deep);
+      color: var(--white);
+      display: grid;
+      place-items: center;
+      font-size: 42px;
+      padding-left: 6px;
+    }
+
+    .warn {
+      border-left: 8px solid var(--red);
+      background: var(--red-soft);
+      padding: 18px;
+      font-size: 20px;
+      line-height: 1.5;
+      margin: 16px 0 0;
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      font-size: 19px;
+      font-weight: 500;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--white);
+      min-height: 62px;
+      padding: 15px;
+      font-size: 20px;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      background: var(--teal-deep);
+      color: var(--white);
+      padding: 14px 18px;
+      font-size: 17px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s var(--ease);
+      z-index: 60;
+    }
+
+    .toast.show { opacity: 1; }
+
+    svg {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding: 14px 18px 32px;
+      }
+
+      .topbar {
+        min-height: auto;
+        margin-bottom: 34px;
+        align-items: flex-start;
+      }
+
+      .brand-mark {
+        width: 48px;
+        height: 48px;
+      }
+
+      .topbar-pill {
+        display: none;
+      }
+
+      .cases,
+      .footer {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .case {
+        min-height: 430px;
+        aspect-ratio: auto;
+      }
+
+      .plate {
+        max-width: 88%;
+      }
+
+      .screen {
+        padding: 20px;
+      }
+    }
+
+    @media (min-width: 1180px) {
+      .hero {
+        padding: 28px 32px 54px;
+      }
+
+      .topbar,
+      .hero-inner,
+      .cases,
+      .footer {
+        max-width: 1360px;
+      }
+
+      .topbar {
+        margin-bottom: 56px;
+      }
+
+      h1 {
+        max-width: 980px;
+        font-size: clamp(4.7rem, 5.4vw, 6.6rem);
+      }
+
+      .lead {
+        max-width: 760px;
+      }
+
+      .cases {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+        padding-bottom: 72px;
+      }
+
+      .case {
+        min-height: 430px;
+        aspect-ratio: auto;
+      }
+
+      .plate {
+        max-width: 92%;
+      }
+
+      .plate-title {
+        font-size: clamp(1.55rem, 2.2vw, 2.45rem);
+      }
+
+      .panel-inner {
+        max-width: 900px;
+      }
+
+      .screen {
+        padding: 38px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+    <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"></rect><rect x="14" y="4" width="6" height="6"></rect><rect x="4" y="14" width="6" height="6"></rect><path d="M14 14h2v2h-2z"></path><path d="M19 14v5h-5"></path></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14"></rect><path d="m10 9 5 3-5 3z"></path><path d="M7 19v2"></path><path d="M17 19v2"></path></symbol>
+    <symbol id="i-path" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="M8 6h3a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h7"></path><path d="M14 4h6v6"></path><path d="M20 4 12 12"></path></symbol>
+    <symbol id="i-checklist" viewBox="0 0 24 24"><path d="M5 4h14v16H5z"></path><path d="m8 9 1.4 1.4L12 7.8"></path><path d="M14 9h3"></path><path d="m8 15 1.4 1.4L12 13.8"></path><path d="M14 15h3"></path></symbol>
+    <symbol id="i-nurse-call" viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 14 0v5H5z"></path><path d="M9 21h6"></path><path d="M12 5v6"></path><path d="M9 8h6"></path><path d="M7 17h10"></path></symbol>
+    <symbol id="i-doctor-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"></path><path d="M12 8v5"></path><path d="M9.5 10.5h5"></path><path d="M17 5v4"></path></symbol>
+    <symbol id="i-hospital" viewBox="0 0 24 24"><path d="M4 21h16"></path><path d="M6 21V5h12v16"></path><path d="M10 8h4"></path><path d="M12 6v4"></path><path d="M10 21v-4h4v4"></path></symbol>
+    <symbol id="i-surgery" viewBox="0 0 24 24"><path d="M4 20 20 4"></path><path d="m14 4 6 6"></path><path d="M6 18h8"></path><path d="M10 14v8"></path></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 6v14"></path><path d="M21 11v9"></path><path d="M3 14h18"></path><path d="M7 14v-3h6a4 4 0 0 1 4 4"></path></symbol>
+    <symbol id="i-crutch" viewBox="0 0 24 24"><path d="M8 21 16 3"></path><path d="M12 12h6"></path><path d="M15 21V3"></path></symbol>
+    <symbol id="i-stairs" viewBox="0 0 24 24"><path d="M3 20h18"></path><path d="M4 16h4v4"></path><path d="M8 12h4v8"></path><path d="M12 8h4v12"></path><path d="M16 4h4v16"></path></symbol>
+    <symbol id="i-chair" viewBox="0 0 24 24"><path d="M8 4c3 2 4 4 4 8s-1 6-4 8"></path><path d="M16 4c-3 2-4 4-4 8s1 6 4 8"></path><circle cx="12" cy="12" r="2.5"></circle></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><circle cx="9" cy="18" r="3"></circle><path d="M10 5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"></path><path d="M10 7v5h5l3 6"></path><path d="M18 18h3"></path></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4z"></path><path d="M12 9v5"></path><path d="M12 18h.01"></path></symbol>
+    <symbol id="i-question" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.7 2.7 0 1 1 4.9 1.6c-.8 1-2.4 1.4-2.4 3.2"></path><path d="M12 17.5h.01"></path></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M18.75 6V15.75C18.75 15.949 18.671 16.14 18.53 16.28C18.39 16.421 18.199 16.5 18 16.5C17.801 16.5 17.61 16.421 17.47 16.28C17.329 16.14 17.25 15.949 17.25 15.75V7.81L6.53 18.53C6.39 18.671 6.199 18.75 6 18.75C5.801 18.75 5.61 18.671 5.47 18.53C5.329 18.39 5.25 18.199 5.25 18C5.25 17.801 5.329 17.61 5.47 17.47L16.19 6.75H8.25C8.051 6.75 7.86 6.671 7.72 6.53C7.579 6.39 7.5 6.199 7.5 6C7.5 5.801 7.579 5.61 7.72 5.47C7.86 5.329 8.051 5.25 8.25 5.25H18C18.199 5.25 18.39 5.329 18.53 5.47C18.671 5.61 18.75 5.801 18.75 6Z" fill="currentColor" stroke="none"></path></symbol>
+  </svg>
+
+  <main class="page">
+    <section class="hero" aria-label="ИРИС">
+      <header class="topbar" aria-label="Шапка ИРИС">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"><svg><use href="#i-hospital"></use></svg></span>
+          <span>
+            <span class="brand-name">ИРИС</span>
+            <span class="brand-sub">медицинский помощник пациента</span>
+          </span>
+        </div>
+        <span class="topbar-pill"><svg aria-hidden="true"><use href="#i-qr"></use></svg> Открыто по QR в палате</span>
+      </header>
+      <div class="float-layer" aria-hidden="true">
+        <span class="sq"></span><span class="sq"></span><span class="sq"></span><span class="sq"></span>
+        <span class="sq"></span><span class="sq"></span><span class="sq"></span><span class="sq"></span>
+      </div>
+      <div class="hero-inner">
+        <span class="badge"><svg aria-hidden="true"><use href="#i-nurse-call"></use></svg> Помощник рядом</span>
+        <h1>Помощник пациента <span class="ghost">в стационаре</span><br>без лишних шагов</h1>
+        <p class="lead">QR-код у палаты открывает понятный маршрут: что делать сейчас, какие видео посмотреть и когда нужно сразу позвать медсестру.</p>
+        <div class="quick" aria-label="Ключевые свойства">
+          <span><svg width="20" height="20"><use href="#i-qr"></use></svg> QR в палате</span>
+          <span><svg width="20" height="20"><use href="#i-video"></use></svg> Видео без регистрации</span>
+          <span><svg width="20" height="20"><use href="#i-alert"></use></svg> Срочная помощь</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="cases" aria-label="Основные сценарии">
+      <button class="case" style="--case-a: #d8f5ef; --case-b: #cfeeff" data-open="steps">
+        <span class="case-bg"><svg><use href="#i-checklist"></use></svg></span>
+        <span class="pixel-grid" aria-hidden="true"></span>
+        <span class="mini-squares" aria-hidden="true">
+          <span class="mini" style="--x:5%;--y:30%;--s:16px"></span><span class="mini" style="--x:10%;--y:42%;--s:10px"></span><span class="mini" style="--x:3%;--y:52%;--s:7px"></span><span class="mini" style="--x:80%;--y:70%;--s:14px"></span><span class="mini" style="--x:85%;--y:82%;--s:9px"></span>
+        </span>
+        <span class="plus">+</span>
+        <span class="plate"><span class="plate-title">Провести по шагам</span><span class="plate-desc">Выбрать этап лечения и увидеть ближайшие действия.</span><span class="plate-meta"><span>Самый понятный старт</span><b>1</b></span></span>
+      </button>
+
+      <button class="case" style="--case-a: #e4f0ff; --case-b: #d9f6f1" data-open="media">
+        <span class="case-bg"><svg><use href="#i-video"></use></svg></span>
+        <span class="pixel-grid" aria-hidden="true"></span>
+        <span class="mini-squares" aria-hidden="true">
+          <span class="mini" style="--x:82%;--y:55%;--s:16px"></span><span class="mini" style="--x:88%;--y:68%;--s:10px"></span><span class="mini" style="--x:78%;--y:72%;--s:7px"></span><span class="mini" style="--x:85%;--y:42%;--s:6px"></span><span class="mini" style="--x:90%;--y:80%;--s:8px"></span>
+        </span>
+        <span class="plus">+</span>
+        <span class="plate"><span class="plate-title">Видео и памятки</span><span class="plate-desc">Короткие ролики: кровать, костыли, лестница, стул, машина.</span><span class="plate-meta"><span>Смотреть сразу</span><b>2</b></span></span>
+      </button>
+
+      <button class="case" style="--case-a: #fff0f3; --case-b: #ffd4dc" data-open="emergency">
+        <span class="case-bg"><svg><use href="#i-nurse-call"></use></svg></span>
+        <span class="pixel-grid" aria-hidden="true"></span>
+        <span class="mini-squares" aria-hidden="true">
+          <span class="mini" style="--x:4%;--y:24%;--s:16px"></span><span class="mini" style="--x:10%;--y:36%;--s:10px"></span><span class="mini" style="--x:2%;--y:44%;--s:7px"></span><span class="mini" style="--x:78%;--y:78%;--s:14px"></span>
+        </span>
+        <span class="plus">+</span>
+        <span class="plate"><span class="plate-title">Если стало плохо</span><span class="plate-desc">Понятный список симптомов, когда нужно позвать персонал.</span><span class="plate-meta"><span>Позвать помощь</span><b>!</b></span></span>
+      </button>
+
+      <button class="case" style="--case-a: #eef8f7; --case-b: #e7e4ff" data-open="ask">
+        <span class="case-bg"><svg><use href="#i-doctor-chat"></use></svg></span>
+        <span class="pixel-grid" aria-hidden="true"></span>
+        <span class="mini-squares" aria-hidden="true">
+          <span class="mini" style="--x:82%;--y:26%;--s:14px"></span><span class="mini" style="--x:88%;--y:38%;--s:10px"></span><span class="mini" style="--x:78%;--y:44%;--s:7px"></span><span class="mini" style="--x:84%;--y:54%;--s:5px"></span>
+        </span>
+        <span class="plus">+</span>
+        <span class="plate"><span class="plate-title">Задать вопрос</span><span class="plate-desc">Написать, какой информации не хватило пациенту.</span><span class="plate-meta"><span>Без сложной формы</span><b>?</b></span></span>
+      </button>
+    </section>
+
+    <section class="footer">
+      <div class="footer-left">
+        <div class="mini-plus">+</div>
+        <p>Вариант 2 сохраняет графичную подачу, но теперь выглядит как медицинский сервис: спокойные цвета, крупные действия, заметные пиктограммы и минимум лишнего на первом экране.</p>
+        <button class="footer-cta" data-open="steps"><span>Начать маршрут</span><i class="arrow-badge"><svg><use href="#i-arrow"></use></svg></i></button>
+      </div>
+      <div class="logos" aria-label="Разделы помощника">
+        <div class="marquee">
+          <div class="marquee-track marquee-projects" id="marqueeTrack"></div>
+        </div>
+      </div>
+    </section>
+    <div style="height:48px"></div>
+  </main>
+
+  <section class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Экран ИРИС">
+    <div class="panel-inner">
+      <nav class="nav">
+        <button class="nav-btn" id="backBtn">Назад</button>
+        <button class="nav-btn" id="homeBtn">В начало</button>
+      </nav>
+      <div class="screen" id="screen"></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast">Спасибо, вопрос записан</div>
+
+  <script>
+    const panel = document.getElementById('panel');
+    const screen = document.getElementById('screen');
+    const toast = document.getElementById('toast');
+    const stack = [];
+
+    const stages = [
+      ['consult', 'Ещё не обращался', 'Запись, документы, обследование', 'i-hospital'],
+      ['prepare', 'Готовлюсь к операции', 'Что взять с собой и что посмотреть', 'i-surgery'],
+      ['hospital', 'Я в больнице', 'Госпитализация, операция, после неё', 'i-bed'],
+      ['discharge', 'Выписываюсь домой', 'Выписка, правила, реабилитация', 'i-path'],
+      ['rehab', 'Реабилитация', 'Как пройти восстановление в ГКБ №1', 'i-crutch']
+    ];
+
+    const videos = {
+      bed: ['Как встать с кровати', 'Короткое видео показывает безопасный порядок движений: повернуться, опустить ноги, встать с опорой.', 'i-bed'],
+      crutches: ['Как ходить с костылями', 'Показываем темп, длину шага и положение головы, чтобы не терять равновесие.', 'i-crutch'],
+      stairs: ['Как ходить по лестнице', 'Главное правило: приставной шаг и двухсторонняя опора при подъёме и спуске.', 'i-stairs'],
+      chair: ['Как вставать со стула', 'Проверяем высоту стула, положение ноги и безопасную опору руками.', 'i-chair'],
+      car: ['Как сесть в машину', 'Переднее сиденье, спинка назад, без резкого сгибания ноги.', 'i-car']
+    };
+
+    function useIcon(id) {
+      return '<svg aria-hidden="true"><use href="#' + id + '"></use></svg>';
+    }
+
+    function optionHtml(id, title, desc, icon) {
+      return '<button class="option" data-next="' + id + '">' + useIcon(icon) + '<span><strong>' + title + '</strong><small>' + desc + '</small></span><span>+</span></button>';
+    }
+
+    function openPanel(id, push = true) {
+      panel.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      if (push) stack.push(id);
+      render(id);
+    }
+
+    function closePanel() {
+      panel.classList.remove('open');
+      document.body.style.overflow = '';
+      stack.length = 0;
+    }
+
+    function render(id) {
+      if (id === 'steps') {
+        screen.innerHTML = '<h2>На каком Вы этапе?</h2><p>Выберите крупную карточку. Ничего вводить не нужно.</p><div class="step-grid">' + stages.map(s => optionHtml('stage:' + s[0], s[1], s[2], s[3])).join('') + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id.indexOf('stage:') === 0) {
+        const key = id.split(':')[1];
+        const item = stages.find(s => s[0] === key) || stages[0];
+        screen.innerHTML = '<h2>' + item[1] + '</h2><p>Здесь остаются только ближайшие действия пациента: памятка, видео и возможность оставить вопрос.</p><div class="step-grid">'
+          + optionHtml('todo', 'Что сделать сейчас', 'Короткая памятка на 3-5 пунктов', 'i-path')
+          + optionHtml('media', 'Видео и памятки', 'Показать подходящие материалы', 'i-video')
+          + optionHtml('ask', 'Не нашёл нужное', 'Оставить вопрос для команды', 'i-question')
+          + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id === 'media') {
+        screen.innerHTML = '<h2>Видео и памятки</h2><p>Выберите ролик. Позже здесь появится выбор отделения и операции.</p><div class="media-list">'
+          + Object.entries(videos).map(([key, v]) => '<button class="media-row" data-next="video:' + key + '">' + useIcon(v[2]) + '<span><strong>' + v[0] + '</strong><small>Короткое обучающее видео</small></span><span>+</span></button>').join('')
+          + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id.indexOf('video:') === 0) {
+        const key = id.split(':')[1];
+        const v = videos[key] || videos.bed;
+        screen.innerHTML = '<h2>' + v[0] + '</h2><p>' + v[1] + '</p><div class="video-box"><div class="play">▶</div></div><div class="warn"><strong>Важно:</strong> если при движении появилась резкая боль, остановитесь и позовите медсестру.</div><div class="step-grid" style="margin-top:18px">' + optionHtml('media', 'К списку видео', 'Вернуться в медиатеку', 'i-video') + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id === 'emergency') {
+        screen.innerHTML = '<h2>Когда срочно звать помощь</h2><p>Этот экран должен быть доступен с главной страницы одним нажатием.</p><div class="warn">Резкая боль, одышка, сильная слабость, головокружение, кровотечение, падение, онемение ноги, температура или резкое ухудшение состояния.</div>';
+        return;
+      }
+
+      if (id === 'ask') {
+        screen.innerHTML = '<h2>Не нашли нужное?</h2><p>Напишите, какой информации не хватило. Это демонстрация будущей формы сбора вопросов.</p><form class="form" id="askForm"><label>Ваш вопрос<textarea placeholder="Например: можно ли спать на боку"></textarea></label><label>Как связаться, если нужно<input placeholder="Телефон или имя, можно не указывать"></label><button class="nav-btn" type="submit">Отправить вопрос</button></form>';
+        document.getElementById('askForm').onsubmit = e => {
+          e.preventDefault();
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2400);
+        };
+        return;
+      }
+
+      screen.innerHTML = '<h2>Что сделать сейчас</h2><p>Пример короткой памятки: проверьте документы, посмотрите нужное видео, при боли или ухудшении состояния позовите медсестру.</p>';
+    }
+
+    function bindOptions() {
+      screen.querySelectorAll('[data-next]').forEach(btn => {
+        btn.onclick = () => openPanel(btn.dataset.next);
+      });
+    }
+
+    function buildPixels() {
+      document.querySelectorAll('.pixel-grid').forEach(grid => {
+        let html = '';
+        for (let row = 0; row < 8; row++) {
+          for (let col = 0; col < 12; col++) {
+            html += '<span class="pixel" style="--d:' + (row + col) + '"></span>';
+          }
+        }
+        grid.innerHTML = html;
+      });
+    }
+
+    function buildMarquee() {
+      const items = [
+        ['Этап лечения', 'i-path'], ['Палата', 'i-hospital'], ['Операция', 'i-surgery'], ['Кровать', 'i-bed'],
+        ['Костыли', 'i-crutch'], ['Лестница', 'i-stairs'], ['Видео', 'i-video'], ['Срочно', 'i-alert']
+      ];
+      const doubled = items.concat(items);
+      document.getElementById('marqueeTrack').innerHTML = doubled.map(([name, icon]) => '<span class="logo-item">' + useIcon(icon) + name + '</span>').join('');
+    }
+
+    document.querySelectorAll('[data-open]').forEach(btn => {
+      btn.onclick = () => openPanel(btn.dataset.open);
+    });
+
+    document.getElementById('homeBtn').onclick = closePanel;
+    document.getElementById('backBtn').onclick = () => {
+      stack.pop();
+      const prev = stack[stack.length - 1];
+      if (!prev) closePanel();
+      else render(prev);
+    };
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+    });
+
+    buildPixels();
+    buildMarquee();
+  </script>
+</body>
+</html>
