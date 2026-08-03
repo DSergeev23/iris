@@ -1,0 +1,1150 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ИРИС — вариант 5</title>
+  <meta name="description" content="Вариант 5 интерфейса ИРИС: крупный мобильный медицинский помощник пациента.">
+  <style>
+    :root {
+      --page: #edf8f7;
+      --surface: #fbfffe;
+      --surface-2: #ffffff;
+      --mint-50: #e4f8f4;
+      --mint-100: #ccf1eb;
+      --teal: #0a7a83;
+      --teal-2: #075d69;
+      --teal-3: #064a54;
+      --blue-50: #e8f4ff;
+      --blue-100: #cfe8ff;
+      --ink: #122f37;
+      --ink-soft: #516b72;
+      --ink-faint: #6f858b;
+      --line: rgba(8, 95, 105, .16);
+      --line-strong: rgba(8, 95, 105, .28);
+      --danger: #c62846;
+      --danger-dark: #981d35;
+      --danger-soft: #fff0f3;
+      --ok: #16856f;
+      --shadow: 0 24px 70px rgba(8, 83, 93, .14);
+      --shadow-soft: 0 12px 32px rgba(8, 83, 93, .08);
+      --radius-lg: 26px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+      --tap: 64px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+      background: var(--page);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    body {
+      background:
+        linear-gradient(90deg, rgba(8, 95, 105, .055) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(8, 95, 105, .055) 1px, transparent 1px),
+        linear-gradient(145deg, #fbfffe 0%, #edf8f7 52%, #e8f4ff 100%);
+      background-size: 44px 44px, 44px 44px, auto;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 4px solid rgba(10, 122, 131, .28);
+      outline-offset: 3px;
+    }
+
+    .screen {
+      width: 100%;
+      min-height: 100dvh;
+      height: auto;
+      padding: 14px;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .terminal {
+      position: relative;
+      width: min(100%, 1180px);
+      min-height: calc(100dvh - 28px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: rgba(251, 255, 254, .9);
+      box-shadow: var(--shadow);
+    }
+
+    .terminal::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.78), transparent 24%),
+        radial-gradient(circle at 82% 18%, rgba(204, 241, 235, .7), transparent 36%),
+        radial-gradient(circle at 18% 86%, rgba(207, 232, 255, .64), transparent 32%);
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 1;
+      min-height: 78px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .74);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      color: #fff;
+      background:
+        linear-gradient(135deg, var(--teal), var(--teal-3));
+      box-shadow: inset 0 0 0 8px rgba(255,255,255,.12);
+    }
+
+    .brand-mark svg,
+    .icon-box svg,
+    .status-icon svg,
+    .sheet-icon svg,
+    .mini-icon svg {
+      display: block;
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-name {
+      display: block;
+      color: var(--teal-3);
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: .03em;
+    }
+
+    .brand-subtitle {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.25;
+      font-weight: 650;
+    }
+
+    .qr-status {
+      min-height: 44px;
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 13px;
+      border: 1px solid rgba(10, 122, 131, .18);
+      border-radius: 999px;
+      background: var(--mint-50);
+      color: var(--teal-3);
+      font-size: 15px;
+      line-height: 1.1;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .qr-status svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .workspace {
+      position: relative;
+      z-index: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .main-panel {
+      min-width: 0;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .hero-block {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, .9);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .kicker {
+      width: fit-content;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: var(--blue-50);
+      color: var(--teal-3);
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 750;
+    }
+
+    .kicker-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 99px;
+      background: var(--ok);
+      box-shadow: 0 0 0 5px rgba(22, 133, 111, .12);
+    }
+
+    .hero-title {
+      margin: 0;
+      max-width: 760px;
+      color: var(--ink);
+      font-size: clamp(34px, 8vw, 58px);
+      line-height: 1.04;
+      font-weight: 820;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      margin: 12px 0 0;
+      max-width: 720px;
+      color: var(--ink-soft);
+      font-size: clamp(18px, 3.8vw, 22px);
+      line-height: 1.42;
+      font-weight: 520;
+    }
+
+    .primary-action {
+      width: 100%;
+      min-height: 104px;
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr) 34px;
+      gap: 14px;
+      align-items: center;
+      padding: 18px;
+      border: 0;
+      border-radius: 24px;
+      color: #fff;
+      text-align: left;
+      background:
+        linear-gradient(135deg, var(--teal) 0%, var(--teal-2) 56%, var(--teal-3) 100%);
+      box-shadow: 0 22px 48px rgba(7, 93, 105, .28);
+    }
+
+    .primary-action:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary-label {
+      display: block;
+      font-size: clamp(23px, 5.8vw, 32px);
+      line-height: 1.08;
+      font-weight: 820;
+      letter-spacing: 0;
+    }
+
+    .primary-note {
+      display: block;
+      margin-top: 7px;
+      color: rgba(255, 255, 255, .83);
+      font-size: clamp(16px, 3.6vw, 19px);
+      line-height: 1.25;
+      font-weight: 580;
+    }
+
+    .arrow-box {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 99px;
+      color: var(--teal-3);
+      background: rgba(255,255,255,.9);
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .action-button {
+      width: 100%;
+      min-height: 86px;
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr) 30px;
+      align-items: center;
+      gap: 13px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255,255,255,.9);
+      color: var(--ink);
+      text-align: left;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .action-button:hover {
+      border-color: var(--line-strong);
+      background: #fff;
+    }
+
+    .action-title {
+      display: block;
+      overflow-wrap: anywhere;
+      font-size: clamp(19px, 4.5vw, 23px);
+      line-height: 1.1;
+      font-weight: 790;
+      letter-spacing: 0;
+    }
+
+    .action-subtitle {
+      display: block;
+      margin-top: 5px;
+      color: var(--ink-soft);
+      overflow-wrap: anywhere;
+      font-size: clamp(15px, 3.5vw, 17px);
+      line-height: 1.24;
+      font-weight: 520;
+    }
+
+    .action-button-danger {
+      border-color: rgba(198, 40, 70, .22);
+      background: var(--danger-soft);
+      color: var(--danger-dark);
+      box-shadow: 0 16px 34px rgba(198, 40, 70, .12);
+    }
+
+    .action-button-danger .action-subtitle {
+      color: rgba(152, 29, 53, .74);
+    }
+
+    .icon-box {
+      width: 54px;
+      height: 54px;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 17px;
+      background: var(--mint-50);
+      color: var(--teal-2);
+    }
+
+    .primary-action .icon-box {
+      background: rgba(255,255,255,.16);
+      color: #fff;
+    }
+
+    .action-button-danger .icon-box {
+      background: #fff;
+      color: var(--danger);
+    }
+
+    .side-panel {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,.76);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+    }
+
+    .side-title {
+      margin: 0;
+      color: var(--teal-3);
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 820;
+    }
+
+    .status-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .status-item {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      min-height: 58px;
+      padding: 8px;
+      border-radius: 16px;
+      background: rgba(232, 244, 255, .62);
+    }
+
+    .status-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: var(--teal-2);
+      background: #fff;
+    }
+
+    .status-text {
+      display: block;
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.22;
+      font-weight: 700;
+    }
+
+    .status-note {
+      display: block;
+      margin-top: 2px;
+      color: var(--ink-faint);
+      font-size: 14px;
+      line-height: 1.18;
+      font-weight: 540;
+    }
+
+    .care-band {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 13px;
+      border-radius: 18px;
+      background: var(--mint-50);
+      color: var(--teal-3);
+    }
+
+    .care-band-title {
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 820;
+    }
+
+    .care-band-text {
+      color: var(--ink-soft);
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 540;
+    }
+
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      align-items: end;
+      justify-content: center;
+      padding: 14px;
+      background: rgba(13, 36, 42, .36);
+    }
+
+    .sheet-backdrop.is-open {
+      display: flex;
+    }
+
+    .sheet {
+      width: min(100%, 760px);
+      max-height: min(84dvh, 780px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--surface);
+      box-shadow: 0 30px 90px rgba(9, 45, 54, .28);
+    }
+
+    .sheet-head {
+      min-height: 74px;
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      gap: 10px;
+      align-items: center;
+      padding: 13px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+    }
+
+    .sheet-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      color: var(--teal-2);
+      background: var(--mint-50);
+    }
+
+    .sheet-title {
+      min-width: 0;
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(22px, 5vw, 30px);
+      line-height: 1.05;
+      font-weight: 830;
+      letter-spacing: 0;
+    }
+
+    .sheet-close {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .sheet-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .sheet-copy {
+      margin: 0 0 14px;
+      color: var(--ink-soft);
+      font-size: 18px;
+      line-height: 1.38;
+      font-weight: 540;
+    }
+
+    .option-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .option-button {
+      width: 100%;
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 28px;
+      gap: 12px;
+      align-items: center;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .option-button:hover {
+      background: var(--mint-50);
+      border-color: var(--line-strong);
+    }
+
+    .option-button-danger {
+      border-color: rgba(198, 40, 70, .2);
+      background: var(--danger-soft);
+      color: var(--danger-dark);
+    }
+
+    .mini-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: var(--teal-2);
+      background: var(--mint-50);
+    }
+
+    .option-button-danger .mini-icon {
+      color: var(--danger);
+      background: #fff;
+    }
+
+    .option-title {
+      display: block;
+      overflow-wrap: anywhere;
+      font-size: 19px;
+      line-height: 1.14;
+      font-weight: 780;
+    }
+
+    .option-note {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink-soft);
+      overflow-wrap: anywhere;
+      font-size: 15px;
+      line-height: 1.24;
+      font-weight: 520;
+    }
+
+    .option-button-danger .option-note {
+      color: rgba(152, 29, 53, .74);
+    }
+
+    .form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-label {
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 780;
+    }
+
+    .field-input {
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid var(--line-strong);
+      border-radius: 16px;
+      padding: 14px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.35;
+      resize: vertical;
+    }
+
+    .field-input::placeholder {
+      color: rgba(81, 107, 114, .72);
+    }
+
+    .submit-button {
+      min-height: 62px;
+      border: 0;
+      border-radius: 18px;
+      padding: 15px 18px;
+      background: var(--teal);
+      color: #fff;
+      font-size: 20px;
+      line-height: 1.1;
+      font-weight: 820;
+      box-shadow: 0 16px 34px rgba(7, 93, 105, .22);
+    }
+
+    .notice {
+      margin-top: 14px;
+      padding: 13px;
+      border-radius: 16px;
+      background: var(--blue-50);
+      color: var(--ink-soft);
+      font-size: 16px;
+      line-height: 1.36;
+      font-weight: 560;
+    }
+
+    .urgent-note {
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid rgba(198, 40, 70, .2);
+      border-radius: 18px;
+      background: var(--danger-soft);
+      color: var(--danger-dark);
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 720;
+    }
+
+    @media (min-width: 780px) {
+      .screen {
+        padding: 24px;
+      }
+
+      .terminal {
+        min-height: calc(100dvh - 48px);
+      }
+
+      .workspace {
+        grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
+        gap: 18px;
+        padding: 18px;
+      }
+
+      .hero-block {
+        padding: 28px;
+      }
+
+      .actions-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .action-button {
+        min-height: 150px;
+        grid-template-columns: 1fr;
+        align-content: space-between;
+      }
+
+      .action-button .arrow-box {
+        justify-self: end;
+      }
+
+      .sheet-backdrop {
+        align-items: center;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .screen {
+        padding: 10px;
+      }
+
+      .terminal {
+        min-height: calc(100dvh - 20px);
+        border-radius: 24px;
+      }
+
+      .topbar {
+        min-height: 72px;
+        padding: 11px;
+      }
+
+      .brand-mark {
+        width: 48px;
+        height: 48px;
+        border-radius: 15px;
+      }
+
+      .brand-name {
+        font-size: 25px;
+      }
+
+      .brand-subtitle {
+        font-size: 13px;
+      }
+
+      .qr-status {
+        max-width: 116px;
+        min-height: 40px;
+        padding: 8px 10px;
+        white-space: normal;
+        font-size: 13px;
+      }
+
+      .workspace {
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .hero-block {
+        padding: 16px;
+        border-radius: 22px;
+      }
+
+      .primary-action {
+        min-height: 98px;
+        grid-template-columns: 52px minmax(0, 1fr) 30px;
+        gap: 11px;
+        padding: 15px;
+      }
+
+      .icon-box {
+        width: 52px;
+        height: 52px;
+      }
+
+      .side-panel {
+        display: none;
+      }
+
+      .sheet-backdrop {
+        padding: 10px;
+      }
+
+      .sheet {
+        max-height: 88dvh;
+        border-radius: 24px;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .primary-action,
+      .action-button,
+      .option-button,
+      .submit-button {
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+      }
+
+      .sheet {
+        animation: sheetIn .22s ease both;
+      }
+    }
+
+    @keyframes sheetIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" focusable="false">
+    <symbol id="i-iris" viewBox="0 0 24 24"><path d="M12 4v16"></path><path d="M6 10h12"></path><path d="M8 5.8c2.8 1.4 5.2 1.4 8 0"></path><path d="M8 18.2c2.8-1.4 5.2-1.4 8 0"></path></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><path d="M14 14h2v2h-2z"></path><path d="M20 14v6h-6"></path></symbol>
+    <symbol id="i-path" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2"></rect><path d="M9.5 9h5"></path><path d="M9.5 12.5h4"></path><path d="m9.5 16 1.4 1.4 3.8-4"></path></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="m10.5 10 4 2-4 2z"></path></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 3.5 19h17z"></path><path d="M12 9v5"></path><path d="M12 17.5h.01"></path></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5.5h14v10H10l-5 4z"></path><path d="M9 9.5h6"></path><path d="M9 12.5h4"></path></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M4 7v12"></path><path d="M20 12v7"></path><path d="M4 15h16"></path><path d="M8 15v-3h5a3 3 0 0 1 3 3"></path></symbol>
+    <symbol id="i-hospital" viewBox="0 0 24 24"><path d="M5 21h14"></path><path d="M7 21V5h10v16"></path><path d="M10 9h4"></path><path d="M12 7v4"></path><path d="M10 21v-4h4v4"></path></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m4 11 8-7 8 7"></path><path d="M6 10v10h12V10"></path><path d="M10 20v-5h4v5"></path></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="5" r="2"></circle><path d="M10 22l2-6"></path><path d="M16 22l-3-7 2-5"></path><path d="M8 12l4-2 4 2"></path></symbol>
+    <symbol id="i-stairs" viewBox="0 0 24 24"><path d="M4 20h16"></path><path d="M5 16h4v4"></path><path d="M9 12h4v8"></path><path d="M13 8h4v12"></path><path d="M17 4h3v16"></path></symbol>
+    <symbol id="i-chair" viewBox="0 0 24 24"><path d="M8 5c2.6 1.8 3.6 4 3.6 7S10.6 17.2 8 19"></path><path d="M16 5c-2.6 1.8-3.6 4-3.6 7s1 5.2 3.6 7"></path><circle cx="12" cy="12" r="2.3"></circle></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><circle cx="8" cy="18" r="2"></circle><path d="M10 6a1.6 1.6 0 1 0 0-3.2A1.6 1.6 0 0 0 10 6z"></path><path d="M10 8v4h5l3 6"></path><path d="M18 18h3"></path></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m20 7-11 11-5-5"></path></symbol>
+  </svg>
+
+  <main class="screen">
+    <section class="terminal" aria-label="ИРИС, помощник пациента">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark"><svg aria-hidden="true"><use href="#i-iris"></use></svg></span>
+          <span class="brand-text">
+            <span class="brand-name">ИРИС</span>
+            <span class="brand-subtitle">помощник пациента</span>
+          </span>
+        </div>
+        <span class="qr-status"><svg aria-hidden="true"><use href="#i-qr"></use></svg>без регистрации</span>
+      </header>
+
+      <div class="workspace">
+        <div class="main-panel">
+          <section class="hero-block">
+            <div class="kicker"><span class="kicker-dot"></span> открыто по QR в больнице</div>
+            <h1 class="hero-title">Что делать дальше?</h1>
+            <p class="hero-copy">Выберите действие. ИРИС подскажет ближайшие шаги, видео и важные признаки.</p>
+          </section>
+
+          <button class="primary-action" type="button" data-open="stages">
+            <span class="icon-box"><svg aria-hidden="true"><use href="#i-path"></use></svg></span>
+            <span>
+              <span class="primary-label">Провести по шагам</span>
+              <span class="primary-note">Подскажу, что делать на Вашем этапе</span>
+            </span>
+            <span class="arrow-box" aria-hidden="true">›</span>
+          </button>
+
+          <div class="actions-grid" aria-label="Быстрые действия">
+            <button class="action-button" type="button" data-open="media">
+              <span class="icon-box"><svg aria-hidden="true"><use href="#i-video"></use></svg></span>
+              <span>
+                <span class="action-title">Видео и памятки</span>
+                <span class="action-subtitle">Короткие инструкции по движению</span>
+              </span>
+              <span class="arrow-box" aria-hidden="true">›</span>
+            </button>
+
+            <button class="action-button action-button-danger" type="button" data-open="urgent">
+              <span class="icon-box"><svg aria-hidden="true"><use href="#i-alert"></use></svg></span>
+              <span>
+                <span class="action-title">Если стало плохо</span>
+                <span class="action-subtitle">Откройте при резком ухудшении</span>
+              </span>
+              <span class="arrow-box" aria-hidden="true">›</span>
+            </button>
+
+            <button class="action-button" type="button" data-open="question">
+              <span class="icon-box"><svg aria-hidden="true"><use href="#i-chat"></use></svg></span>
+              <span>
+                <span class="action-title">Задать вопрос</span>
+                <span class="action-subtitle">Напишите, что непонятно</span>
+              </span>
+              <span class="arrow-box" aria-hidden="true">›</span>
+            </button>
+          </div>
+        </div>
+
+        <aside class="side-panel" aria-label="Сегодня доступно">
+          <h2 class="side-title">Сегодня доступно</h2>
+          <ul class="status-list">
+            <li class="status-item">
+              <span class="status-icon"><svg aria-hidden="true"><use href="#i-path"></use></svg></span>
+              <span><span class="status-text">Пошаговые подсказки</span><span class="status-note">Без ввода личных данных</span></span>
+            </li>
+            <li class="status-item">
+              <span class="status-icon"><svg aria-hidden="true"><use href="#i-video"></use></svg></span>
+              <span><span class="status-text">Видео восстановления</span><span class="status-note">Открываются сразу</span></span>
+            </li>
+            <li class="status-item">
+              <span class="status-icon"><svg aria-hidden="true"><use href="#i-alert"></use></svg></span>
+              <span><span class="status-text">Срочные признаки</span><span class="status-note">Красный раздел отдельно</span></span>
+            </li>
+          </ul>
+          <div class="care-band">
+            <span class="care-band-title">Как пользоваться</span>
+            <span class="care-band-text">Нажмите нужную крупную кнопку. Если сомневаетесь, начните с “Провести по шагам”.</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" aria-hidden="true">
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <header class="sheet-head">
+        <span class="sheet-icon" id="sheetIcon"><svg aria-hidden="true"><use href="#i-path"></use></svg></span>
+        <h2 class="sheet-title" id="sheetTitle">Раздел</h2>
+        <button class="sheet-close" type="button" id="sheetClose" aria-label="Закрыть">×</button>
+      </header>
+      <div class="sheet-body" id="sheetBody"></div>
+    </section>
+  </div>
+
+  <script>
+    const stageItems = [
+      ["outpatient", "Ещё не обращался", "Первые действия и запись к врачу", "i-home"],
+      ["prepare", "Готовлюсь к операции", "Что уточнить перед госпитализацией", "i-check"],
+      ["hospital", "Я в больнице", "Что делать в палате и после процедуры", "i-hospital"],
+      ["discharge", "Выписываюсь домой", "Памятка перед возвращением домой", "i-home"],
+      ["rehab", "Реабилитация", "Движение, упражнения и ограничения", "i-walk"]
+    ];
+
+    const mediaItems = [
+      ["bed", "Как встать с кровати", "Безопасно начать движение", "i-bed"],
+      ["crutches", "Как ходить с костылями", "Опора, шаг и поворот", "i-walk"],
+      ["stairs", "Как ходить по лестнице", "Подъём и спуск без спешки", "i-stairs"],
+      ["chair", "Как вставать со стула", "Как не перегружать ногу", "i-chair"],
+      ["car", "Как сесть в машину", "Посадка и выход после операции", "i-car"]
+    ];
+
+    const urgentItems = [
+      "резкая боль",
+      "одышка",
+      "сильная слабость",
+      "головокружение",
+      "кровотечение",
+      "падение",
+      "онемение ноги",
+      "температура",
+      "резкое ухудшение состояния"
+    ];
+
+    const sheetBackdrop = document.getElementById("sheetBackdrop");
+    const sheetTitle = document.getElementById("sheetTitle");
+    const sheetBody = document.getElementById("sheetBody");
+    const sheetIcon = document.getElementById("sheetIcon");
+    const sheetClose = document.getElementById("sheetClose");
+    let lastFocused = null;
+
+    function iconMarkup(iconId) {
+      return '<svg aria-hidden="true"><use href="#' + iconId + '"></use></svg>';
+    }
+
+    function optionButton(id, title, note, iconId, danger) {
+      const dangerClass = danger ? " option-button-danger" : "";
+      return '<button class="option-button' + dangerClass + '" type="button" data-next="' + id + '">' +
+        '<span class="mini-icon">' + iconMarkup(iconId) + '</span>' +
+        '<span><span class="option-title">' + title + '</span><span class="option-note">' + note + '</span></span>' +
+        '<span class="arrow-box" aria-hidden="true">›</span>' +
+      '</button>';
+    }
+
+    function setIcon(iconId) {
+      sheetIcon.innerHTML = iconMarkup(iconId);
+    }
+
+    function openSheet(kind) {
+      lastFocused = document.activeElement;
+      renderSheet(kind);
+      sheetBackdrop.classList.add("is-open");
+      sheetBackdrop.setAttribute("aria-hidden", "false");
+      sheetClose.focus();
+    }
+
+    function closeSheet() {
+      sheetBackdrop.classList.remove("is-open");
+      sheetBackdrop.setAttribute("aria-hidden", "true");
+      if (lastFocused && typeof lastFocused.focus === "function") {
+        lastFocused.focus();
+      }
+    }
+
+    function renderSheet(kind) {
+      if (kind === "stages") {
+        setIcon("i-path");
+        sheetTitle.textContent = "На каком Вы этапе?";
+        sheetBody.innerHTML = '<p class="sheet-copy">Выберите один пункт. Ничего вводить не нужно.</p>' +
+          '<div class="option-list">' +
+          stageItems.map(item => optionButton("stage:" + item[0], item[1], item[2], item[3], false)).join("") +
+          '</div>';
+      }
+
+      if (kind.indexOf("stage:") === 0) {
+        const key = kind.split(":")[1];
+        const item = stageItems.find(stage => stage[0] === key) || stageItems[0];
+        setIcon(item[3]);
+        sheetTitle.textContent = item[1];
+        sheetBody.innerHTML = '<p class="sheet-copy">ИРИС покажет ближайшие шаги для этого этапа. Можно сразу открыть видео или оставить вопрос.</p>' +
+          '<div class="option-list">' +
+          optionButton("media", "Видео и памятки", "Показать материалы по движению и уходу", "i-video", false) +
+          optionButton("question", "Задать вопрос", "Напишите, если что-то непонятно", "i-chat", false) +
+          optionButton("urgent", "Если стало плохо", "Открыть срочные признаки", "i-alert", true) +
+          '</div>';
+      }
+
+      if (kind === "media") {
+        setIcon("i-video");
+        sheetTitle.textContent = "Видео и памятки";
+        sheetBody.innerHTML = '<p class="sheet-copy">Выберите нужную короткую инструкцию.</p>' +
+          '<div class="option-list">' +
+          mediaItems.map(item => optionButton("video:" + item[0], item[1], item[2], item[3], false)).join("") +
+          '</div>';
+      }
+
+      if (kind.indexOf("video:") === 0) {
+        const key = kind.split(":")[1];
+        const item = mediaItems.find(video => video[0] === key) || mediaItems[0];
+        setIcon(item[3]);
+        sheetTitle.textContent = item[1];
+        sheetBody.innerHTML = '<p class="sheet-copy">' + item[2] + '. Смотрите без спешки. Если появилась резкая боль, остановитесь и позовите медсестру.</p>' +
+          '<div class="notice">Здесь будет открываться короткое видео или памятка. В прототипе показан путь к нужному материалу.</div>' +
+          '<div class="option-list" style="margin-top:14px">' +
+          optionButton("media", "К списку видео", "Вернуться к памяткам", "i-video", false) +
+          '</div>';
+      }
+
+      if (kind === "urgent") {
+        setIcon("i-alert");
+        sheetTitle.textContent = "Если стало плохо";
+        sheetBody.innerHTML = '<p class="urgent-note">Если состояние резко ухудшилось, позовите медсестру или нажмите кнопку вызова в палате.</p>' +
+          '<div class="option-list">' +
+          urgentItems.map(text => optionButton("urgent:" + text, text, "Сообщите персоналу как можно скорее", "i-alert", true)).join("") +
+          '</div>';
+      }
+
+      if (kind.indexOf("urgent:") === 0) {
+        const text = kind.replace("urgent:", "");
+        setIcon("i-alert");
+        sheetTitle.textContent = text;
+        sheetBody.innerHTML = '<p class="urgent-note">Не ждите. Позовите медсестру или врача и скажите: “' + text + '”.</p>' +
+          '<div class="option-list">' +
+          optionButton("urgent", "Назад к признакам", "Посмотреть весь список", "i-alert", true) +
+          optionButton("question", "Описать вопрос", "Если нужно передать детали", "i-chat", false) +
+          '</div>';
+      }
+
+      if (kind === "question") {
+        setIcon("i-chat");
+        sheetTitle.textContent = "Задать вопрос";
+        sheetBody.innerHTML = '<form class="form" id="questionForm">' +
+          '<label class="field"><span class="field-label">Ваш вопрос</span><textarea class="field-input" name="question" rows="5" placeholder="Например: когда можно вставать?"></textarea></label>' +
+          '<label class="field"><span class="field-label">Как связаться, если нужно</span><input class="field-input" name="contact" placeholder="Телефон, палата или другой способ"></label>' +
+          '<button class="submit-button" type="submit">Отправить вопрос</button>' +
+        '</form>' +
+        '<div class="notice" id="formNotice" hidden>Вопрос подготовлен к отправке. В рабочей версии здесь будет передача медицинской команде.</div>';
+      }
+
+      bindSheetActions();
+    }
+
+    function bindSheetActions() {
+      sheetBody.querySelectorAll("[data-next]").forEach(button => {
+        button.addEventListener("click", () => renderSheet(button.dataset.next));
+      });
+
+      const form = document.getElementById("questionForm");
+      if (form) {
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          const notice = document.getElementById("formNotice");
+          if (notice) {
+            notice.hidden = false;
+            notice.scrollIntoView({ block: "nearest" });
+          }
+        });
+      }
+    }
+
+    document.querySelectorAll("[data-open]").forEach(button => {
+      button.addEventListener("click", () => openSheet(button.dataset.open));
+    });
+
+    sheetClose.addEventListener("click", closeSheet);
+
+    sheetBackdrop.addEventListener("click", event => {
+      if (event.target === sheetBackdrop) {
+        closeSheet();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && sheetBackdrop.classList.contains("is-open")) {
+        closeSheet();
+      }
+    });
+  </script>
+</body>
+</html>

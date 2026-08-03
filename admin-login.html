@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Вход в панель управления порталом ИРИС.">
+  <title>Вход — ИРИС</title>
+  <style>
+    :root {
+      --canvas: #edf5f4;
+      --paper: #ffffff;
+      --ink: #17323a;
+      --muted: #6b8085;
+      --line: #d6e3e4;
+      --teal: #08767c;
+      --teal-dark: #07555d;
+      --mint: #31b8a8;
+      --red: #c64758;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--canvas);
+    }
+    * { box-sizing: border-box; }
+    body { min-height: 100vh; margin: 0; background: var(--canvas); }
+    button, input { font: inherit; }
+    .login-shell { min-height: 100vh; display: grid; grid-template-columns: minmax(340px, .82fr) minmax(520px, 1.18fr); }
+    .identity {
+      position: relative;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      padding: clamp(28px, 5vw, 68px);
+      color: #effafa;
+      background:
+        linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px),
+        #103f46;
+      background-size: 34px 34px;
+    }
+    .identity::after { content: ""; position: absolute; right: -100px; bottom: 14%; width: 270px; height: 270px; border: 1px solid rgba(49,184,168,.28); border-radius: 50%; box-shadow: 0 0 0 50px rgba(49,184,168,.055), 0 0 0 100px rgba(49,184,168,.035); }
+    .brand { position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; }
+    .brand-mark { position: relative; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--mint); box-shadow: 0 0 0 7px rgba(49,184,168,.12); }
+    .brand-mark::before, .brand-mark::after { content: ""; position: absolute; background: currentColor; border-radius: 3px; }
+    .brand-mark::before { width: 21px; height: 6px; }
+    .brand-mark::after { width: 6px; height: 21px; }
+    .brand strong { display: block; font-size: 25px; line-height: 1; }
+    .brand span { display: block; margin-top: 6px; color: rgba(239,250,250,.58); font-size: 12px; }
+    .identity-copy { position: relative; z-index: 1; max-width: 430px; }
+    .identity-copy span { color: #72d8c7; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .identity-copy h1 { margin: 13px 0 0; font-size: clamp(34px, 4.3vw, 58px); line-height: 1.02; font-weight: 680; letter-spacing: 0; }
+    .identity-copy p { max-width: 390px; margin: 18px 0 0; color: rgba(239,250,250,.7); font-size: 15px; line-height: 1.6; }
+    .identity-foot { position: relative; z-index: 1; color: rgba(239,250,250,.42); font-size: 11px; }
+    .login-area { display: grid; place-items: center; padding: 32px; background: #f8fbfb; }
+    .login-form { width: min(420px, 100%); }
+    .login-form h2 { margin: 0; font-size: 30px; line-height: 1.15; }
+    .login-form > p { margin: 10px 0 29px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+    .field { display: grid; gap: 8px; margin-top: 17px; }
+    .field label { color: #3d565c; font-size: 12px; font-weight: 720; }
+    .field input { width: 100%; height: 49px; padding: 0 13px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); background: #fff; outline: none; }
+    .field input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(8,118,124,.1); }
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 48px; }
+    .show-password { position: absolute; top: 5px; right: 5px; width: 39px; height: 39px; display: grid; place-items: center; border: 0; border-radius: 6px; color: var(--muted); background: transparent; cursor: pointer; }
+    .show-password:hover { color: var(--teal); background: #edf7f6; }
+    .icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+    .login-button { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 24px; border: 0; border-radius: 7px; color: #fff; background: var(--teal); font-size: 14px; font-weight: 760; cursor: pointer; box-shadow: 0 12px 28px rgba(8,118,124,.17); }
+    .login-button:hover { background: var(--teal-dark); }
+    .login-button:disabled { cursor: wait; opacity: .72; }
+    .error { display: none; margin-top: 14px; padding: 10px 12px; border: 1px solid #f0d3d8; border-radius: 7px; color: var(--red); background: #fff1f3; font-size: 12px; line-height: 1.45; }
+    .error.is-visible { display: block; }
+    .support { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .support strong { color: var(--ink); }
+    :focus-visible { outline: 3px solid rgba(49,184,168,.35); outline-offset: 2px; }
+    @media (max-width: 800px) {
+      .login-shell { display: block; }
+      .identity { min-height: 230px; padding: 26px 22px; }
+      .identity-copy { margin-top: 48px; }
+      .identity-copy h1 { font-size: 31px; }
+      .identity-copy p, .identity-foot { display: none; }
+      .login-area { min-height: calc(100vh - 230px); padding: 34px 22px; place-items: start center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="login-shell">
+    <section class="identity" aria-label="ИРИС">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span><span><strong>ИРИС</strong><span>Управление порталом</span></span></div>
+      <div class="identity-copy"><span>Панель администратора</span><h1>Информация для пациента под контролем</h1><p>Управляйте отделениями, сценариями восстановления и материалами портала в одном месте.</p></div>
+      <div class="identity-foot">ГКБ №1 им. Н.И. Пирогова · закрытый раздел</div>
+    </section>
+    <section class="login-area">
+      <form class="login-form" id="loginForm" novalidate>
+        <h2>Вход в админку</h2>
+        <p>Введите учетные данные администратора.</p>
+        <div class="field"><label for="login">Логин</label><input id="login" name="login" autocomplete="username" placeholder="admin" required></div>
+        <div class="field"><label for="password">Пароль</label><div class="password-wrap"><input id="password" name="password" type="password" autocomplete="current-password" placeholder="Введите пароль" required><button class="show-password" type="button" id="showPassword" aria-label="Показать пароль"><svg class="icon" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>
+        <div class="error" id="loginError" role="alert">Введите логин и пароль.</div>
+        <button class="login-button" type="submit" id="loginButton">Войти</button>
+        <div class="support"><strong>Нет доступа?</strong><br>Обратитесь к ответственному за портал в вашей больнице.</div>
+      </form>
+    </section>
+  </main>
+  <script>
+    const form = document.getElementById('loginForm');
+    const login = document.getElementById('login');
+    const password = document.getElementById('password');
+    const showPassword = document.getElementById('showPassword');
+    const error = document.getElementById('loginError');
+    const loginButton = document.getElementById('loginButton');
+
+    showPassword.addEventListener('click', () => {
+      const visible = password.type === 'text';
+      password.type = visible ? 'password' : 'text';
+      showPassword.setAttribute('aria-label', visible ? 'Показать пароль' : 'Скрыть пароль');
+    });
+
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!login.value.trim() || !password.value) {
+        error.classList.add('is-visible');
+        (!login.value.trim() ? login : password).focus();
+        return;
+      }
+      error.classList.remove('is-visible');
+      loginButton.disabled = true;
+      loginButton.textContent = 'Входим…';
+      window.location.href = 'admin.html';
+    });
+  </script>
+</body>
+</html>

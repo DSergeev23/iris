@@ -1,0 +1,1185 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ИРИС — радикальный вариант</title>
+  <meta name="description" content="Радикально другой вариант ИРИС: мобильный пульт пациента у кровати.">
+  <style>
+    :root {
+      --bg: #e7e6ee;
+      --panel: #ece9f7;
+      --panel-soft: #dde4f1;
+      --mint: #d9d7f0;
+      --aqua: #ccd8ea;
+      --teal: #2f63b7;
+      --teal-dark: #25345e;
+      --ink: #20283a;
+      --muted: #5f6475;
+      --faint: #7c8090;
+      --line: rgba(37, 52, 94, .18);
+      --line-strong: rgba(37, 52, 94, .34);
+      --danger: #c72545;
+      --danger-dark: #8f1830;
+      --danger-soft: #f7dce2;
+      --yellow: #d7cff4;
+      --shadow: 0 24px 64px rgba(32, 40, 58, .16);
+      --shadow-tight: 0 10px 28px rgba(32, 40, 58, .1);
+      --cut-lg: polygon(0 18px, 18px 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%);
+      --cut-md: polygon(0 14px, 14px 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+      --cut-pill: polygon(0 12px, 12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px));
+      --cut-alert: polygon(0 18px, 18px 0, calc(100% - 34px) 0, 100% 34px, 100% 100%, 0 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background:
+        linear-gradient(90deg, rgba(37, 52, 94, .055) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(37, 52, 94, .055) 1px, transparent 1px),
+        linear-gradient(160deg, #e7e6ee 0%, #dedaf0 46%, #d8dfeb 100%);
+      background-size: 36px 36px, 36px 36px, auto;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    textarea:focus-visible,
+    input:focus-visible {
+      outline: 4px solid rgba(8, 120, 130, .26);
+      outline-offset: 3px;
+    }
+
+    .app {
+      width: 100%;
+      min-height: 100dvh;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .bedside {
+      position: relative;
+      width: min(100%, 1120px);
+      min-height: calc(100dvh - 20px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: rgba(236, 233, 247, .9);
+      box-shadow: var(--shadow);
+      clip-path: var(--cut-lg);
+    }
+
+    .bedside::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(204, 216, 234, .54), transparent 28%),
+        radial-gradient(circle at 88% 26%, rgba(188, 174, 232, .38), transparent 32%);
+    }
+
+    .top {
+      position: relative;
+      z-index: 1;
+      min-height: 72px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background: rgba(222, 218, 240, .82);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 50px minmax(0, 1fr);
+      gap: 11px;
+      align-items: center;
+    }
+
+    .brand-mark,
+    .status-mark,
+    .route-dot,
+    .row-icon,
+    .drawer-icon,
+    .mini-mark {
+      display: grid;
+      place-items: center;
+      flex: none;
+    }
+
+    .brand-mark {
+      width: 50px;
+      height: 50px;
+      border-radius: 0;
+      color: #f5f1ff;
+      background: var(--teal-dark);
+      box-shadow: inset 0 0 0 7px rgba(246, 240, 223, .13);
+      clip-path: polygon(50% 0, 100% 22%, 100% 78%, 50% 100%, 0 78%, 0 22%);
+    }
+
+    svg {
+      display: block;
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .brand-name {
+      display: block;
+      color: var(--teal-dark);
+      font-size: 27px;
+      line-height: 1;
+      letter-spacing: .03em;
+      font-weight: 850;
+    }
+
+    .brand-sub {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .qr {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--panel-soft);
+      color: var(--teal-dark);
+      clip-path: var(--cut-pill);
+      white-space: nowrap;
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .qr svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .main {
+      position: relative;
+      z-index: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .now {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: rgba(236, 233, 247, .92);
+      box-shadow: var(--shadow-tight);
+      clip-path: var(--cut-lg);
+    }
+
+    .now-label {
+      width: fit-content;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border-radius: 0;
+      background: var(--mint);
+      color: var(--teal-dark);
+      clip-path: var(--cut-pill);
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 850;
+    }
+
+    .pulse {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 5px rgba(47, 99, 183, .14);
+    }
+
+    .now-title {
+      margin: 0;
+      max-width: 760px;
+      color: var(--ink);
+      font-size: clamp(34px, 9vw, 68px);
+      line-height: 1.02;
+      letter-spacing: 0;
+      font-weight: 880;
+    }
+
+    .now-copy {
+      margin: 0;
+      max-width: 680px;
+      color: var(--muted);
+      font-size: clamp(18px, 4vw, 24px);
+      line-height: 1.38;
+      font-weight: 560;
+    }
+
+    .next-step {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      min-height: 76px;
+      padding: 12px;
+      border-radius: 0;
+      background: var(--yellow);
+      color: var(--ink);
+      clip-path: var(--cut-md);
+    }
+
+    .status-mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 0;
+      background: #f3efff;
+      color: var(--teal-dark);
+      clip-path: polygon(50% 0, 100% 26%, 100% 74%, 50% 100%, 0 74%, 0 26%);
+    }
+
+    .step-kicker {
+      display: block;
+      color: var(--faint);
+      font-size: 13px;
+      line-height: 1.1;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .step-text {
+      display: block;
+      margin-top: 4px;
+      color: var(--ink);
+      font-size: clamp(19px, 4.6vw, 25px);
+      line-height: 1.15;
+      font-weight: 850;
+    }
+
+    .route {
+      position: relative;
+      display: grid;
+      gap: 0;
+      padding: 8px 0;
+    }
+
+    .route::before {
+      content: "";
+      position: absolute;
+      left: 35px;
+      top: 40px;
+      bottom: 40px;
+      width: 3px;
+      border-radius: 0;
+      background: linear-gradient(180deg, var(--teal), rgba(47, 99, 183, .16));
+    }
+
+    .route-item {
+      position: relative;
+      width: 100%;
+      min-height: 82px;
+      display: grid;
+      grid-template-columns: 70px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 8px 0;
+      border: 0;
+      background: transparent;
+      text-align: left;
+    }
+
+    .route-dot {
+      position: relative;
+      z-index: 1;
+      width: 70px;
+      height: 70px;
+    }
+
+    .route-dot-inner {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--line);
+      border-radius: 0;
+      background: var(--panel);
+      color: var(--teal-dark);
+      box-shadow: var(--shadow-tight);
+      clip-path: polygon(50% 0, 100% 22%, 100% 78%, 50% 100%, 0 78%, 0 22%);
+    }
+
+    .route-item-primary .route-dot-inner {
+      width: 58px;
+      height: 58px;
+      border-color: transparent;
+      background: var(--teal);
+      color: #f5f1ff;
+    }
+
+    .route-card {
+      min-width: 0;
+      min-height: 70px;
+      display: grid;
+      align-content: center;
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: rgba(236, 233, 247, .92);
+      box-shadow: var(--shadow-tight);
+      clip-path: var(--cut-md);
+    }
+
+    .route-item-primary .route-card {
+      border-color: rgba(8, 120, 130, .28);
+      background: var(--panel-soft);
+    }
+
+    .route-title {
+      display: block;
+      overflow-wrap: anywhere;
+      color: var(--ink);
+      font-size: clamp(20px, 4.8vw, 27px);
+      line-height: 1.1;
+      font-weight: 860;
+    }
+
+    .route-note {
+      display: block;
+      margin-top: 5px;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+      font-size: clamp(15px, 3.5vw, 18px);
+      line-height: 1.24;
+      font-weight: 560;
+    }
+
+    .quick {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .quick-title {
+      margin: 0;
+      color: var(--teal-dark);
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .quick-row {
+      width: 100%;
+      min-height: 78px;
+      display: grid;
+      grid-template-columns: 50px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: rgba(236, 233, 247, .9);
+      text-align: left;
+      box-shadow: var(--shadow-tight);
+      clip-path: var(--cut-md);
+    }
+
+    .row-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 0;
+      background: var(--panel-soft);
+      color: var(--teal-dark);
+      clip-path: polygon(50% 0, 100% 20%, 100% 80%, 50% 100%, 0 80%, 0 20%);
+    }
+
+    .row-title {
+      display: block;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.12;
+      font-weight: 850;
+    }
+
+    .row-note {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 560;
+    }
+
+    .row-arrow {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 0;
+      background: var(--panel-soft);
+      color: var(--teal-dark);
+      clip-path: polygon(0 8px, 8px 0, 100% 0, 100% 100%, 0 100%);
+      font-size: 24px;
+      font-weight: 850;
+    }
+
+    .panic-bar {
+      position: relative;
+      z-index: 2;
+      padding: 10px;
+      border-top: 1px solid rgba(199, 37, 69, .18);
+      background: rgba(231, 230, 238, .92);
+      backdrop-filter: blur(16px);
+    }
+
+    .panic-button {
+      width: 100%;
+      min-height: 68px;
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 11px 14px;
+      border: 0;
+      border-radius: 0;
+      background: var(--danger);
+      color: #fff8f2;
+      text-align: left;
+      box-shadow: 0 18px 38px rgba(199, 37, 69, .22);
+      clip-path: var(--cut-alert);
+    }
+
+    .panic-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 0;
+      background: rgba(255, 248, 242, .17);
+      clip-path: polygon(50% 0, 100% 24%, 100% 76%, 50% 100%, 0 76%, 0 24%);
+    }
+
+    .panic-title {
+      display: block;
+      font-size: clamp(22px, 5vw, 29px);
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    .panic-note {
+      display: block;
+      margin-top: 5px;
+      color: rgba(255, 255, 255, .84);
+      font-size: 15px;
+      line-height: 1.18;
+      font-weight: 650;
+    }
+
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      align-items: end;
+      justify-content: center;
+      padding: 10px;
+      background: rgba(21, 25, 39, .45);
+    }
+
+    .drawer-backdrop.open {
+      display: flex;
+    }
+
+    .drawer {
+      width: min(100%, 720px);
+      max-height: min(86dvh, 760px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--panel);
+      box-shadow: 0 30px 90px rgba(11, 36, 43, .28);
+      clip-path: var(--cut-lg);
+    }
+
+    .drawer-head {
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) 46px;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(236, 233, 247, .96);
+    }
+
+    .drawer-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 0;
+      background: var(--panel-soft);
+      color: var(--teal-dark);
+      clip-path: polygon(50% 0, 100% 22%, 100% 78%, 50% 100%, 0 78%, 0 22%);
+    }
+
+    .drawer-title {
+      margin: 0;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+      font-size: clamp(23px, 5vw, 32px);
+      line-height: 1.06;
+      font-weight: 880;
+    }
+
+    .drawer-close {
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--panel);
+      color: var(--ink);
+      font-size: 28px;
+      line-height: 1;
+      clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+    }
+
+    .drawer-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .drawer-copy {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.36;
+      font-weight: 560;
+    }
+
+    .choice-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .choice {
+      width: 100%;
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 30px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: var(--panel);
+      color: var(--ink);
+      text-align: left;
+      clip-path: var(--cut-md);
+    }
+
+    .choice:hover,
+    .quick-row:hover,
+    .route-item:hover .route-card {
+      border-color: var(--line-strong);
+      background: #f0ebff;
+    }
+
+    .choice-danger {
+      border-color: rgba(199, 37, 69, .22);
+      background: var(--danger-soft);
+      color: var(--danger-dark);
+    }
+
+    .mini-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 0;
+      background: var(--panel-soft);
+      color: var(--teal-dark);
+      clip-path: polygon(50% 0, 100% 22%, 100% 78%, 50% 100%, 0 78%, 0 22%);
+    }
+
+    .choice-danger .mini-mark {
+      background: var(--panel);
+      color: var(--danger);
+    }
+
+    .choice-title {
+      display: block;
+      overflow-wrap: anywhere;
+      font-size: 19px;
+      line-height: 1.14;
+      font-weight: 850;
+    }
+
+    .choice-note {
+      display: block;
+      margin-top: 4px;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.22;
+      font-weight: 560;
+    }
+
+    .choice-danger .choice-note {
+      color: rgba(143, 24, 48, .75);
+    }
+
+    .form {
+      display: grid;
+      gap: 13px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field-text {
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 58px;
+      padding: 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 0;
+      background: #f4f0ff;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.34;
+      resize: vertical;
+      clip-path: var(--cut-md);
+    }
+
+    .submit {
+      min-height: 62px;
+      padding: 14px 18px;
+      border: 0;
+      border-radius: 0;
+      background: var(--teal);
+      color: #fff8f2;
+      font-size: 20px;
+      line-height: 1.1;
+      font-weight: 900;
+      clip-path: var(--cut-alert);
+    }
+
+    .notice {
+      margin-top: 14px;
+      padding: 13px;
+      border-radius: 0;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.35;
+      font-weight: 600;
+      clip-path: var(--cut-md);
+    }
+
+    .urgent-copy {
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid rgba(199, 37, 69, .2);
+      border-radius: 0;
+      background: var(--danger-soft);
+      color: var(--danger-dark);
+      font-size: 18px;
+      line-height: 1.34;
+      font-weight: 850;
+      clip-path: var(--cut-md);
+    }
+
+    @media (min-width: 820px) {
+      .app {
+        padding: 22px;
+      }
+
+      .bedside {
+        min-height: calc(100dvh - 44px);
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+
+      .main {
+        grid-template-columns: minmax(0, 1.05fr) minmax(340px, .68fr);
+        gap: 18px;
+        padding: 18px;
+      }
+
+      .now {
+        padding: 26px;
+      }
+
+      .route {
+        padding-right: 8px;
+      }
+
+      .quick {
+        align-content: start;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 0;
+        background: rgba(236, 233, 247, .78);
+        box-shadow: var(--shadow-tight);
+        clip-path: var(--cut-lg);
+      }
+
+      .panic-bar {
+        position: absolute;
+        right: 18px;
+        bottom: 18px;
+        width: min(360px, calc(100% - 36px));
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        backdrop-filter: none;
+      }
+
+      .drawer-backdrop {
+        align-items: center;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .top {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .qr {
+        width: fit-content;
+        min-height: 36px;
+        font-size: 13px;
+      }
+
+      .main {
+        padding-bottom: 4px;
+      }
+
+      .now {
+        padding: 15px;
+      }
+
+      .next-step {
+        min-height: 70px;
+      }
+
+      .route-item {
+        grid-template-columns: 58px minmax(0, 1fr);
+        min-height: 76px;
+      }
+
+      .route::before {
+        left: 29px;
+      }
+
+      .route-dot {
+        width: 58px;
+        height: 64px;
+      }
+
+      .route-dot-inner {
+        width: 44px;
+        height: 44px;
+      }
+
+      .route-item-primary .route-dot-inner {
+        width: 52px;
+        height: 52px;
+      }
+
+      .route-card {
+        min-height: 66px;
+        padding: 12px;
+      }
+
+      .quick-title {
+        display: none;
+      }
+
+      .quick-row {
+        min-height: 72px;
+      }
+
+      .drawer {
+        max-height: 88dvh;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .route-card,
+      .quick-row,
+      .choice,
+      .panic-button,
+      .submit {
+        transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+      }
+
+      .panic-button:hover,
+      .submit:hover {
+        transform: translateY(-1px);
+      }
+
+      .drawer {
+        animation: drawerIn .22s ease both;
+      }
+    }
+
+    @keyframes drawerIn {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" focusable="false">
+    <symbol id="i-iris" viewBox="0 0 24 24"><path d="M12 4v16"></path><path d="M6 10h12"></path><path d="M8 5.8c2.8 1.4 5.2 1.4 8 0"></path><path d="M8 18.2c2.8-1.4 5.2-1.4 8 0"></path></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"></rect><rect x="14" y="4" width="6" height="6" rx="1"></rect><rect x="4" y="14" width="6" height="6" rx="1"></rect><path d="M14 14h2v2h-2z"></path><path d="M20 14v6h-6"></path></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m15.5 8.5-2.2 5-4.8 2 2.2-5z"></path></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"></circle><circle cx="18" cy="18" r="2"></circle><path d="M8 6h3a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h7"></path></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="m10.5 10 4 2-4 2z"></path></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5.5h14v10H10l-5 4z"></path><path d="M9 9.5h6"></path><path d="M9 12.5h4"></path></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 3.5 19h17z"></path><path d="M12 9v5"></path><path d="M12 17.5h.01"></path></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m4 11 8-7 8 7"></path><path d="M6 10v10h12V10"></path><path d="M10 20v-5h4v5"></path></symbol>
+    <symbol id="i-hospital" viewBox="0 0 24 24"><path d="M5 21h14"></path><path d="M7 21V5h10v16"></path><path d="M10 9h4"></path><path d="M12 7v4"></path><path d="M10 21v-4h4v4"></path></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M4 7v12"></path><path d="M20 12v7"></path><path d="M4 15h16"></path><path d="M8 15v-3h5a3 3 0 0 1 3 3"></path></symbol>
+    <symbol id="i-walk" viewBox="0 0 24 24"><circle cx="13" cy="5" r="2"></circle><path d="M10 22l2-6"></path><path d="M16 22l-3-7 2-5"></path><path d="M8 12l4-2 4 2"></path></symbol>
+    <symbol id="i-stairs" viewBox="0 0 24 24"><path d="M4 20h16"></path><path d="M5 16h4v4"></path><path d="M9 12h4v8"></path><path d="M13 8h4v12"></path><path d="M17 4h3v16"></path></symbol>
+    <symbol id="i-chair" viewBox="0 0 24 24"><path d="M8 5c2.6 1.8 3.6 4 3.6 7S10.6 17.2 8 19"></path><path d="M16 5c-2.6 1.8-3.6 4-3.6 7s1 5.2 3.6 7"></path><circle cx="12" cy="12" r="2.3"></circle></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><circle cx="8" cy="18" r="2"></circle><path d="M10 6a1.6 1.6 0 1 0 0-3.2A1.6 1.6 0 0 0 10 6z"></path><path d="M10 8v4h5l3 6"></path><path d="M18 18h3"></path></symbol>
+  </svg>
+
+  <main class="app">
+    <section class="bedside" aria-label="ИРИС, пульт пациента">
+      <header class="top">
+        <div class="brand">
+          <span class="brand-mark"><svg aria-hidden="true"><use href="#i-iris"></use></svg></span>
+          <span>
+            <span class="brand-name">ИРИС</span>
+            <span class="brand-sub">помощник пациента</span>
+          </span>
+        </div>
+        <span class="qr"><svg aria-hidden="true"><use href="#i-qr"></use></svg> открыто по QR</span>
+      </header>
+
+      <div class="main">
+        <section class="now" aria-labelledby="nowTitle">
+          <div class="now-label"><span class="pulse"></span> сейчас главное</div>
+          <h1 class="now-title" id="nowTitle">Выберите свой этап</h1>
+          <p class="now-copy">ИРИС покажет ближайший шаг, видео и признаки, при которых нужно позвать персонал.</p>
+          <div class="next-step">
+            <span class="status-mark"><svg aria-hidden="true"><use href="#i-compass"></use></svg></span>
+            <span>
+              <span class="step-kicker">первое действие</span>
+              <span class="step-text">Начните с маршрута пациента</span>
+            </span>
+          </div>
+        </section>
+
+        <section class="route" aria-label="Маршрут пациента">
+          <button class="route-item route-item-primary" type="button" data-open="stages">
+            <span class="route-dot"><span class="route-dot-inner"><svg aria-hidden="true"><use href="#i-route"></use></svg></span></span>
+            <span class="route-card">
+              <span class="route-title">Провести по шагам</span>
+              <span class="route-note">Выбрать этап и получить ближайшие действия</span>
+            </span>
+          </button>
+
+          <button class="route-item" type="button" data-open="media">
+            <span class="route-dot"><span class="route-dot-inner"><svg aria-hidden="true"><use href="#i-video"></use></svg></span></span>
+            <span class="route-card">
+              <span class="route-title">Видео и памятки</span>
+              <span class="route-note">Встать с кровати, костыли, лестница, стул, машина</span>
+            </span>
+          </button>
+
+          <button class="route-item" type="button" data-open="question">
+            <span class="route-dot"><span class="route-dot-inner"><svg aria-hidden="true"><use href="#i-chat"></use></svg></span></span>
+            <span class="route-card">
+              <span class="route-title">Задать вопрос</span>
+              <span class="route-note">Простая форма без регистрации</span>
+            </span>
+          </button>
+        </section>
+
+        <aside class="quick" aria-label="Быстрый доступ">
+          <h2 class="quick-title">Пульт пациента</h2>
+          <button class="quick-row" type="button" data-open="stages">
+            <span class="row-icon"><svg aria-hidden="true"><use href="#i-compass"></use></svg></span>
+            <span><span class="row-title">Мой этап</span><span class="row-note">Ещё не обращался, в больнице, выписка</span></span>
+            <span class="row-arrow" aria-hidden="true">›</span>
+          </button>
+          <button class="quick-row" type="button" data-open="media">
+            <span class="row-icon"><svg aria-hidden="true"><use href="#i-video"></use></svg></span>
+            <span><span class="row-title">Материалы</span><span class="row-note">Видео восстановления</span></span>
+            <span class="row-arrow" aria-hidden="true">›</span>
+          </button>
+          <button class="quick-row" type="button" data-open="question">
+            <span class="row-icon"><svg aria-hidden="true"><use href="#i-chat"></use></svg></span>
+            <span><span class="row-title">Вопрос</span><span class="row-note">Передать непонятное команде</span></span>
+            <span class="row-arrow" aria-hidden="true">›</span>
+          </button>
+        </aside>
+      </div>
+
+      <div class="panic-bar">
+        <button class="panic-button" type="button" data-open="urgent">
+          <span class="panic-icon"><svg aria-hidden="true"><use href="#i-alert"></use></svg></span>
+          <span>
+            <span class="panic-title">Мне стало плохо</span>
+            <span class="panic-note">Откройте при резкой боли, одышке, падении или кровотечении</span>
+          </span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true">
+    <section class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <header class="drawer-head">
+        <span class="drawer-icon" id="drawerIcon"><svg aria-hidden="true"><use href="#i-route"></use></svg></span>
+        <h2 class="drawer-title" id="drawerTitle">Раздел</h2>
+        <button class="drawer-close" type="button" id="drawerClose" aria-label="Закрыть">×</button>
+      </header>
+      <div class="drawer-body" id="drawerBody"></div>
+    </section>
+  </div>
+
+  <script>
+    const stages = [
+      ["outpatient", "Ещё не обращался", "Первые действия и запись к врачу", "i-home"],
+      ["prepare", "Готовлюсь к операции", "Что уточнить перед госпитализацией", "i-route"],
+      ["hospital", "Я в больнице", "Что делать в палате и после процедуры", "i-hospital"],
+      ["discharge", "Выписываюсь домой", "Памятка перед возвращением домой", "i-home"],
+      ["rehab", "Реабилитация", "Движение, упражнения и ограничения", "i-walk"]
+    ];
+
+    const videos = [
+      ["bed", "Как встать с кровати", "Безопасно начать движение", "i-bed"],
+      ["crutches", "Как ходить с костылями", "Опора, шаг и поворот", "i-walk"],
+      ["stairs", "Как ходить по лестнице", "Подъём и спуск без спешки", "i-stairs"],
+      ["chair", "Как вставать со стула", "Как не перегружать ногу", "i-chair"],
+      ["car", "Как сесть в машину", "Посадка и выход после операции", "i-car"]
+    ];
+
+    const urgent = [
+      "резкая боль",
+      "одышка",
+      "сильная слабость",
+      "головокружение",
+      "кровотечение",
+      "падение",
+      "онемение ноги",
+      "температура",
+      "резкое ухудшение состояния"
+    ];
+
+    const drawerBackdrop = document.getElementById("drawerBackdrop");
+    const drawerTitle = document.getElementById("drawerTitle");
+    const drawerBody = document.getElementById("drawerBody");
+    const drawerIcon = document.getElementById("drawerIcon");
+    const drawerClose = document.getElementById("drawerClose");
+    let lastFocus = null;
+
+    function icon(id) {
+      return '<svg aria-hidden="true"><use href="#' + id + '"></use></svg>';
+    }
+
+    function setDrawerIcon(id) {
+      drawerIcon.innerHTML = icon(id);
+    }
+
+    function choice(next, title, note, iconId, danger) {
+      return '<button class="choice' + (danger ? ' choice-danger' : '') + '" type="button" data-next="' + next + '">' +
+        '<span class="mini-mark">' + icon(iconId) + '</span>' +
+        '<span><span class="choice-title">' + title + '</span><span class="choice-note">' + note + '</span></span>' +
+        '<span class="row-arrow" aria-hidden="true">›</span>' +
+      '</button>';
+    }
+
+    function openDrawer(kind) {
+      lastFocus = document.activeElement;
+      render(kind);
+      drawerBackdrop.classList.add("open");
+      drawerBackdrop.setAttribute("aria-hidden", "false");
+      drawerClose.focus();
+    }
+
+    function closeDrawer() {
+      drawerBackdrop.classList.remove("open");
+      drawerBackdrop.setAttribute("aria-hidden", "true");
+      if (lastFocus && typeof lastFocus.focus === "function") {
+        lastFocus.focus();
+      }
+    }
+
+    function render(kind) {
+      if (kind === "stages") {
+        setDrawerIcon("i-route");
+        drawerTitle.textContent = "Выберите этап";
+        drawerBody.innerHTML = '<p class="drawer-copy">После выбора ИРИС покажет ближайшие действия для Вашей ситуации.</p><div class="choice-list">' +
+          stages.map(item => choice("stage:" + item[0], item[1], item[2], item[3], false)).join("") +
+          '</div>';
+      }
+
+      if (kind.indexOf("stage:") === 0) {
+        const key = kind.split(":")[1];
+        const found = stages.find(item => item[0] === key) || stages[0];
+        setDrawerIcon(found[3]);
+        drawerTitle.textContent = found[1];
+        drawerBody.innerHTML = '<p class="drawer-copy">Ближайший шаг: посмотрите подсказку и откройте подходящие материалы. Если состояние ухудшилось, используйте красный раздел.</p><div class="choice-list">' +
+          choice("media", "Видео и памятки", "Показать материалы по движению и уходу", "i-video", false) +
+          choice("question", "Задать вопрос", "Написать, что непонятно", "i-chat", false) +
+          choice("urgent", "Мне стало плохо", "Открыть список срочных признаков", "i-alert", true) +
+          '</div>';
+      }
+
+      if (kind === "media") {
+        setDrawerIcon("i-video");
+        drawerTitle.textContent = "Видео и памятки";
+        drawerBody.innerHTML = '<p class="drawer-copy">Выберите инструкцию. В рабочей версии здесь откроется короткое видео.</p><div class="choice-list">' +
+          videos.map(item => choice("video:" + item[0], item[1], item[2], item[3], false)).join("") +
+          '</div>';
+      }
+
+      if (kind.indexOf("video:") === 0) {
+        const key = kind.split(":")[1];
+        const found = videos.find(item => item[0] === key) || videos[0];
+        setDrawerIcon(found[3]);
+        drawerTitle.textContent = found[1];
+        drawerBody.innerHTML = '<p class="drawer-copy">' + found[2] + '. Если появилась резкая боль или слабость, остановитесь и позовите медсестру.</p>' +
+          '<div class="notice">Прототип показывает точку входа. Сюда можно подключить видео, текстовую памятку и кнопку “показать крупнее”.</div>' +
+          '<div class="choice-list" style="margin-top:14px">' + choice("media", "К списку материалов", "Вернуться назад", "i-video", false) + '</div>';
+      }
+
+      if (kind === "urgent") {
+        setDrawerIcon("i-alert");
+        drawerTitle.textContent = "Мне стало плохо";
+        drawerBody.innerHTML = '<p class="urgent-copy">Если состояние резко ухудшилось, позовите медсестру или нажмите кнопку вызова в палате.</p><div class="choice-list">' +
+          urgent.map(text => choice("urgent:" + text, text, "Сообщите персоналу как можно скорее", "i-alert", true)).join("") +
+          '</div>';
+      }
+
+      if (kind.indexOf("urgent:") === 0) {
+        const symptom = kind.replace("urgent:", "");
+        setDrawerIcon("i-alert");
+        drawerTitle.textContent = symptom;
+        drawerBody.innerHTML = '<p class="urgent-copy">Не ждите. Позовите медсестру или врача и скажите: “' + symptom + '”.</p><div class="choice-list">' +
+          choice("urgent", "Назад к признакам", "Посмотреть весь список", "i-alert", true) +
+          choice("question", "Описать вопрос", "Передать детали, если нужно", "i-chat", false) +
+          '</div>';
+      }
+
+      if (kind === "question") {
+        setDrawerIcon("i-chat");
+        drawerTitle.textContent = "Задать вопрос";
+        drawerBody.innerHTML = '<form class="form" id="questionForm">' +
+          '<label class="field"><span class="field-text">Ваш вопрос</span><textarea class="input" rows="5" placeholder="Например: когда можно вставать?"></textarea></label>' +
+          '<label class="field"><span class="field-text">Как связаться, если нужно</span><input class="input" placeholder="Телефон, палата или другой способ"></label>' +
+          '<button class="submit" type="submit">Отправить вопрос</button>' +
+          '</form><div class="notice" id="questionNotice" hidden>Вопрос подготовлен к отправке. В рабочей версии здесь будет передача медицинской команде.</div>';
+      }
+
+      bindDrawer();
+    }
+
+    function bindDrawer() {
+      drawerBody.querySelectorAll("[data-next]").forEach(button => {
+        button.addEventListener("click", () => render(button.dataset.next));
+      });
+
+      const form = document.getElementById("questionForm");
+      if (form) {
+        form.addEventListener("submit", event => {
+          event.preventDefault();
+          const notice = document.getElementById("questionNotice");
+          if (notice) {
+            notice.hidden = false;
+            notice.scrollIntoView({ block: "nearest" });
+          }
+        });
+      }
+    }
+
+    document.querySelectorAll("[data-open]").forEach(button => {
+      button.addEventListener("click", () => openDrawer(button.dataset.open));
+    });
+
+    drawerClose.addEventListener("click", closeDrawer);
+
+    drawerBackdrop.addEventListener("click", event => {
+      if (event.target === drawerBackdrop) {
+        closeDrawer();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && drawerBackdrop.classList.contains("open")) {
+        closeDrawer();
+      }
+    });
+  </script>
+</body>
+</html>

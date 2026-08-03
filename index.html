@@ -174,6 +174,26 @@
       color: var(--white);
     }
 
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .pill.secondary {
+      color: var(--medical-2);
+      background: rgba(255,255,255,.74);
+      border: 1px solid rgba(12,111,120,.16);
+      box-shadow: 0 14px 30px rgba(15,84,91,.1);
+    }
+
+    .pill.secondary svg {
+      width: 24px;
+      height: 24px;
+      color: var(--scrub);
+    }
+
     .clinical-chips {
       display: flex;
       flex-wrap: wrap;
@@ -182,6 +202,7 @@
     }
 
     .chip {
+      border: 0;
       min-height: 42px;
       display: inline-flex;
       align-items: center;
@@ -194,12 +215,35 @@
       box-shadow: 0 10px 24px rgba(15,84,91,.08);
       font-size: 16px;
       font-weight: 800;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease, color .12s ease, box-shadow .12s ease;
+    }
+
+    .chip:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.92);
+    }
+
+    .chip.is-active {
+      color: var(--white);
+      background: linear-gradient(135deg, var(--medical), var(--scrub));
+      border-color: transparent;
+      box-shadow: 0 16px 34px rgba(12,111,120,.22);
     }
 
     .chip svg {
       width: 19px;
       height: 19px;
       color: var(--scrub);
+    }
+
+    .chip.is-active svg {
+      color: var(--white);
+    }
+
+    .chip:focus-visible {
+      outline: 3px solid var(--sage);
+      outline-offset: 3px;
     }
 
     .grid {
@@ -410,6 +454,109 @@
 
     .media-card .card-title {
       color: rgba(255,255,255,.76);
+    }
+
+    .department-info {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 18px;
+    }
+
+    .doctor-card,
+    .reference-card {
+      min-height: 260px;
+    }
+
+    .doctor-layout {
+      display: grid;
+      grid-template-columns: 132px 1fr;
+      gap: 20px;
+      align-items: center;
+      height: 100%;
+    }
+
+    .doctor-photo {
+      width: 132px;
+      aspect-ratio: 1;
+      border-radius: 30px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background:
+        linear-gradient(160deg, rgba(12,111,120,.9), rgba(33,166,166,.72)),
+        radial-gradient(circle at 35% 22%, rgba(255,255,255,.42), transparent 30%);
+      box-shadow: 0 18px 38px rgba(15,84,91,.18);
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .doctor-card h2,
+    .reference-card h2 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 3vw, 42px);
+      line-height: 1.08;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .doctor-card p,
+    .reference-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.55;
+    }
+
+    .doctor-role {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--medical);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .reference-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .reference-item {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.68);
+      border: 1px solid rgba(12,111,120,.1);
+    }
+
+    .reference-item .icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      color: var(--medical-2);
+      background: rgba(33,166,166,.12);
+    }
+
+    .reference-copy strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .reference-copy span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.35;
     }
 
     .media-list {
@@ -637,6 +784,37 @@
       line-height: 1.45;
     }
 
+    .patient-checklist {
+      display: grid;
+      gap: 12px;
+      margin: 16px 0 20px;
+      padding: 18px;
+      border-radius: 24px;
+      background: rgba(33, 166, 166, .1);
+      border: 1px solid rgba(12, 111, 120, .16);
+    }
+
+    .patient-checklist div {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    .patient-checklist b {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--medical), var(--scrub));
+      font-size: 17px;
+    }
+
     .form {
       display: grid;
       gap: 14px;
@@ -695,8 +873,10 @@
 
     @media (max-width: 980px) {
       .grid { grid-template-columns: 1fr; }
+      .department-info { grid-template-columns: 1fr; }
       .stack { grid-template-rows: none; }
       .topbar { flex-direction: column; }
+      .top-actions { width: 100%; }
       .pill { width: 100%; }
       .card { min-height: auto; }
     }
@@ -712,6 +892,8 @@
       .action .arrow { display: none; }
       .action strong { font-size: 21px; }
       .action span span { font-size: 16px; }
+      .doctor-layout { grid-template-columns: 1fr; }
+      .doctor-photo { width: 112px; border-radius: 26px; }
       .nav-title { display: none; }
       .nav-btn { flex: 1; }
       .screen > p, .warn div { font-size: 19px; }
@@ -766,6 +948,16 @@
       .screen {
         padding: 38px;
       }
+
+      .department-info {
+        grid-template-columns: minmax(440px, .9fr) minmax(520px, 1.1fr);
+        gap: 24px;
+      }
+
+      .doctor-card,
+      .reference-card {
+        min-height: 300px;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -782,6 +974,8 @@
     <symbol id="hi-care-path" viewBox="0 0 24 24"><path d="M6 4h9l3 3v13H6z"></path><path d="M14 4v4h4"></path><path d="M9 11h6"></path><path d="M9 15h4"></path><path d="M10.5 20a3.5 3.5 0 0 0 7 0"></path></symbol>
     <symbol id="hi-hospital" viewBox="0 0 24 24"><path d="M4 21h16"></path><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"></path><path d="M10 8h4"></path><path d="M12 6v4"></path><path d="M9 14h1"></path><path d="M14 14h1"></path><path d="M10 21v-4h4v4"></path></symbol>
     <symbol id="hi-outpatient" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2"></circle><path d="M5 21v-2a6.5 6.5 0 0 1 13 0v2"></path><path d="M18 8h3"></path><path d="M19.5 6.5v3"></path></symbol>
+    <symbol id="hi-brain" viewBox="0 0 24 24"><path d="M9 4.5a3 3 0 0 0-4 2.8 3.4 3.4 0 0 0 .7 6.6A3.8 3.8 0 0 0 10 19V5.8a3 3 0 0 0-1-1.3z"></path><path d="M15 4.5a3 3 0 0 1 4 2.8 3.4 3.4 0 0 1-.7 6.6A3.8 3.8 0 0 1 14 19V5.8a3 3 0 0 1 1-1.3z"></path><path d="M7.5 10.5H10"></path><path d="M14 10.5h2.5"></path><path d="M8 15.5c.8 0 1.5-.3 2-.9"></path><path d="M16 15.5c-.8 0-1.5-.3-2-.9"></path></symbol>
+    <symbol id="hi-stethoscope" viewBox="0 0 24 24"><path d="M6 4v5a4 4 0 0 0 8 0V4"></path><path d="M4.5 4h3"></path><path d="M12.5 4h3"></path><path d="M10 13v2a5 5 0 0 0 10 0v-2"></path><circle cx="20" cy="11" r="2"></circle></symbol>
     <symbol id="hi-surgery" viewBox="0 0 24 24"><path d="M4 20 20 4"></path><path d="m14 4 6 6"></path><path d="M11 7 7 3"></path><path d="m4 6 4 4"></path><path d="M6 18h8"></path><path d="M10 14v8"></path></symbol>
     <symbol id="hi-hospital-bed" viewBox="0 0 24 24"><path d="M3 6v14"></path><path d="M21 11v9"></path><path d="M3 14h18"></path><path d="M7 14v-3a3 3 0 0 1 3-3h2a4 4 0 0 1 4 4v2"></path><path d="M3 20h18"></path></symbol>
     <symbol id="hi-discharge" viewBox="0 0 24 24"><path d="M5 21V5h9"></path><path d="M14 3h6v6"></path><path d="m20 3-9 9"></path><path d="M9 17h6"></path><path d="M9 13h2"></path></symbol>
@@ -805,13 +999,19 @@
           </div>
           <h1>ИРИС помогает пациенту не потеряться в больнице</h1>
           <p>Сканируйте QR-код, выбирайте свой этап и смотрите понятные памятки или видео восстановления. Крупно, спокойно, без регистрации.</p>
-          <div class="clinical-chips" aria-label="Ключевые свойства прототипа">
-            <span class="chip"><svg aria-hidden="true"><use href="#hi-qr"></use></svg>QR в палате</span>
-            <span class="chip"><svg aria-hidden="true"><use href="#hi-patient-band"></use></svg>Без регистрации</span>
-            <span class="chip"><svg aria-hidden="true"><use href="#hi-video-education"></use></svg>Видео восстановления</span>
+          <div class="clinical-chips" aria-label="Выбор отделения">
+            <button class="chip is-active" type="button" data-department="trauma"><svg aria-hidden="true"><use href="#hi-joints"></use></svg>Травматология</button>
+            <button class="chip" type="button" data-department="neuro"><svg aria-hidden="true"><use href="#hi-brain"></use></svg>Неврология</button>
+            <button class="chip" type="button" data-department="therapy"><svg aria-hidden="true"><use href="#hi-stethoscope"></use></svg>Терапия</button>
           </div>
         </div>
-        <button class="pill glass" data-open="steps">Провести по шагам</button>
+        <div class="top-actions" aria-label="Быстрые действия">
+          <button class="pill glass" data-open="steps">Провести по шагам</button>
+          <button class="pill secondary" type="button" id="departmentInfoBtn">
+            <svg aria-hidden="true"><use href="#hi-hospital"></use></svg>
+            Об отделении
+          </button>
+        </div>
       </header>
 
       <section class="grid">
@@ -874,11 +1074,31 @@
               </div>
             </div>
           </div>
-          <div class="media-list">
+          <div class="media-list" id="homeMediaList">
             <button class="media-row" data-video="bed"><span class="icon"><svg aria-hidden="true"><use href="#hi-hospital-bed"></use></svg></span><span><strong>Как встать с кровати</strong><small>1 мин 30 сек</small></span></button>
             <button class="media-row" data-video="crutches"><span class="icon"><svg aria-hidden="true"><use href="#hi-crutch"></use></svg></span><span><strong>Как ходить с костылями</strong><small>30 сек</small></span></button>
             <button class="media-row" data-video="stairs"><span class="icon"><svg aria-hidden="true"><use href="#hi-stairs"></use></svg></span><span><strong>Как ходить по лестнице</strong><small>1 мин 15 сек</small></span></button>
           </div>
+        </article>
+      </section>
+
+      <section class="department-info" id="departmentInfo" aria-label="Информация об отделении">
+        <article class="card doctor-card glass noise">
+          <div class="doctor-layout">
+            <div class="doctor-photo" id="doctorPhoto" aria-label="Место для фото заведующего">АК</div>
+            <div>
+              <div class="doctor-role">Заведующий отделением</div>
+              <h2 id="doctorName">Андрей Константинов</h2>
+              <p id="doctorText">Травматолог-ортопед, ведет пациентов после операций и помогает команде отделения выстроить понятный маршрут восстановления.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="card reference-card glass noise">
+          <div class="doctor-role">Справка по отделению</div>
+          <h2 id="departmentTitle">Травматология</h2>
+          <p id="departmentDescription">Отделение помогает пациентам после травм, операций на суставах и сложных переломов. Здесь собраны короткие инструкции, которые чаще всего нужны в палате и перед выпиской.</p>
+          <div class="reference-list" id="departmentFacts"></div>
         </article>
       </section>
     </main>
@@ -903,21 +1123,108 @@
     const navTitle = document.getElementById('navTitle');
     const toast = document.getElementById('toast');
     const stack = [];
+    const departmentButtons = document.querySelectorAll('[data-department]');
+    const doctorPhoto = document.getElementById('doctorPhoto');
+    const doctorName = document.getElementById('doctorName');
+    const doctorText = document.getElementById('doctorText');
+    const departmentTitle = document.getElementById('departmentTitle');
+    const departmentDescription = document.getElementById('departmentDescription');
+    const departmentFacts = document.getElementById('departmentFacts');
+    const homeMediaList = document.getElementById('homeMediaList');
+    const departmentInfo = document.getElementById('departmentInfo');
+    const departmentInfoBtn = document.getElementById('departmentInfoBtn');
 
-    const stages = [
-      ['consult', 'Ещё не обращался', 'Запись, документы, обследование'],
-      ['prepare', 'Готовлюсь к операции', 'Что взять с собой и что посмотреть'],
-      ['hospital', 'Я в больнице', 'День госпитализации, операция, после неё'],
-      ['discharge', 'Выписываюсь домой', 'Выписка, правила, реабилитация'],
-      ['rehab', 'Реабилитация', 'Как пройти восстановление в ГКБ №1']
-    ];
+    const departments = {
+      trauma: {
+        name: 'Травматология',
+        icon: 'hi-joints',
+        initials: 'АК',
+        doctor: 'Андрей Константинов',
+        doctorText: 'Травматолог-ортопед, ведет пациентов после операций и помогает команде отделения выстроить понятный маршрут восстановления.',
+        description: 'Отделение помогает пациентам после травм, операций на суставах и сложных переломов. Здесь собраны короткие инструкции, которые чаще всего нужны в палате и перед выпиской. Пациент может быстро уточнить, как вставать, как пользоваться опорой, что делать с повязкой и какие симптомы нельзя ждать до следующего обхода. Материалы написаны простым языком, чтобы ими было удобно пользоваться с телефона рядом с кроватью.',
+        facts: [
+          ['После операции', 'Как вставать, ходить, пользоваться опорой и не перегружать ногу.'],
+          ['Перед выпиской', 'Что уточнить у врача, как ухаживать за швом и когда прийти на контроль.'],
+          ['Домашний режим', 'Первые упражнения, ограничения и признаки, когда нужно обратиться за помощью.']
+        ]
+      },
+      neuro: {
+        name: 'Неврология',
+        icon: 'hi-brain',
+        initials: 'ЕМ',
+        doctor: 'Елена Морозова',
+        doctorText: 'Невролог, курирует пациентов после инсульта, головокружений и нарушений чувствительности, объясняет маршрут наблюдения простым языком.',
+        description: 'Отделение помогает восстановить движение, речь, равновесие и самочувствие после неврологических состояний. Материалы помогают не пропустить важные симптомы и действия. В этом разделе пациент видит спокойные подсказки: как безопасно вставать, что отслеживать утром и вечером, когда звать медсестру и как выполнять короткие упражнения без перегрузки. Информация подходит для самого пациента и для близкого человека рядом.',
+        facts: [
+          ['Наблюдение', 'Что отслеживать утром и вечером: речь, слабость, давление, онемение.'],
+          ['Восстановление', 'Безопасные упражнения, режим отдыха и первые бытовые действия.'],
+          ['Тревожные признаки', 'Когда срочно звать медсестру или врача без ожидания обхода.']
+        ]
+      },
+      therapy: {
+        name: 'Терапия',
+        icon: 'hi-stethoscope',
+        initials: 'СП',
+        doctor: 'Сергей Павлов',
+        doctorText: 'Врач-терапевт, ведет пациентов с заболеваниями сердца, легких и общими состояниями, где особенно важны режим и понятные назначения.',
+        description: 'Терапевтическое отделение помогает стабилизировать состояние, пройти обследования и разобраться с назначениями. В памятках собраны режим, подготовка и частые вопросы. Пациент может быстро посмотреть, как принимать лекарства, что уточнить перед процедурой, какие показатели записывать и при каких симптомах лучше сразу позвать персонал. Блок сделан как справочник на каждый день госпитализации.',
+        facts: [
+          ['Назначения', 'Как принимать лекарства, что уточнить у врача и где смотреть изменения.'],
+          ['Обследования', 'Как подготовиться к анализам, УЗИ, ЭКГ и другим процедурам.'],
+          ['Самочувствие', 'Какие симптомы нельзя терпеть и когда нужно сразу позвать персонал.']
+        ]
+      }
+    };
 
-    const videos = {
-      bed: ['Как встать с кровати', 'Короткое видео показывает безопасный порядок движений: повернуться, опустить ноги, встать с опорой.'],
-      crutches: ['Как ходить с костылями', 'Показываем темп, длину шага и положение головы, чтобы не терять равновесие.'],
-      stairs: ['Как ходить по лестнице', 'Главное правило: приставной шаг и двухсторонняя опора при подъёме и спуске.'],
-      chair: ['Как вставать со стула', 'Проверяем высоту стула, положение ноги и безопасную опору руками.'],
-      car: ['Как сесть в машину', 'Переднее сиденье, спинка назад, без резкого сгибания ноги.']
+    let currentDepartment = new URLSearchParams(window.location.search).get('department');
+    if (!departments[currentDepartment]) currentDepartment = 'trauma';
+
+    const departmentContent = {
+      trauma: {
+        stages: [
+          ['surgery-day', 'День после операции', 'Как безопасно сесть, встать и позвать помощь', 'hospital', ['Не вставайте резко: сначала сядьте на край кровати.', 'Проверьте, что рядом есть опора или медсестра.', 'Если появилась резкая боль или слабость, остановитесь.']],
+          ['first-walk', 'Первая ходьба', 'Костыли, ходунки, опора и темп шага', 'crutches', ['Наденьте удобную обувь или нескользящие носки.', 'Держите корпус прямо и смотрите вперед.', 'Идите короткими шагами, не спешите.']],
+          ['discharge', 'Перед выпиской', 'Шов, лекарства, ограничения и контрольный визит', 'discharge', ['Уточните, когда менять повязку.', 'Проверьте список лекарств и дозировки.', 'Запишите дату контрольного приема.']],
+          ['home-rehab', 'Восстановление дома', 'Упражнения, лестница, бытовые действия', 'stairs', ['Делайте упражнения только в разрешенном объеме.', 'На лестнице используйте поручень и опору.', 'При усилении отека или боли свяжитесь с отделением.']]
+        ],
+        videos: {
+          bed: ['Как встать с кровати', '1 мин 30 сек', 'Короткое видео показывает безопасный порядок движений: повернуться, опустить ноги, встать с опорой.', 'hospital'],
+          crutches: ['Как ходить с костылями', '30 сек', 'Показываем темп, длину шага и положение головы, чтобы не терять равновесие.', 'crutches'],
+          stairs: ['Как ходить по лестнице', '1 мин 15 сек', 'Главное правило: приставной шаг и двухсторонняя опора при подъеме и спуске.', 'stairs'],
+          car: ['Как сесть в машину', '45 сек', 'Переднее сиденье, спинка назад, без резкого сгибания ноги.', 'car']
+        },
+        emergency: ['Резкая или усиливающаяся боль.', 'Кровотечение или промокшая повязка.', 'Онемение ноги, падение, невозможность наступить.', 'Температура или резкое ухудшение состояния.']
+      },
+      neuro: {
+        stages: [
+          ['morning-check', 'Проверить самочувствие', 'Речь, слабость, давление, головокружение', 'question', ['Скажите вслух простую фразу и проверьте речь.', 'Сравните силу в руках и ногах.', 'Если стало хуже, сразу зовите медсестру.']],
+          ['safe-move', 'Безопасно двигаться', 'Как вставать, садиться и ходить без риска падения', 'wheelchair', ['Вставайте только после разрешения персонала.', 'Не идите в туалет без помощи, если кружится голова.', 'Держитесь за поручни и не торопитесь.']],
+          ['speech-memory', 'Речь и память', 'Короткие упражнения без перегрузки', 'brain', ['Повторяйте простые слова медленно.', 'Делайте паузы, если устали.', 'Просите близких говорить короткими фразами.']],
+          ['after-discharge', 'После выписки', 'Наблюдение, лекарства и контрольные симптомы', 'discharge', ['Запишите схему лекарств крупно на листе.', 'Следите за давлением по назначению врача.', 'При новой слабости или нарушении речи вызывайте помощь.']]
+        ],
+        videos: {
+          safeRise: ['Как безопасно вставать', '1 мин', 'Показываем, как сесть, дождаться устойчивости и только потом вставать.', 'hospital'],
+          balance: ['Упражнения на равновесие', '1 мин 20 сек', 'Мягкие движения рядом с опорой, без риска падения и перегрузки.', 'wheelchair'],
+          speech: ['Короткая тренировка речи', '50 сек', 'Простые повторы слов и дыхания, которые легко делать в палате.', 'brain'],
+          pressure: ['Как вести дневник давления', '40 сек', 'Что записывать утром и вечером, чтобы врачу было проще оценить динамику.', 'question']
+        },
+        emergency: ['Внезапная слабость в руке или ноге.', 'Нарушение речи, перекос лица, спутанность.', 'Сильная новая головная боль.', 'Падение, потеря сознания или резкое головокружение.']
+      },
+      therapy: {
+        stages: [
+          ['meds', 'Понять назначения', 'Лекарства, дозировки и вопросы врачу', 'question', ['Проверьте название каждого лекарства.', 'Не меняйте дозу без врача.', 'Отметьте вопросы к обходу в памятке.']],
+          ['tests', 'Подготовиться к обследованию', 'Анализы, ЭКГ, УЗИ и режим перед процедурой', 'stethoscope', ['Посмотрите, можно ли есть перед процедурой.', 'Уточните время обследования у медсестры.', 'Возьмите документы и список лекарств.']],
+          ['breathing', 'Если тяжело дышать', 'Когда звать персонал и как занять положение', 'hospital', ['Сядьте выше, не ложитесь плоско.', 'Сразу нажмите кнопку вызова персонала.', 'Не идите самостоятельно по коридору.']],
+          ['home-mode', 'Режим дома', 'Питание, лекарства, контроль давления и визит', 'discharge', ['Составьте простой график приема лекарств.', 'Запишите показатели, которые нужно контролировать.', 'Уточните дату повторного приема.']]
+        ],
+        videos: {
+          meds: ['Как принимать лекарства', '1 мин', 'Короткая памятка: время приема, дозы и что делать, если пропустили таблетку.', 'question'],
+          tests: ['Подготовка к обследованию', '45 сек', 'Что уточнить перед анализами, ЭКГ, УЗИ и другими процедурами.', 'stethoscope'],
+          breathing: ['Что делать при одышке', '40 сек', 'Спокойный алгоритм: положение тела, вызов персонала, симптомы для врача.', 'hospital'],
+          pressure: ['Как измерять давление', '50 сек', 'Как сесть, где держать руку и какие цифры записывать.', 'patient-band']
+        },
+        emergency: ['Одышка, боль или сдавление в груди.', 'Сильная слабость, холодный пот, обморок.', 'Высокое давление с плохим самочувствием.', 'Резкое ухудшение после приема лекарства.']
+      }
     };
 
     function icon(name) {
@@ -927,6 +1234,8 @@
         hospital: 'hi-hospital',
         discharge: 'hi-discharge',
         rehab: 'hi-crutch',
+        brain: 'hi-brain',
+        stethoscope: 'hi-stethoscope',
         question: 'hi-question',
         media: 'hi-video-education',
         bed: 'hi-hospital-bed',
@@ -934,9 +1243,54 @@
         stairs: 'hi-stairs',
         chair: 'hi-joints',
         car: 'hi-wheelchair',
+        wheelchair: 'hi-wheelchair',
+        'patient-band': 'hi-patient-band',
         back: 'hi-arrow-left'
       };
       return '<svg aria-hidden="true"><use href="#' + (icons[name] || icons.question) + '"></use></svg>';
+    }
+
+    function getDepartmentContent() {
+      return departmentContent[currentDepartment] || departmentContent.trauma;
+    }
+
+    function renderMediaRows(limit) {
+      const entries = Object.entries(getDepartmentContent().videos);
+      return entries.slice(0, limit || entries.length).map(([key, v]) => (
+        '<button class="media-row" data-video="' + key + '"><span class="icon">' + icon(v[3]) + '</span><span><strong>' + v[0] + '</strong><small>' + v[1] + '</small></span></button>'
+      )).join('');
+    }
+
+    function bindVideoButtons(root = document) {
+      root.querySelectorAll('[data-video]').forEach(btn => btn.onclick = () => openPanel('video:' + btn.dataset.video));
+    }
+
+    function setDepartment(key, updateUrl = true) {
+      const department = departments[key] || departments.trauma;
+      currentDepartment = departments[key] ? key : 'trauma';
+
+      departmentButtons.forEach(btn => {
+        const isActive = btn.dataset.department === currentDepartment;
+        btn.classList.toggle('is-active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+      });
+
+      doctorPhoto.textContent = department.initials;
+      doctorName.textContent = department.doctor;
+      doctorText.textContent = department.doctorText;
+      departmentTitle.textContent = department.name;
+      departmentDescription.textContent = department.description;
+      departmentFacts.innerHTML = department.facts.map((fact, index) => (
+        '<div class="reference-item"><span class="icon">' + icon(index === 0 ? 'hospital' : index === 1 ? 'discharge' : 'question') + '</span><span class="reference-copy"><strong>' + fact[0] + '</strong><span>' + fact[1] + '</span></span></div>'
+      )).join('');
+      homeMediaList.innerHTML = renderMediaRows(3);
+      bindVideoButtons(homeMediaList);
+
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('department', currentDepartment);
+        window.history.replaceState({}, '', url);
+      }
     }
 
     function openPanel(id, push = true) {
@@ -955,10 +1309,11 @@
     function render(id) {
       const titleMap = { steps: 'Этапы', media: 'Видео', emergency: 'Срочно', ask: 'Вопрос' };
       navTitle.textContent = titleMap[id] || 'ИРИС';
+      const content = getDepartmentContent();
 
       if (id === 'steps') {
-        screen.innerHTML = '<h2>На каком Вы этапе?</h2><p>Нажмите на большую карточку. Не нужно ничего вводить.</p><div class="step-grid">'
-          + stages.map(s => '<button class="action glass" data-stage="' + s[0] + '"><span class="icon">' + icon(s[0]) + '</span><span><strong>' + s[1] + '</strong><span>' + s[2] + '</span></span><span class="arrow">›</span></button>').join('')
+        screen.innerHTML = '<h2>' + departments[currentDepartment].name + ': что сейчас важно?</h2><p>Нажмите на большую карточку. Шаги и памятки отличаются для каждого отделения.</p><div class="step-grid">'
+          + content.stages.map(s => '<button class="action glass" data-stage="' + s[0] + '"><span class="icon">' + icon(s[3]) + '</span><span><strong>' + s[1] + '</strong><span>' + s[2] + '</span></span><span class="arrow">›</span></button>').join('')
           + '</div>';
         screen.querySelectorAll('[data-stage]').forEach(btn => btn.onclick = () => openPanel('stage:' + btn.dataset.stage));
         return;
@@ -966,10 +1321,12 @@
 
       if (id.indexOf('stage:') === 0) {
         const key = id.split(':')[1];
-        const found = stages.find(s => s[0] === key);
+        const found = content.stages.find(s => s[0] === key);
         const name = found ? found[1] : 'Ваш этап';
-        screen.innerHTML = '<h2>' + name + '</h2><p>Здесь пациент видит только ближайшие действия, без длинного общего меню.</p><div class="step-grid">'
-          + '<button class="action glass"><span class="icon">' + icon('prepare') + '</span><span><strong>Что сделать сейчас</strong><span>Короткая памятка на 3-5 пунктов</span></span><span class="arrow">›</span></button>'
+        const todos = found ? found[4] : ['Посмотрите памятку.', 'Если стало хуже, зовите персонал.', 'Оставьте вопрос, если информации не хватило.'];
+        screen.innerHTML = '<h2>' + name + '</h2><p>' + departments[currentDepartment].name + ': здесь пациент видит только ближайшие действия, без длинного общего меню.</p>'
+          + '<div class="patient-checklist">' + todos.map((todo, index) => '<div><b>' + (index + 1) + '</b><span>' + todo + '</span></div>').join('') + '</div>'
+          + '<div class="step-grid">'
           + '<button class="action glass" data-open-inner="media"><span class="icon">' + icon('media') + '</span><span><strong>Видео и памятки</strong><span>Показать подходящие материалы</span></span><span class="arrow">›</span></button>'
           + '<button class="action glass" data-open-inner="ask"><span class="icon">' + icon('question') + '</span><span><strong>Не нашёл нужное</strong><span>Оставить вопрос для команды</span></span><span class="arrow">›</span></button>'
           + '</div>';
@@ -978,23 +1335,23 @@
       }
 
       if (id === 'media') {
-        screen.innerHTML = '<h2>Видео и памятки</h2><p>Выберите ролик. В будущем здесь появится выбор отделения и операции.</p><div class="media-list">'
-          + Object.entries(videos).map(([key, v]) => '<button class="media-row" data-video="' + key + '"><span class="icon">' + icon(key) + '</span><span><strong>' + v[0] + '</strong><small>Короткое обучающее видео</small></span></button>').join('')
+        screen.innerHTML = '<h2>Видео и памятки</h2><p>Материалы для отделения: ' + departments[currentDepartment].name + '. Выберите ролик или памятку.</p><div class="media-list">'
+          + renderMediaRows()
           + '</div>';
-        screen.querySelectorAll('[data-video]').forEach(btn => btn.onclick = () => openPanel('video:' + btn.dataset.video));
+        bindVideoButtons(screen);
         return;
       }
 
       if (id.indexOf('video:') === 0) {
         const key = id.split(':')[1];
-        const v = videos[key] || videos.bed;
-        screen.innerHTML = '<h2>' + v[0] + '</h2><p>' + v[1] + '</p><div class="video-box"><div class="play">▶</div></div><div class="warn"><div><strong>Важно:</strong> если при движении появилась резкая боль, остановитесь и позовите медсестру.</div></div><div class="actions"><button class="action glass" data-open-inner="media"><span class="icon">' + icon('back') + '</span><span><strong>К списку видео</strong><span>Вернуться в медиатеку</span></span><span class="arrow">›</span></button></div>';
+        const v = content.videos[key] || Object.values(content.videos)[0];
+        screen.innerHTML = '<h2>' + v[0] + '</h2><p>' + v[2] + '</p><div class="video-box"><div class="play">▶</div></div><div class="warn"><div><strong>Важно:</strong> если состояние ухудшилось, остановитесь и позовите медсестру.</div></div><div class="actions"><button class="action glass" data-open-inner="media"><span class="icon">' + icon('back') + '</span><span><strong>К списку видео</strong><span>Вернуться в медиатеку</span></span><span class="arrow">›</span></button></div>';
         screen.querySelector('[data-open-inner]').onclick = () => openPanel('media');
         return;
       }
 
       if (id === 'emergency') {
-        screen.innerHTML = '<h2>Когда срочно звать помощь</h2><p>Этот экран должен быть доступен с главной страницы одним нажатием.</p><div class="warn"><div>Резкая или усиливающаяся боль.</div><div>Одышка, сильная слабость, головокружение.</div><div>Кровотечение, падение, онемение ноги.</div><div>Температура или резкое ухудшение состояния.</div></div>';
+        screen.innerHTML = '<h2>Когда срочно звать помощь</h2><p>Список адаптирован под отделение: ' + departments[currentDepartment].name + '.</p><div class="warn">' + content.emergency.map(item => '<div>' + item + '</div>').join('') + '</div>';
         return;
       }
 
@@ -1008,8 +1365,12 @@
       }
     }
 
+    departmentButtons.forEach(btn => btn.onclick = () => setDepartment(btn.dataset.department));
+    departmentInfoBtn.onclick = () => {
+      departmentInfo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
     document.querySelectorAll('[data-open]').forEach(btn => btn.onclick = () => openPanel(btn.dataset.open));
-    document.querySelectorAll('[data-video]').forEach(btn => btn.onclick = () => openPanel('video:' + btn.dataset.video));
+    setDepartment(currentDepartment, false);
     document.getElementById('homeBtn').onclick = closePanel;
     document.getElementById('backBtn').onclick = () => {
       stack.pop();

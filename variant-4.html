@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ИРИС — вариант 4</title>
+  <meta name="description" content="Вариант 4 прототипа ИРИС: полноэкранный медицинский hero в формате референса.">
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap");
+
+    :root {
+      --black: #000;
+      --white: #fff;
+      --iris: #42dfce;
+      --iris-dark: #062c31;
+      --blue: #6ab5ff;
+      --red: #e2475f;
+      --muted: rgba(255,255,255,.62);
+      --glass: rgba(0,0,0,.16);
+      --line: rgba(255,255,255,.12);
+      --sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --serif: "Instrument Serif", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #000;
+      color: var(--white);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    textarea { font: inherit; }
+
+    button {
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .section {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100dvh;
+      min-height: 680px;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      box-shadow: 0 -20px 50px rgba(0,0,0,.5);
+      --x: 58%;
+      --y: 48%;
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .scene-base,
+    .scene-live {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .scene-base {
+      background:
+        linear-gradient(90deg, rgba(0,0,0,.88), rgba(0,0,0,.4) 42%, rgba(0,0,0,.86)),
+        radial-gradient(circle at 70% 36%, rgba(255,255,255,.18), transparent 20rem),
+        linear-gradient(135deg, #07161a, #0a2a31 48%, #03090b);
+    }
+
+    .scene-live {
+      background:
+        radial-gradient(circle at 65% 40%, rgba(66,223,206,.56), transparent 25rem),
+        radial-gradient(circle at 34% 62%, rgba(106,181,255,.28), transparent 23rem),
+        linear-gradient(135deg, #061418, #063b43 48%, #02080a);
+      mask-image: radial-gradient(circle 520px at var(--x) var(--y), black 0 52%, rgba(0,0,0,.72) 66%, transparent 100%);
+      -webkit-mask-image: radial-gradient(circle 520px at var(--x) var(--y), black 0 52%, rgba(0,0,0,.72) 66%, transparent 100%);
+    }
+
+    .scene::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.1), rgba(0,0,0,.66)),
+        radial-gradient(circle at 50% 50%, transparent 0 34%, rgba(0,0,0,.46) 78%);
+      pointer-events: none;
+    }
+
+    .room-lines,
+    .room-glow,
+    .phone,
+    .pulse-band {
+      position: absolute;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .room-lines {
+      inset: 0;
+      opacity: .32;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,.075) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.075) 1px, transparent 1px);
+      background-size: 54px 54px;
+      mask-image: radial-gradient(circle at 57% 46%, black 0 42%, transparent 74%);
+    }
+
+    .room-glow {
+      left: 50%;
+      top: 48%;
+      width: min(62vw, 820px);
+      height: min(62vw, 820px);
+      transform: translate(-50%, -50%) rotate(-10deg);
+      border: 1px solid rgba(255,255,255,.14);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,0)),
+        radial-gradient(circle at 50% 50%, rgba(66,223,206,.16), transparent 58%);
+      box-shadow: inset 0 0 0 1px rgba(66,223,206,.08), 0 40px 120px rgba(0,0,0,.48);
+    }
+
+    .phone {
+      right: 16%;
+      top: 15%;
+      width: min(34vw, 390px);
+      aspect-ratio: 9 / 16;
+      border: 1px solid rgba(255,255,255,.22);
+      background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.04));
+      box-shadow: 0 45px 120px rgba(0,0,0,.58);
+      transform: rotate(3deg);
+      backdrop-filter: blur(12px);
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.12)),
+        radial-gradient(circle at 50% 18%, rgba(66,223,206,.22), transparent 32%),
+        rgba(2,18,22,.72);
+    }
+
+    .phone-ui {
+      position: absolute;
+      inset: 34px 30px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .phone-logo {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      background: var(--iris);
+      color: var(--iris-dark);
+    }
+
+    .phone-title {
+      margin-top: 16px;
+      color: #fff;
+      font-size: clamp(28px, 3.2vw, 42px);
+      line-height: 1;
+      font-weight: 700;
+    }
+
+    .phone-pill,
+    .phone-card {
+      border: 1px solid rgba(255,255,255,.13);
+      background: rgba(255,255,255,.08);
+    }
+
+    .phone-pill {
+      width: 74%;
+      height: 42px;
+    }
+
+    .phone-card {
+      height: 86px;
+    }
+
+    .phone-card.main {
+      background: var(--iris);
+      border-color: transparent;
+    }
+
+    .pulse-band {
+      left: -4%;
+      top: 52%;
+      width: 108%;
+      height: 160px;
+      color: rgba(66,223,206,.56);
+      filter: drop-shadow(0 0 18px rgba(66,223,206,.48));
+      opacity: .9;
+    }
+
+    .brand {
+      position: absolute;
+      left: 8%;
+      top: 7%;
+      z-index: 20;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      backdrop-filter: blur(60px);
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      background: var(--iris);
+      color: var(--iris-dark);
+    }
+
+    .brand-mark svg,
+    .phone-logo svg {
+      width: 25px;
+      height: 25px;
+    }
+
+    .brand-name {
+      display: block;
+      font-size: 25px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    .brand-sub {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .stats-card {
+      position: absolute;
+      left: calc(8% + 200px);
+      top: 20%;
+      z-index: 20;
+      width: 320px;
+      padding: 24px 32px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 2px;
+      background: var(--glass);
+      backdrop-filter: blur(80px);
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 13px;
+      height: 84px;
+      overflow: visible;
+    }
+
+    .stat {
+      font-family: var(--serif);
+      font-size: 72px;
+      line-height: 80px;
+      font-style: italic;
+      letter-spacing: -0.03em;
+      color: var(--iris);
+      text-shadow: 0 0 26px rgba(66,223,206,.52);
+    }
+
+    .chart-wrap {
+      width: 22px;
+      height: 72px;
+      overflow: visible;
+    }
+
+    .chart {
+      width: 160px;
+      height: 80px;
+      transform: translateX(-52px);
+      color: var(--iris);
+      filter: drop-shadow(0 0 14px rgba(66,223,206,.7));
+    }
+
+    .stats-card h2 {
+      margin: 16px 0 8px;
+      font-family: var(--serif);
+      font-size: 15px;
+      line-height: 1.12;
+      font-weight: 400;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+
+    .stats-card p {
+      margin: 0;
+      color: var(--muted);
+      font-family: var(--serif);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .headline {
+      position: absolute;
+      left: 8%;
+      bottom: 12%;
+      z-index: 20;
+      max-width: 560px;
+    }
+
+    .headline h1 {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      font-size: clamp(32px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+    }
+
+    .font-sans {
+      font-family: var(--sans);
+      font-weight: 600;
+    }
+
+    .font-serif {
+      font-family: var(--serif);
+      font-weight: 400;
+    }
+
+    .italic { font-style: italic; }
+    .not-italic { font-style: normal; }
+
+    .headline p {
+      max-width: 470px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.42;
+    }
+
+    .cta-block {
+      position: absolute;
+      right: calc(8% + 100px);
+      bottom: 12%;
+      z-index: 20;
+      width: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .cta-label {
+      width: 100%;
+      padding: 7px 8px;
+      background: #fff;
+      color: #000;
+      text-align: center;
+      font-family: var(--serif);
+      font-size: 10px;
+      line-height: 16px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .action-panel {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 10px;
+      border: 0;
+      border-radius: 0 0 18px 18px;
+      background: linear-gradient(135deg, var(--iris), #8ff5e9);
+      color: var(--iris-dark);
+      box-shadow: 0 24px 70px rgba(66,223,206,.24);
+    }
+
+    .action-btn {
+      min-height: 82px;
+      display: grid;
+      align-content: space-between;
+      justify-items: start;
+      gap: 8px;
+      border: 1px solid rgba(6,44,49,.12);
+      border-radius: 13px;
+      background: rgba(255,255,255,.58);
+      color: var(--iris-dark);
+      padding: 10px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .action-btn.main {
+      grid-column: span 3;
+      min-height: 94px;
+      background: #fff;
+    }
+
+    .action-btn.warn {
+      background: rgba(226,71,95,.12);
+      color: #5f0615;
+    }
+
+    .action-btn svg {
+      width: 26px;
+      height: 26px;
+      stroke-width: 1.65;
+    }
+
+    .action-btn strong {
+      display: block;
+      font-size: 12px;
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -.01em;
+    }
+
+    .action-btn.main strong {
+      font-size: 19px;
+    }
+
+    .action-btn span {
+      display: block;
+      margin-top: 4px;
+      color: rgba(6,44,49,.68);
+      font-size: 9px;
+      line-height: 1.12;
+    }
+
+    .hotspot {
+      position: absolute;
+      z-index: 30;
+    }
+
+    .hotspot.right {
+      right: calc(8% + 100px);
+      bottom: 12%;
+      width: calc(50% - 50px);
+      height: calc(50% + 230px);
+    }
+
+    .hotspot.left {
+      left: calc(8% + 200px);
+      top: calc(20% + 190px);
+      width: calc(15% + 250px);
+      height: calc(22.5% + 130px);
+      transform: translateY(-100%);
+    }
+
+    .panel {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      overflow: auto;
+      background: #03181d;
+    }
+
+    .panel.open { display: block; }
+
+    .panel-inner {
+      width: min(100%, 760px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 16px 16px 38px;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      gap: 10px;
+      padding: 8px 0 18px;
+      background: linear-gradient(180deg, #03181d 72%, rgba(3,24,29,0));
+    }
+
+    .nav-btn {
+      min-height: 58px;
+      border: 0;
+      background: var(--iris);
+      color: var(--iris-dark);
+      padding: 13px 20px;
+      font-size: 19px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .screen {
+      min-height: 70vh;
+      padding: clamp(22px, 5vw, 34px);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(34px);
+    }
+
+    .screen h2 {
+      margin: 0 0 12px;
+      color: var(--iris);
+      font-size: clamp(34px, 8vw, 54px);
+      line-height: 1.02;
+      font-weight: 700;
+    }
+
+    .screen > p {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 21px;
+      line-height: 1.5;
+    }
+
+    .step-grid,
+    .media-list,
+    .form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .option,
+    .media-row {
+      width: 100%;
+      min-height: 92px;
+      display: grid;
+      grid-template-columns: 62px 1fr auto;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .option svg,
+    .media-row svg {
+      width: 50px;
+      height: 50px;
+      padding: 10px;
+      background: rgba(66,223,206,.13);
+      color: var(--iris);
+    }
+
+    .option strong,
+    .media-row strong {
+      display: block;
+      color: #fff;
+      font-size: 23px;
+      line-height: 1.12;
+      font-weight: 700;
+    }
+
+    .option small,
+    .media-row small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .video-box {
+      min-height: 280px;
+      display: grid;
+      place-items: center;
+      margin: 22px 0;
+      background: linear-gradient(135deg, rgba(66,223,206,.22), rgba(106,181,255,.18));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-box::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(255,255,255,.08) 1px, transparent 1px);
+      background-size: 34px 34px;
+    }
+
+    .play {
+      position: relative;
+      z-index: 1;
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--iris);
+      color: var(--iris-dark);
+      font-size: 42px;
+      padding-left: 6px;
+    }
+
+    .warn {
+      margin-top: 16px;
+      padding: 20px;
+      border-left: 8px solid var(--red);
+      background: rgba(226,71,95,.14);
+      color: #fff;
+      font-size: 21px;
+      line-height: 1.45;
+    }
+
+    label {
+      display: grid;
+      gap: 8px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      min-height: 64px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.1);
+      padding: 16px;
+      color: #fff;
+      font-size: 20px;
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 80;
+      transform: translateX(-50%);
+      background: var(--iris);
+      color: var(--iris-dark);
+      padding: 15px 20px;
+      font-size: 18px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toast.show { opacity: 1; }
+
+    svg {
+      display: block;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      overflow: hidden;
+    }
+
+    button:focus-visible,
+    input:focus,
+    textarea:focus {
+      outline: 4px solid rgba(66,223,206,.42);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 1024px) {
+      .brand {
+        left: 5%;
+        top: 5%;
+      }
+
+      .stats-card {
+        left: 5%;
+        top: 18%;
+      }
+
+      .headline {
+        left: 5%;
+        bottom: 10%;
+        max-width: 52%;
+      }
+
+      .cta-block {
+        right: 5%;
+        bottom: 10%;
+      }
+
+      .phone {
+        right: 9%;
+        width: min(40vw, 350px);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .section {
+        height: 100dvh;
+        min-height: 760px;
+      }
+
+      .phone {
+        right: -10%;
+        top: 25%;
+        width: 78vw;
+        opacity: .54;
+      }
+
+      .room-glow {
+        width: 120vw;
+        height: 120vw;
+      }
+
+      .pulse-band {
+        top: 36%;
+        height: 120px;
+      }
+
+      .brand {
+        left: 16px;
+        right: 16px;
+        top: 16px;
+      }
+
+      .stats-card {
+        left: 16px;
+        right: 16px;
+        top: 116px;
+        width: auto;
+        padding: 18px;
+      }
+
+      .stat {
+        font-size: 50px;
+        line-height: 58px;
+      }
+
+      .headline {
+        left: 16px;
+        right: 16px;
+        bottom: 180px;
+        max-width: none;
+      }
+
+      .headline h1 {
+        font-size: 27px;
+      }
+
+      .headline p {
+        font-size: 16px;
+        max-width: 96%;
+      }
+
+      .cta-block {
+        left: 16px;
+        right: 16px;
+        bottom: 24px;
+      }
+
+      .cta-label,
+      .action-panel {
+        width: min(100%, 320px);
+      }
+
+      .cta-block {
+        align-items: center;
+      }
+
+      .hotspot {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <svg aria-hidden="true" width="0" height="0" style="position:absolute;overflow:hidden">
+    <symbol id="i-qr" viewBox="0 0 24 24"><rect x="6" y="6" width="4" height="4" rx=".7"></rect><rect x="14" y="6" width="4" height="4" rx=".7"></rect><rect x="6" y="14" width="4" height="4" rx=".7"></rect><path d="M14 14h1.6v1.6H14z"></path><path d="M18 14v4h-4"></path><path d="M4.8 8V5.8h2.2"></path><path d="M17 5.8h2.2V8"></path><path d="M4.8 16v2.2h2.2"></path><path d="M17 18.2h2.2V16"></path></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="5" y="6.5" width="14" height="11" rx="2"></rect><path d="m11 10 4 2-4 2z"></path></symbol>
+    <symbol id="i-path" viewBox="0 0 24 24"><rect x="6.5" y="5" width="11" height="14" rx="2"></rect><path d="M9.5 9h5"></path><path d="M9.5 12h4"></path><path d="m9.5 15.2 1.2 1.2 3.8-3.8"></path></symbol>
+    <symbol id="i-checklist" viewBox="0 0 24 24"><rect x="6.5" y="5" width="11" height="14" rx="2"></rect><path d="m9.5 9.2 1 1 2-2"></path><path d="M14 9.2h1.2"></path><path d="m9.5 14.4 1 1 2-2"></path><path d="M14 14.4h1.2"></path></symbol>
+    <symbol id="i-hospital" viewBox="0 0 24 24"><rect x="6.5" y="5" width="11" height="14" rx="2"></rect><path d="M10 9h4"></path><path d="M12 7v4"></path><path d="M10.2 19v-3.5h3.6V19"></path></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M5 8v10"></path><path d="M19 12v6"></path><path d="M5 15h14"></path><path d="M8 15v-3h5a3 3 0 0 1 3 3"></path></symbol>
+    <symbol id="i-crutch" viewBox="0 0 24 24"><path d="M9 20 15 4"></path><path d="M12 11h4"></path><path d="M15 20V4"></path></symbol>
+    <symbol id="i-stairs" viewBox="0 0 24 24"><path d="M4 19h16"></path><path d="M6 15h4v4"></path><path d="M10 11h4v8"></path><path d="M14 7h4v12"></path></symbol>
+    <symbol id="i-chair" viewBox="0 0 24 24"><path d="M8 5c2.6 1.8 3.6 4 3.6 7s-1 5.2-3.6 7"></path><path d="M16 5c-2.6 1.8-3.6 4-3.6 7s1 5.2 3.6 7"></path><circle cx="12" cy="12" r="2.3"></circle></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><circle cx="9" cy="18" r="2.4"></circle><path d="M10 5.2a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z"></path><path d="M10 8v4h5l3 6"></path><path d="M18 18h2"></path></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 6 5.5 18h13z"></path><path d="M12 10v3.5"></path><path d="M12 16h.01"></path></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M6 6.5h12v9H10l-4 3z"></path><path d="M12 9v4"></path><path d="M10 11h4"></path></symbol>
+  </svg>
+
+  <main class="section" id="section">
+    <div class="scene">
+      <div class="scene-base"></div>
+      <div class="scene-live"></div>
+      <div class="room-lines"></div>
+      <div class="room-glow"></div>
+      <svg class="pulse-band" viewBox="0 0 1200 160" aria-hidden="true">
+        <path d="M0 86h178l40-72 70 132 64-96 50 36h798"></path>
+      </svg>
+      <div class="phone" aria-hidden="true">
+        <div class="phone-ui">
+          <div class="phone-logo"><svg><use href="#i-hospital"></use></svg></div>
+          <div class="phone-title">ИРИС</div>
+          <div class="phone-pill"></div>
+          <div class="phone-card main"></div>
+          <div class="phone-card"></div>
+          <div class="phone-card"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="brand">
+      <span class="brand-mark"><svg aria-hidden="true"><use href="#i-hospital"></use></svg></span>
+      <span><span class="brand-name">ИРИС</span><span class="brand-sub">помощник пациента</span></span>
+    </div>
+
+    <aside class="stats-card">
+      <div class="stat-row">
+        <div class="stat">24/7</div>
+        <div class="chart-wrap">
+          <svg class="chart" viewBox="0 0 289 138" aria-hidden="true">
+            <path d="M22.5 48.7C39.8 48.7 49.3 54.9 63.2 69.3C77 83.7 86.5 110.5 103.8 110.5C121.1 110.5 130.7 84.3 144.5 59.3C158.3 34.3 167.9 19.6 185.2 19.6C202.5 19.6 208.6 57.7 225.8 57.7C243.1 57.7 249.2 19.5 266.5 19.5"></path>
+          </svg>
+        </div>
+      </div>
+      <h2>Подсказки по восстановлению всегда под рукой</h2>
+      <p>QR-код у палаты открывает маршрут пациента, видео и срочные признаки без регистрации.</p>
+    </aside>
+
+    <section class="headline">
+      <h1>
+        <span class="font-sans">Понятные шаги</span>
+        <span class="font-sans">для восстановления</span>
+        <span class="font-serif"><span class="not-italic">прямо </span><span class="italic">у палаты</span></span>
+        <span class="font-serif italic">на экране телефона</span>
+      </h1>
+      <p>Выберите этап лечения, откройте короткое видео или быстро проверьте, когда нужно позвать медсестру.</p>
+    </section>
+
+    <div class="cta-block">
+      <div class="cta-label">Что нужно пациенту</div>
+      <div class="action-panel">
+        <button class="action-btn main" data-open="steps">
+          <svg aria-hidden="true"><use href="#i-path"></use></svg>
+          <strong>Провести по шагам</strong>
+          <span>Помощь пациенту на текущем этапе</span>
+        </button>
+        <button class="action-btn" data-open="media">
+          <svg aria-hidden="true"><use href="#i-video"></use></svg>
+          <strong>Видео</strong>
+          <span>Памятки и ролики</span>
+        </button>
+        <button class="action-btn warn" data-open="emergency">
+          <svg aria-hidden="true"><use href="#i-alert"></use></svg>
+          <strong>Срочно</strong>
+          <span>Если стало плохо</span>
+        </button>
+        <button class="action-btn" data-open="ask">
+          <svg aria-hidden="true"><use href="#i-chat"></use></svg>
+          <strong>Вопрос</strong>
+          <span>Не нашли нужное</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="hotspot right" aria-hidden="true"></div>
+    <div class="hotspot left" aria-hidden="true"></div>
+  </main>
+
+  <section class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Экран ИРИС">
+    <div class="panel-inner">
+      <nav class="nav">
+        <button class="nav-btn" id="backBtn">Назад</button>
+        <button class="nav-btn" id="homeBtn">В начало</button>
+      </nav>
+      <div class="screen" id="screen"></div>
+    </div>
+  </section>
+
+  <div class="toast" id="toast">Спасибо, вопрос записан</div>
+
+  <script>
+    const section = document.getElementById('section');
+    const panel = document.getElementById('panel');
+    const screen = document.getElementById('screen');
+    const toast = document.getElementById('toast');
+    const stack = [];
+
+    window.addEventListener('pointermove', event => {
+      section.style.setProperty('--x', event.clientX + 'px');
+      section.style.setProperty('--y', event.clientY + 'px');
+    });
+
+    const stages = [
+      ['consult', 'Ещё не обращался', 'Запись, документы, обследование', 'i-hospital'],
+      ['prepare', 'Готовлюсь к операции', 'Что взять с собой и что посмотреть', 'i-checklist'],
+      ['hospital', 'Я в больнице', 'Госпитализация, операция, после неё', 'i-bed'],
+      ['discharge', 'Выписываюсь домой', 'Выписка, правила, реабилитация', 'i-path'],
+      ['rehab', 'Реабилитация', 'Как пройти восстановление в ГКБ №1', 'i-crutch']
+    ];
+
+    const videos = {
+      bed: ['Как встать с кровати', 'Короткое видео показывает безопасный порядок движений: повернуться, опустить ноги, встать с опорой.', 'i-bed'],
+      crutches: ['Как ходить с костылями', 'Показываем темп, длину шага и положение головы, чтобы не терять равновесие.', 'i-crutch'],
+      stairs: ['Как ходить по лестнице', 'Главное правило: приставной шаг и двухсторонняя опора при подъёме и спуске.', 'i-stairs'],
+      chair: ['Как вставать со стула', 'Проверяем высоту стула, положение ноги и безопасную опору руками.', 'i-chair'],
+      car: ['Как сесть в машину', 'Переднее сиденье, спинка назад, без резкого сгибания ноги.', 'i-car']
+    };
+
+    function useIcon(id) {
+      return '<svg aria-hidden="true"><use href="#' + id + '"></use></svg>';
+    }
+
+    function optionHtml(id, title, desc, icon) {
+      return '<button class="option" data-next="' + id + '">' + useIcon(icon) + '<span><strong>' + title + '</strong><small>' + desc + '</small></span><span>+</span></button>';
+    }
+
+    function openPanel(id, push = true) {
+      panel.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      if (push) stack.push(id);
+      render(id);
+    }
+
+    function closePanel() {
+      panel.classList.remove('open');
+      document.body.style.overflow = '';
+      stack.length = 0;
+    }
+
+    function render(id) {
+      if (id === 'steps') {
+        screen.innerHTML = '<h2>На каком Вы этапе?</h2><p>Выберите крупную карточку. Ничего вводить не нужно.</p><div class="step-grid">' + stages.map(s => optionHtml('stage:' + s[0], s[1], s[2], s[3])).join('') + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id.indexOf('stage:') === 0) {
+        const key = id.split(':')[1];
+        const item = stages.find(s => s[0] === key) || stages[0];
+        screen.innerHTML = '<h2>' + item[1] + '</h2><p>Здесь остаются только ближайшие действия пациента: памятка, видео и возможность оставить вопрос.</p><div class="step-grid">'
+          + optionHtml('todo', 'Что сделать сейчас', 'Короткая памятка на 3-5 пунктов', 'i-checklist')
+          + optionHtml('media', 'Видео и памятки', 'Показать подходящие материалы', 'i-video')
+          + optionHtml('ask', 'Задать вопрос', 'Оставить вопрос для команды', 'i-chat')
+          + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id === 'media') {
+        screen.innerHTML = '<h2>Видео и памятки</h2><p>Выберите ролик. Позже здесь появится выбор отделения и операции.</p><div class="media-list">'
+          + Object.entries(videos).map(([key, v]) => '<button class="media-row" data-next="video:' + key + '">' + useIcon(v[2]) + '<span><strong>' + v[0] + '</strong><small>Короткое обучающее видео</small></span><span>+</span></button>').join('')
+          + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id.indexOf('video:') === 0) {
+        const key = id.split(':')[1];
+        const v = videos[key] || videos.bed;
+        screen.innerHTML = '<h2>' + v[0] + '</h2><p>' + v[1] + '</p><div class="video-box"><div class="play">▶</div></div><div class="warn"><strong>Важно:</strong> если при движении появилась резкая боль, остановитесь и позовите медсестру.</div><div class="step-grid" style="margin-top:18px">' + optionHtml('media', 'К списку видео', 'Вернуться в медиатеку', 'i-video') + '</div>';
+        bindOptions();
+        return;
+      }
+
+      if (id === 'emergency') {
+        screen.innerHTML = '<h2>Когда срочно звать помощь</h2><p>Этот экран должен быть доступен с главной страницы одним нажатием.</p><div class="warn">Резкая боль, одышка, сильная слабость, головокружение, кровотечение, падение, онемение ноги, температура или резкое ухудшение состояния.</div>';
+        return;
+      }
+
+      if (id === 'ask') {
+        screen.innerHTML = '<h2>Задать вопрос</h2><p>Напишите, какой информации не хватило. Это демонстрация будущей формы сбора вопросов.</p><form class="form" id="askForm"><label>Ваш вопрос<textarea placeholder="Например: можно ли спать на боку"></textarea></label><label>Как связаться, если нужно<input placeholder="Телефон или имя, можно не указывать"></label><button class="nav-btn" type="submit">Отправить вопрос</button></form>';
+        document.getElementById('askForm').onsubmit = e => {
+          e.preventDefault();
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2400);
+        };
+        return;
+      }
+
+      screen.innerHTML = '<h2>Что сделать сейчас</h2><p>Пример короткой памятки: проверьте документы, посмотрите нужное видео, при боли или ухудшении состояния позовите медсестру.</p>';
+    }
+
+    function bindOptions() {
+      screen.querySelectorAll('[data-next]').forEach(btn => {
+        btn.onclick = () => openPanel(btn.dataset.next);
+      });
+    }
+
+    document.querySelectorAll('[data-open]').forEach(btn => {
+      btn.onclick = () => openPanel(btn.dataset.open);
+    });
+
+    document.getElementById('homeBtn').onclick = closePanel;
+    document.getElementById('backBtn').onclick = () => {
+      stack.pop();
+      const prev = stack[stack.length - 1];
+      if (!prev) closePanel();
+      else render(prev);
+    };
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+    });
+  </script>
+</body>
+</html>
