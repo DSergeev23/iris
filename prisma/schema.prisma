@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PublicationStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaKind {
+  VIDEO
+  DOCUMENT
+  IMAGE
+}
+
+enum ScenarioActionKind {
+  STEP
+  MEDIA
+  EMERGENCY
+  INFORMATION
+}
+
+model AdminUser {
+  id           String         @id @default(uuid()) @db.Uuid
+  email        String         @unique
+  passwordHash String         @map("password_hash")
+  displayName  String         @map("display_name")
+  isActive     Boolean        @default(true) @map("is_active")
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  sessions     AdminSession[]
+  auditEvents  AuditLog[]
+
+  @@map("admin_users")
+}
+
+model AdminSession {
+  id          String    @id @default(uuid()) @db.Uuid
+  adminUserId String    @map("admin_user_id") @db.Uuid
+  tokenHash   String    @unique @map("token_hash")
+  expiresAt   DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  adminUser   AdminUser @relation(fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId, expiresAt])
+  @@map("admin_sessions")
+}
+
+model Department {
+  id        String                      @id @default(uuid()) @db.Uuid
+  slug      String                      @unique
+  name      String
+  intro     String                      @default("")
+  status    PublicationStatus           @default(DRAFT)
+  sortOrder Int                         @default(0) @map("sort_order")
+  createdAt DateTime                    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime                    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  head      DepartmentHead?
+  reference DepartmentReferenceSection?
+  facts     DepartmentFact[]
+  media     MediaItem[]
+  scenario  Scenario?
+
+  @@index([status, sortOrder])
+  @@map("departments")
+}
+
+model DepartmentHead {
+  id             String     @id @default(uuid()) @db.Uuid
+  departmentId   String     @unique @map("department_id") @db.Uuid
+  firstName      String     @map("first_name")
+  lastName       String     @map("last_name")
+  middleName     String?    @map("middle_name")
+  roleTitle      String     @default("") @map("role_title")
+  biography      String     @default("")
+  photoObjectKey String?    @map("photo_object_key")
+  photoAlt       String     @default("") @map("photo_alt")
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  department     Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@map("department_heads")
+}
+
+model DepartmentReferenceSection {
+  id           String     @id @default(uuid()) @db.Uuid
+  departmentId String     @unique @map("department_id") @db.Uuid
+  title        String
+  description  String     @default("")
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@map("department_reference_sections")
+}
+
+model DepartmentFact {
+  id           String     @id @default(uuid()) @db.Uuid
+  departmentId String     @map("department_id") @db.Uuid
+  iconKey      String     @default("info") @map("icon_key")
+  title        String
+  body         String
+  sortOrder    Int        @default(0) @map("sort_order")
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, sortOrder])
+  @@map("department_facts")
+}
+
+model Scenario {
+  id             String            @id @default(uuid()) @db.Uuid
+  departmentId   String            @unique @map("department_id") @db.Uuid
+  title          String
+  description    String            @default("")
+  emergencyTitle String            @default("Нужна срочная помощь?") @map("emergency_title")
+  emergencyBody  String            @default("") @map("emergency_body")
+  status         PublicationStatus @default(DRAFT)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime          @updatedAt @map("updated_at") @db.Timestamptz(6)
+  department     Department        @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  steps          ScenarioStep[]
+
+  @@map("scenarios")
+}
+
+model ScenarioStep {
+  id              String           @id @default(uuid()) @db.Uuid
+  scenarioId      String           @map("scenario_id") @db.Uuid
+  title           String
+  description     String           @default("")
+  sortOrder       Int              @default(0) @map("sort_order")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  scenario        Scenario         @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  actions         ScenarioAction[] @relation("ActionSourceStep")
+  targetedBy      ScenarioAction[] @relation("ActionTargetStep")
+
+  @@unique([scenarioId, sortOrder])
+  @@map("scenario_steps")
+}
+
+model ScenarioAction {
+  id           String             @id @default(uuid()) @db.Uuid
+  stepId       String             @map("step_id") @db.Uuid
+  title        String
+  body         String             @default("")
+  actionLabel  String             @default("") @map("action_label")
+  kind         ScenarioActionKind
+  targetStepId String?            @map("target_step_id") @db.Uuid
+  targetMediaId String?           @map("target_media_id") @db.Uuid
+  sortOrder    Int                @default(0) @map("sort_order")
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  step         ScenarioStep       @relation("ActionSourceStep", fields: [stepId], references: [id], onDelete: Cascade)
+  targetStep   ScenarioStep?      @relation("ActionTargetStep", fields: [targetStepId], references: [id], onDelete: SetNull)
+  targetMedia  MediaItem?         @relation(fields: [targetMediaId], references: [id], onDelete: SetNull)
+
+  @@unique([stepId, sortOrder])
+  @@map("scenario_actions")
+}
+
+model MediaItem {
+  id               String             @id @default(uuid()) @db.Uuid
+  departmentId     String             @map("department_id") @db.Uuid
+  kind             MediaKind
+  title            String
+  description      String             @default("")
+  status           PublicationStatus  @default(DRAFT)
+  storageObjectKey String             @unique @map("storage_object_key")
+  originalFilename String             @map("original_filename")
+  mimeType         String             @map("mime_type")
+  fileSizeBytes    BigInt             @map("file_size_bytes")
+  durationSeconds  Int?               @map("duration_seconds")
+  posterObjectKey  String?            @map("poster_object_key")
+  sortOrder        Int                @default(0) @map("sort_order")
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+  department       Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  scenarioActions  ScenarioAction[]
+
+  @@index([departmentId, status, sortOrder])
+  @@map("media_items")
+}
+
+model AuditLog {
+  id          BigInt     @id @default(autoincrement())
+  adminUserId String?    @map("admin_user_id") @db.Uuid
+  entityType  String     @map("entity_type")
+  entityId    String?    @map("entity_id") @db.Uuid
+  action      String
+  payload     Json       @default("{}")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt(sort: Desc)])
+  @@map("audit_log")
+}

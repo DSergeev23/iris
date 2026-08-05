@@ -1,17 +1,12 @@
 # Iris content database
 
-These SQL files are the first migration set for Timeweb PostgreSQL. They are not tied to the static prototypes and do not contain credentials or real media.
+The production schema is managed by Prisma rather than hand-run SQL:
 
-## Run order
+- [`../prisma/schema.prisma`](../prisma/schema.prisma) is the readable data model.
+- [`../prisma/migrations/20260805120000_initial/migration.sql`](../prisma/migrations/20260805120000_initial/migration.sql) is the versioned migration for Timeweb PostgreSQL.
+- `npm run db:seed` creates the three example departments only if the database is completely empty.
 
-After creating a PostgreSQL database in Timeweb, run the files in this order:
-
-```bash
-psql "$DATABASE_URL" -f database/001_initial_schema.sql
-psql "$DATABASE_URL" -f database/002_demo_content.sql
-```
-
-The second file is optional demo content. It deliberately creates no administrator: the first account must be created by the future server code from environment variables, with an Argon2id password hash.
+Do not execute a schema manually in the Timeweb panel. On deployment the application uses `prisma migrate deploy`, so the database structure is kept in sync with the exact application version.
 
 ## Data placement
 
@@ -26,6 +21,4 @@ The second file is optional demo content. It deliberately creates no administrat
 
 ## UI mapping
 
-`departments` feeds the department chips on the patient portal and the selector in the admin panel. `scenario_stages` and `scenario_situations` form the "Провести по шагам" flow. `media_items` provide videos, images and PDFs; a media item can be shown from multiple stages through `media_stage_links`.
-
-The future app will expose two read models: public department content (published records only) and editable admin content (drafts included). The existing `admin.html` remains a visual prototype until it is moved into the Next.js app.
+`departments` feeds the department chips on the patient portal and the selector in the admin panel. `scenarios`, `scenario_steps` and `scenario_actions` form the dynamic "Провести по шагам" flow. `media_items` provide videos, images and PDFs. The public portal reads only published records; the admin reads drafts too.
