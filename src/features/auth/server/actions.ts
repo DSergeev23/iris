@@ -44,7 +44,7 @@ export async function loginAction(_: LoginState, formData: FormData): Promise<Lo
   await db.auditLog.create({
     data: { adminUserId: user.id, entityType: "admin_session", action: "login" },
   });
-  redirect("/");
+  redirect("/admin");
 }
 
 export async function logoutAction() {

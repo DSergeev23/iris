@@ -1,0 +1,190 @@
+.portal {
+  --bg: #eef7f6;
+  --paper: #fbfffe;
+  --medical: #0c6f78;
+  --medical-2: #064d59;
+  --scrub: #21a6a6;
+  --iris: #6f5bd6;
+  --sage: #4f9b7e;
+  --danger: #c9445b;
+  --ink: #133039;
+  --white: #ffffff;
+  --muted: rgba(19, 48, 57, .68);
+  --muted-on-dark: rgba(255, 255, 255, .78);
+  --line: rgba(12, 111, 120, .16);
+  --shadow: 0 24px 70px rgba(15, 84, 91, .18);
+  min-height: 100vh;
+  color: var(--ink);
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.36) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255,255,255,.36) 1px, transparent 1px),
+    radial-gradient(900px 520px at 78% -6%, rgba(33, 166, 166, .24), transparent 62%),
+    radial-gradient(720px 420px at 6% 20%, rgba(111, 91, 214, .15), transparent 58%),
+    linear-gradient(180deg, #f7fcfb 0%, #eaf6f5 54%, #dff0ef 100%);
+  background-size: 42px 42px, 42px 42px, auto, auto, auto;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+.portal button, .portal a { -webkit-tap-highlight-color: transparent; }
+.portal button:focus-visible, .portal a:focus-visible { outline: 3px solid var(--sage); outline-offset: 3px; }
+.portal svg { width: 29px; height: 29px; stroke-width: 1.8; }
+
+.app { min-height: 100vh; padding: 18px; display: flex; justify-content: center; }
+.shell { width: 100%; max-width: 1180px; min-height: calc(100vh - 36px); display: flex; flex-direction: column; gap: 18px; }
+.topbar { display: flex; gap: 18px; align-items: flex-start; justify-content: space-between; }
+.intro { max-width: 760px; }
+.brandline { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--medical); font-size: 13px; font-weight: 700; text-transform: uppercase; }
+.brandline svg, .cardTitle svg { width: 13px; height: 13px; }
+.intro h1 { max-width: none; margin: 0; font-size: clamp(34px, 7vw, 72px); line-height: 1.02; font-weight: 620; }
+.intro > p { max-width: 720px; margin: 16px 0 0; color: var(--muted); font-size: clamp(18px, 2.8vw, 23px); line-height: 1.55; }
+
+.glass { position: relative; overflow: hidden; background: rgba(255,255,255,.72); backdrop-filter: blur(18px); box-shadow: inset 0 1px 1px rgba(255,255,255,.86), var(--shadow); }
+.glass::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px; background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(12,111,120,.14) 42%, rgba(255,255,255,.78)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+.noise::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .16; mix-blend-mode: multiply; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/></svg>"); }
+
+.clinicalChips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.chip { min-height: 42px; display: inline-flex; align-items: center; gap: 9px; padding: 9px 13px; border-radius: 999px; color: var(--medical-2); background: rgba(255,255,255,.72); border: 1px solid rgba(12,111,120,.14); box-shadow: 0 10px 24px rgba(15,84,91,.08); font-size: 16px; font-weight: 800; cursor: pointer; }
+.chip svg { width: 19px; height: 19px; color: var(--scrub); }
+.chip:hover { transform: translateY(-1px); background: rgba(255,255,255,.92); }
+.activeChip { color: var(--white); background: linear-gradient(135deg, var(--medical), var(--scrub)); border-color: transparent; box-shadow: 0 16px 34px rgba(12,111,120,.22); }
+.activeChip svg { color: var(--white); }
+
+.topActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.pill { min-height: 56px; border: 0; border-radius: 999px; padding: 14px 22px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-size: 18px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.primaryPill { color: var(--white); background: linear-gradient(135deg, rgba(12,111,120,.94), rgba(6,77,89,.94)); box-shadow: var(--shadow); }
+.secondaryPill { color: var(--medical-2); background: rgba(255,255,255,.74); border: 1px solid rgba(12,111,120,.16); box-shadow: 0 14px 30px rgba(15,84,91,.1); }
+.secondaryPill svg { width: 24px; height: 24px; color: var(--scrub); }
+
+.grid { flex: 1; display: grid; grid-template-columns: minmax(0,1.12fr) minmax(0,.88fr) minmax(0,1fr); gap: 18px; min-height: 0; }
+.card { position: relative; border-radius: 28px; min-height: 220px; padding: 24px; }
+.card::after { content: ""; position: absolute; right: 22px; top: 22px; width: 28px; height: 28px; opacity: .18; background: linear-gradient(var(--medical),var(--medical)) center/8px 100% no-repeat, linear-gradient(var(--medical),var(--medical)) center/100% 8px no-repeat; border-radius: 8px; pointer-events: none; }
+.primaryCard::after, .mediaCard::after, .emergencyCard::after { background: linear-gradient(#fff,#fff) center/8px 100% no-repeat, linear-gradient(#fff,#fff) center/100% 8px no-repeat; opacity: .2; }
+.cardTitle, .leftCardTitle { margin-bottom: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+.cardTitle { display: flex; align-items: center; justify-content: center; gap: 9px; color: rgba(255,255,255,.76); }
+.leftCardTitle { color: rgba(12,111,120,.72); }
+
+.primaryCard { display: flex; flex-direction: column; justify-content: space-between; color: var(--white); background: linear-gradient(150deg, rgba(6,77,89,.96), rgba(12,111,120,.9) 46%, rgba(75,58,157,.82)), radial-gradient(420px 280px at 50% 0%, rgba(255,255,255,.24), transparent 65%); }
+.irisMark { width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center; margin-bottom: 18px; background: radial-gradient(circle at 32% 28%,rgba(255,255,255,.7),transparent 25%), conic-gradient(from 210deg,#fff,#bdeee7,#7f6ee3,#2f8f98,#fff); box-shadow: 0 22px 52px rgba(12,111,120,.42); color: var(--medical-2); font-size: 44px; font-weight: 800; }
+.bigText { margin: 0; font-size: clamp(28px,5.5vw,48px); line-height: 1.08; font-weight: 600; }
+.mutedLight { color: var(--muted-on-dark); font-size: 19px; line-height: 1.52; }
+.actions { display: grid; gap: 14px; margin-top: 24px; }
+.action, .panelAction { width: 100%; min-height: 68px; border: 0; border-radius: 22px; padding: 18px; cursor: pointer; text-align: left; display: grid; grid-template-columns: 58px minmax(0,1fr) auto; gap: 15px; align-items: center; }
+.action { color: var(--white); background: rgba(255,255,255,.13); }
+.action:hover { background: rgba(255,255,255,.2); }
+.action:active, .panelAction:active { transform: scale(.985); }
+.actionIcon, .panelActionIcon, .mediaIcon { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; }
+.actionIcon { color: var(--white); background: rgba(255,255,255,.18); }
+.action strong, .panelAction strong { display: block; margin-bottom: 4px; font-size: 23px; line-height: 1.18; }
+.action span span, .panelAction span span { opacity: .72; font-size: 17px; line-height: 1.35; }
+.arrow { color: currentColor; opacity: .58; font-size: 28px; }
+
+.stack { display: grid; gap: 18px; grid-template-rows: auto 1fr; }
+.noticeCard { color: var(--ink); background: linear-gradient(145deg,rgba(255,255,255,.82),rgba(230,243,241,.76)), radial-gradient(220px 180px at 95% 0%,rgba(33,166,166,.16),transparent 70%); }
+.noticeCard p { margin: 0; color: rgba(19,48,57,.82); font-size: 20px; line-height: 1.55; }
+.emergencyCard { color: var(--white); background: linear-gradient(145deg,rgba(180,48,69,.96),rgba(102,23,42,.94)); }
+.emergencyCard .leftCardTitle { color: rgba(255,255,255,.76); }
+.emergencyTitle { max-width: 330px; margin: 0; font-size: 34px; line-height: 1.08; font-weight: 600; }
+.emergencyButton { margin-top: 18px; min-height: 56px; border: 0; border-radius: 999px; padding: 14px 22px; color: var(--white); background: rgba(255,255,255,.16); cursor: pointer; font-size: 18px; font-weight: 700; }
+
+.mediaCard { display: flex; flex-direction: column; gap: 30px; color: var(--white); background: radial-gradient(360px 260px at 80% 4%,rgba(150,232,217,.24),transparent 65%), linear-gradient(150deg,#073b46,#0b5f68 58%,#143240); }
+.marquee { width: calc(100% + 48px); margin: 20px -24px 0; overflow: hidden; mask-image: linear-gradient(to right,transparent,black 9%,black 91%,transparent); }
+.marqueeTrack { display: flex; width: max-content; gap: 12px; animation: marqueeLeft 24s linear infinite; }
+.tile { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; color: var(--white); background: rgba(255,255,255,.13); border: 1px solid rgba(255,255,255,.22); flex: none; }
+@keyframes marqueeLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.mediaList, .panelMediaList { display: grid; gap: 12px; margin-top: auto; }
+.mediaRow { width: 100%; min-height: 76px; border: 1px solid rgba(255,255,255,.22); border-radius: 20px; padding: 12px; color: var(--white); background: rgba(255,255,255,.12); cursor: pointer; display: grid; grid-template-columns: 56px 1fr; gap: 13px; text-align: left; align-items: center; }
+.mediaIcon { width: 56px; height: 56px; color: inherit; background: rgba(255,255,255,.16); }
+.mediaRow strong { display: block; font-size: 19px; line-height: 1.22; }
+.mediaRow small { display: block; margin-top: 3px; color: var(--muted-on-dark); font-size: 16px; }
+.emptyMedia { color: var(--muted-on-dark); font-size: 17px; }
+
+.departmentInfo { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: 18px; scroll-margin-top: 18px; }
+.doctorCard, .referenceCard { min-height: 260px; }
+.doctorLayout { display: grid; grid-template-columns: 132px 1fr; gap: 20px; align-items: center; height: 100%; }
+.doctorPhoto { width: 132px; aspect-ratio: 1; border-radius: 30px; display: grid; place-items: center; color: var(--white); background: linear-gradient(160deg,rgba(12,111,120,.9),rgba(33,166,166,.72)); box-shadow: 0 18px 38px rgba(15,84,91,.18); font-size: 34px; font-weight: 800; }
+.doctorRole { margin-bottom: 12px; color: var(--medical); font-size: 13px; font-weight: 800; text-transform: uppercase; }
+.doctorCard h2, .referenceCard h2 { margin: 0 0 10px; font-size: clamp(28px,3vw,42px); line-height: 1.08; font-weight: 650; }
+.doctorCard p, .referenceCard p { margin: 0; color: var(--muted); font-size: 19px; line-height: 1.55; }
+.referenceList { display: grid; gap: 12px; margin-top: 18px; }
+.referenceItem { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; padding: 12px; border-radius: 18px; background: rgba(255,255,255,.68); border: 1px solid rgba(12,111,120,.1); }
+.referenceIcon { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--medical-2); background: rgba(33,166,166,.12); }
+.referenceIcon svg { width: 24px; height: 24px; }
+.referenceCopy strong { display: block; font-size: 18px; line-height: 1.2; }
+.referenceCopy span { display: block; margin-top: 3px; color: var(--muted); font-size: 16px; line-height: 1.35; }
+
+.panel { position: fixed; inset: 0; z-index: 20; padding: 16px; overflow: auto; background: linear-gradient(90deg,rgba(255,255,255,.34) 1px,transparent 1px), linear-gradient(180deg,rgba(255,255,255,.34) 1px,transparent 1px), radial-gradient(900px 520px at 78% -6%,rgba(33,166,166,.24),transparent 62%), #eef7f6; background-size: 42px 42px,42px 42px,auto,auto; }
+.panelInner { max-width: 760px; min-height: calc(100vh - 32px); margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.panelNav { display: flex; gap: 12px; align-items: center; position: sticky; top: 0; z-index: 2; padding: 4px 0 8px; background: linear-gradient(180deg,rgba(238,247,246,.96) 70%,rgba(238,247,246,0)); }
+.navButton { min-height: 56px; border: 0; border-radius: 999px; padding: 14px 18px; color: var(--white); background: linear-gradient(135deg,var(--medical),var(--medical-2)); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 800; }
+.navButton svg { width: 20px; height: 20px; }
+.navTitle { margin-left: auto; color: var(--muted); font-size: 17px; }
+.screen { border-radius: 30px; padding: 24px; background: rgba(255,255,255,.82); border: 1px solid var(--line); color: var(--ink); }
+.screen h2 { max-width: 680px; margin: 0 0 12px; font-size: clamp(30px,7vw,44px); line-height: 1.08; font-weight: 650; }
+.screen > p { margin: 0 0 20px; color: var(--muted); font-size: 20px; line-height: 1.55; }
+.stepGrid { display: grid; gap: 14px; }
+.panelAction { color: var(--ink); background: rgba(255,255,255,.84); border: 1px solid rgba(12,111,120,.12); box-shadow: 0 12px 30px rgba(15,84,91,.1); }
+.panelActionIcon { color: var(--medical-2); background: linear-gradient(145deg,rgba(33,166,166,.16),rgba(111,91,214,.12)); }
+.lightMediaRow { color: var(--ink); background: rgba(255,255,255,.84); border-color: rgba(12,111,120,.12); box-shadow: 0 12px 30px rgba(15,84,91,.1); }
+.lightMediaRow .mediaIcon { color: var(--medical-2); background: rgba(33,166,166,.12); }
+.lightMediaRow small { color: var(--muted); }
+.videoBox { aspect-ratio: 16/10; border-radius: 24px; display: grid; place-items: center; margin: 20px 0; background: linear-gradient(135deg,rgba(12,111,120,.24),rgba(111,91,214,.18)), radial-gradient(320px 220px at 70% 20%,rgba(255,255,255,.72),transparent 70%), #d8efec; color: var(--medical-2); }
+.videoBox svg { width: 88px; height: 88px; padding: 24px; border-radius: 50%; background: rgba(255,255,255,.72); }
+.warn { display: grid; gap: 12px; margin-top: 16px; padding: 18px; border-radius: 24px; background: rgba(201,68,91,.1); border: 1px solid rgba(201,68,91,.28); }
+.warn div { display: flex; gap: 12px; align-items: flex-start; color: var(--ink); font-size: 20px; line-height: 1.45; }
+.patientChecklist { display: grid; gap: 12px; margin: 16px 0 20px; padding: 18px; border-radius: 24px; background: rgba(33,166,166,.1); border: 1px solid rgba(12,111,120,.16); }
+.patientChecklist div { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: center; font-size: 20px; line-height: 1.45; }
+.patientChecklist b { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; color: var(--white); background: linear-gradient(135deg,var(--medical),var(--scrub)); }
+.patientChecklist svg { width: 18px; height: 18px; }
+
+.empty { min-height: 100vh; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; color: #133039; background: #eef7f6; text-align: center; }
+.empty h1 { margin: 0; font-size: clamp(30px,5vw,48px); }
+.empty p { max-width: 560px; margin: 0; color: rgba(19,48,57,.68); font-size: 19px; line-height: 1.5; }
+
+@media (max-width: 980px) {
+  .grid, .departmentInfo { grid-template-columns: 1fr; }
+  .stack { grid-template-rows: none; }
+  .topbar { flex-direction: column; }
+  .topActions { width: 100%; }
+  .pill { flex: 1; }
+  .card { min-height: auto; }
+}
+
+@media (max-width: 520px) {
+  .app { padding: 12px; }
+  .shell { min-height: calc(100vh - 24px); }
+  .topbar { gap: 10px; }
+  .brandline { font-size: 11px; }
+  .intro > p { font-size: 18px; }
+  .card, .screen { padding: 20px; border-radius: 26px; }
+  .action, .panelAction { grid-template-columns: 54px minmax(0,1fr); padding: 15px; }
+  .action .arrow, .panelAction .arrow { display: none; }
+  .action strong, .panelAction strong { font-size: 21px; }
+  .action span span, .panelAction span span { font-size: 16px; }
+  .doctorLayout { grid-template-columns: 1fr; }
+  .doctorPhoto { width: 112px; border-radius: 26px; }
+  .navTitle { display: none; }
+  .navButton { flex: 1; justify-content: center; }
+  .screen > p, .warn div { font-size: 19px; }
+  .clinicalChips { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .chip { justify-content: flex-start; min-width: 0; }
+}
+
+@media (min-width: 1180px) {
+  .app { padding: 32px; }
+  .shell { max-width: 1360px; min-height: calc(100vh - 64px); gap: 24px; }
+  .topbar { align-items: flex-end; }
+  .intro { max-width: 880px; }
+  .intro h1 { font-size: clamp(58px,5vw,86px); }
+  .intro > p { max-width: 790px; font-size: 23px; }
+  .grid { grid-template-columns: minmax(360px,1.05fr) minmax(310px,.82fr) minmax(360px,1fr); gap: 24px; }
+  .card { min-height: 260px; padding: 30px; }
+  .action { min-height: 104px; }
+  .panelInner { max-width: 900px; }
+  .screen { padding: 38px; }
+  .departmentInfo { grid-template-columns: minmax(440px,.9fr) minmax(520px,1.1fr); gap: 24px; }
+  .doctorCard, .referenceCard { min-height: 300px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal *, .portal *::before, .portal *::after { animation: none !important; transition: none !important; }
+}

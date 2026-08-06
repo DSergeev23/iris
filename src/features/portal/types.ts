@@ -16,7 +16,15 @@ export type PortalDepartment = {
       id: string;
       title: string;
       description: string;
-      actions: Array<{ id: string; title: string; body: string; actionLabel: string; kind: string }>;
+      actions: Array<{
+        id: string;
+        title: string;
+        body: string;
+        actionLabel: string;
+        kind: string;
+        targetStepId: string | null;
+        targetMediaId: string | null;
+      }>;
     }>;
   } | null;
 };

@@ -6,7 +6,19 @@ The production schema is managed by Prisma rather than hand-run SQL:
 - [`../prisma/migrations/20260805120000_initial/migration.sql`](../prisma/migrations/20260805120000_initial/migration.sql) is the versioned migration for Timeweb PostgreSQL.
 - `npm run db:seed` creates the three example departments only if the database is completely empty.
 
-Do not execute a schema manually in the Timeweb panel. On deployment the application uses `prisma migrate deploy`, so the database structure is kept in sync with the exact application version.
+Do not execute a hand-written schema in the Timeweb panel. Apply the versioned Prisma migrations with `npm run db:migrate` as an explicit deployment step when a release contains database changes. The application startup command is only `npm start`; migrations and data bootstrap do not run inside the web-container startup loop.
+
+## First administrator
+
+The first administrator is created through a guarded one-time route:
+
+1. Add a random `ADMIN_SETUP_TOKEN` of at least 32 characters to the Timeweb application environment.
+2. Deploy the application and open `/setup` on the technical or admin domain.
+3. Enter the setup token, administrator email, display name, and a password of at least 16 characters.
+4. Verify that `/admin` opens and `/login` accepts the new credentials.
+5. Remove `ADMIN_SETUP_TOKEN` from Timeweb and redeploy.
+
+The setup action refuses to create a second administrator even if the route is called concurrently. `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` are not used.
 
 ## Data placement
 

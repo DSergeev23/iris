@@ -13,7 +13,20 @@ function mapDepartment(item: Awaited<ReturnType<typeof getRawDepartment>>): Port
     media: item.media.map((media) => ({ id: media.id, title: media.title, description: media.description, kind: media.kind })),
     scenario: item.scenario ? {
       title: item.scenario.title, description: item.scenario.description, emergencyTitle: item.scenario.emergencyTitle, emergencyBody: item.scenario.emergencyBody,
-      steps: item.scenario.steps.map((step) => ({ id: step.id, title: step.title, description: step.description, actions: step.actions.map((action) => ({ id: action.id, title: action.title, body: action.body, actionLabel: action.actionLabel, kind: action.kind })) })),
+      steps: item.scenario.steps.map((step) => ({
+        id: step.id,
+        title: step.title,
+        description: step.description,
+        actions: step.actions.map((action) => ({
+          id: action.id,
+          title: action.title,
+          body: action.body,
+          actionLabel: action.actionLabel,
+          kind: action.kind,
+          targetStepId: action.targetStepId,
+          targetMediaId: action.targetMediaId,
+        })),
+      })),
     } : null,
   };
 }
