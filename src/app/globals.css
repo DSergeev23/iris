@@ -146,6 +146,15 @@ h1 { max-width:760px; margin:0; font-size:clamp(34px, 5vw, 58px); line-height:1.
 .inline-empty { margin:0; padding:12px; color:var(--muted); background:#f4f8f8; }
 .media-admin-row { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid var(--line); }
 .media-admin-row:last-child { border-bottom:0; }
+.upload-form { margin:18px 0 24px; padding:20px; border:1px solid #b9d8d4; border-radius:7px; background:#eff9f7; }
+.upload-heading { display:flex; align-items:center; gap:9px; color:var(--deep); }
+.upload-progress { height:10px; margin:14px 0 8px; overflow:hidden; border-radius:999px; background:#d7e8e5; }
+.upload-progress span { display:block; height:100%; border-radius:inherit; background:var(--aqua); transition:width .15s ease; }
+.upload-message { margin:10px 0; font-weight:750; }
+.upload-message.error { color:#a32929; }
+.upload-message.success { color:#176950; }
+.media-editors { margin-top:18px; }
+.publication-inline { margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
 .admin-aside { position:sticky; top:20px; }
 .aside-panel { border-left:4px solid var(--aqua); padding:20px; background:#dff4f0; }
 .aside-panel h2 { margin:0 0 12px; font-size:19px; }

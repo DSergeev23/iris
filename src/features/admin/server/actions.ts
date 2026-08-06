@@ -460,3 +460,37 @@ export async function moveScenarioButtonAction(formData: FormData) {
     adminRedirect(undefined, "error", errorMessage(error), "scenario");
   }
 }
+
+export async function updateMediaItemAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const parsed = z.object({ mediaId: idSchema, title: z.string().trim().min(2).max(180), description: z.string().trim().max(2000) }).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) adminRedirect(undefined, "error", "Проверьте название и описание материала.", "media");
+  try {
+    const media = await db.mediaItem.findUnique({ where: { id: parsed.data.mediaId }, select: { id: true, departmentId: true } });
+    if (!media) throw new ValidationError("Материал не найден.");
+    await requireDepartmentWrite(admin, media.departmentId);
+    await db.mediaItem.update({ where: { id: media.id }, data: { title: parsed.data.title, description: parsed.data.description } });
+    refreshContent();
+    adminRedirect(media.departmentId, "notice", "Материал сохранён.", "media");
+  } catch (error) {
+    adminRedirect(undefined, "error", errorMessage(error), "media");
+  }
+}
+
+export async function toggleMediaPublicationAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const mediaId = idSchema.safeParse(formData.get("mediaId"));
+  const status = z.nativeEnum(PublicationStatus).safeParse(formData.get("status"));
+  if (!mediaId.success || !status.success || status.data === PublicationStatus.ARCHIVED) adminRedirect(undefined, "error", "Некорректный статус материала.", "media");
+  try {
+    const media = await db.mediaItem.findUnique({ where: { id: mediaId.data }, select: { id: true, departmentId: true } });
+    if (!media) throw new ValidationError("Материал не найден.");
+    await requireDepartmentWrite(admin, media.departmentId);
+    await db.mediaItem.update({ where: { id: media.id }, data: { status: status.data } });
+    await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: media.id, action: "publication", payload: { status: status.data } } });
+    refreshContent();
+    adminRedirect(media.departmentId, "notice", status.data === PublicationStatus.PUBLISHED ? "Материал опубликован." : "Материал скрыт с портала.", "media");
+  } catch (error) {
+    adminRedirect(undefined, "error", errorMessage(error), "media");
+  }
+}

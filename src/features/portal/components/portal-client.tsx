@@ -168,7 +168,7 @@ export function PortalClient({ departments, initialSlug }: Props) {
         <section className={styles.departmentInfo} id="department-info">
           <article className={cx(styles.card, styles.doctorCard, styles.glass, styles.noise)}>
             <div className={styles.doctorLayout}>
-              <div className={styles.doctorPhoto}>{initials}</div>
+              <div className={styles.doctorPhoto}>{department.head?.photoUrl ? <img src={department.head.photoUrl} alt={department.head.name ? `Заведующий отделением ${department.head.name}` : "Заведующий отделением"} /> : initials}</div>
               <div>
                 <div className={styles.doctorRole}>{department.head?.role || "Заведующий отделением"}</div>
                 <h2>{department.head?.name || "Команда отделения"}</h2>
@@ -225,7 +225,7 @@ function PanelContent({ department, view, open, onAction }: { department: Portal
 
   if (view.type === "media-detail") {
     const item = department.media.find((media) => media.id === view.mediaId);
-    return <><h2>{item?.title || "Материал не найден"}</h2><p>{item?.description}</p><div className={styles.videoBox}>{item?.kind === "VIDEO" ? <Play /> : <FileText />}</div><div className={styles.warn}><div><strong>Важно:</strong> если состояние ухудшилось, остановитесь и позовите медсестру.</div></div></>;
+    return <><h2>{item?.title || "Материал не найден"}</h2><p>{item?.description}</p>{item?.url && item.kind === "VIDEO" ? <video className={styles.videoPlayer} controls preload="metadata" src={item.url}>Ваш браузер не поддерживает видео.</video> : item?.url ? <a className={styles.documentLink} href={item.url} target="_blank" rel="noreferrer"><FileText />Открыть памятку</a> : <div className={styles.videoBox}>{item?.kind === "VIDEO" ? <Play /> : <FileText />}</div>}<div className={styles.warn}><div><strong>Важно:</strong> если состояние ухудшилось, остановитесь и позовите медсестру.</div></div></>;
   }
 
   return <><h2>{scenario?.emergencyTitle || "Когда срочно звать помощь"}</h2><p>Список адаптирован под отделение: {department.name}.</p><div className={styles.warn}><div><CircleAlert /><span>{scenario?.emergencyBody || "Позовите медицинскую сестру кнопкой вызова у кровати или обратитесь на пост."}</span></div></div></>;

@@ -31,6 +31,34 @@ The setup action refuses to create a second administrator even if the route is c
 | Passwords, database/S3 credentials and session secrets | Timeweb environment variables |
 | Patient symptoms, medical history and chat messages | Not part of this MVP |
 
+## Timeweb S3
+
+Keep the bucket private. The browser uploads through a five-minute presigned `PUT` URL, and the application serves private files through short-lived signed `GET` URLs.
+
+Configure bucket CORS for these origins:
+
+```text
+https://irisadmin.ru
+https://dsergeev23-iris-f156.twc1.net
+```
+
+Allowed methods:
+
+```text
+PUT
+GET
+HEAD
+```
+
+Allowed request headers should include `Content-Type`. Do not expose `S3_ACCESS_KEY_ID` or `S3_SECRET_ACCESS_KEY` in browser-visible variables: all five S3 settings remain server-side Timeweb environment variables.
+
+Upload flow:
+
+1. `/api/uploads/presign` checks the admin session, department, MIME type, and size.
+2. The browser uploads the bytes directly to Timeweb S3 and displays progress.
+3. `/api/uploads/complete` verifies the object with `HeadObject` before writing PostgreSQL metadata.
+4. New media stays in `DRAFT` until the administrator publishes it.
+
 ## UI mapping
 
 `departments` feeds the department chips on the patient portal and the selector in the admin panel. `scenarios`, `scenario_steps` and `scenario_actions` form the dynamic "Провести по шагам" flow. `media_items` provide videos, images and PDFs. The public portal reads only published records; the admin reads drafts too.

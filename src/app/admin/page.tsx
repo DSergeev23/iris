@@ -15,6 +15,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { ConfirmDeleteButton, SubmitButton } from "@/features/admin/components/form-buttons";
+import { FileUpload } from "@/features/admin/components/file-upload";
 import { ScenarioActionFields } from "@/features/admin/components/scenario-action-fields";
 import {
   addScenarioActionAction,
@@ -28,10 +29,12 @@ import {
   moveScenarioStepAction,
   saveDepartmentFactAction,
   toggleDepartmentPublicationAction,
+  toggleMediaPublicationAction,
   toggleScenarioPublicationAction,
   updateDepartmentContentAction,
   updateDepartmentHeadAction,
   updateDepartmentIdentityAction,
+  updateMediaItemAction,
   updateScenarioAction,
   updateScenarioButtonAction,
   updateScenarioStepAction,
@@ -236,8 +239,16 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
           <section id="media" className="admin-section">
             <div className="section-heading"><div><p className="section-kicker">Материалы отделения</p><h2>Видео и памятки</h2></div><span className="section-note">{selected.media.length} материалов</span></div>
-            <p className="section-description">Загрузка файлов в Timeweb S3 будет подключена следующим блоком. Уже добавленные материалы можно выбирать в переходах сценария.</p>
-            <div className="editor-list">{selected.media.map((item) => <div className="media-admin-row" key={item.id}><div><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : item.kind === "DOCUMENT" ? "Памятка" : "Изображение"}</small></div><span className={`status ${item.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{item.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span></div>)}</div>
+            <p className="section-description">Загрузите MP4, PDF, JPG, PNG или WebP. Новый материал создаётся как черновик и появится у пациентов только после публикации.</p>
+            <FileUpload departmentId={selected.id} purpose="MEDIA" />
+            <div className="editor-list media-editors">{selected.media.map((item) => <details className="editor-item" key={item.id}>
+              <summary><span><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : item.kind === "DOCUMENT" ? "Памятка PDF" : "Изображение"}</small></span><span className={`status ${item.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{item.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span><span className="edit-label">Настроить</span></summary>
+              <div className="editor-body">
+                <form action={updateMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><label>Название<input name="title" defaultValue={item.title} required /></label><label>Описание<textarea name="description" defaultValue={item.description} /></label><SubmitButton className="button-icon-text"><Save size={17} />Сохранить материал</SubmitButton></form>
+                <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><SubmitButton className={item.status === PublicationStatus.PUBLISHED ? "button-secondary" : undefined}>{item.status === PublicationStatus.PUBLISHED ? "Скрыть с портала" : "Опубликовать материал"}</SubmitButton></form>
+              </div>
+            </details>)}</div>
+            {!selected.media.length && <div className="inline-empty">Загруженных материалов пока нет.</div>}
           </section>
 
           <section id="head" className="admin-section">
@@ -249,6 +260,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <label>Описание<textarea className="textarea-large" name="biography" defaultValue={selected.head?.biography ?? ""} /></label>
               <SubmitButton className="button-icon-text"><Save size={18} />Сохранить профиль</SubmitButton>
             </form>
+            <div className="subsection-heading"><div><h3>Фотография</h3><p>{selected.head?.photoObjectKey ? "Фотография загружена и используется на портале." : "Добавьте портрет заведующего в JPG, PNG или WebP."}</p></div></div>
+            <FileUpload departmentId={selected.id} purpose="HEAD_PHOTO" />
           </section>
         </> : <section className="admin-section"><div className="empty-state"><Building2 size={30} /><strong>Создайте первое отделение</strong><span>После этого появятся редакторы текстов, сценария и заведующего.</span></div></section>}
       </div>
