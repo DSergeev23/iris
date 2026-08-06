@@ -5,6 +5,7 @@ import {
   ArrowUp,
   Building2,
   CheckCircle2,
+  DatabaseZap,
   ExternalLink,
   FileText,
   LogOut,
@@ -20,6 +21,7 @@ import { ScenarioActionFields } from "@/features/admin/components/scenario-actio
 import {
   addScenarioActionAction,
   addScenarioStepAction,
+  bootstrapInitialContentAction,
   createDepartmentAction,
   deleteDepartmentFactAction,
   deleteScenarioButtonAction,
@@ -87,6 +89,11 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <div className="admin-grid"><div className="admin-content">
         <section id="departments" className="admin-section">
           <div className="section-heading"><div><p className="section-kicker">Структура портала</p><h2>Отделения</h2></div><span className="section-note">На портале видны только опубликованные</span></div>
+          {!departments.length && <div className="bootstrap-panel">
+            <div className="bootstrap-icon"><DatabaseZap size={25} /></div>
+            <div><h3>Заполнить портал стартовыми данными</h3><p>Создаст травматологию, неврологию и терапию вместе со справками и сценариями. После этого всё можно отредактировать.</p></div>
+            <form action={bootstrapInitialContentAction}><SubmitButton pendingLabel="Создаём данные..." className="button-icon-text"><DatabaseZap size={18} />Создать начальные данные</SubmitButton></form>
+          </div>}
           <div className="department-manager">
             <div className="department-list">
               {departments.map((item, index) => <div className={`department-row ${selected?.id === item.id ? "selected" : ""}`} key={item.id}>

@@ -39,6 +39,7 @@ Configure bucket CORS for these origins:
 
 ```text
 https://irisadmin.ru
+https://iriscare.ru
 https://dsergeev23-iris-f156.twc1.net
 ```
 

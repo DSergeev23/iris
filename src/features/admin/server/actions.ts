@@ -7,6 +7,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/features/auth/server/session";
 import { db } from "@/lib/db";
 import { ValidationError } from "@/lib/errors";
+import { createInitialContent } from "./bootstrap-content";
 import { requireDepartmentWrite, requireScenarioStepWrite, requireScenarioWrite } from "./permissions";
 
 const idSchema = z.string().uuid();
@@ -90,6 +91,18 @@ function adminRedirect(departmentId: string | undefined, type: "notice" | "error
 function refreshContent() {
   revalidatePath("/portal");
   revalidatePath("/admin");
+}
+
+export async function bootstrapInitialContentAction() {
+  const admin = await requireAdmin();
+  try {
+    const firstDepartmentId = await db.$transaction((tx) => createInitialContent(tx, admin.id), { timeout: 20_000 });
+    if (!firstDepartmentId) throw new ValidationError("Начальные данные уже созданы. Обновите страницу.");
+    refreshContent();
+    adminRedirect(firstDepartmentId, "notice", "Созданы три отделения и стартовые сценарии.");
+  } catch (error) {
+    adminRedirect(undefined, "error", errorMessage(error));
+  }
 }
 
 export async function createDepartmentAction(formData: FormData) {
