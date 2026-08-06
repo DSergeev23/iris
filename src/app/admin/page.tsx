@@ -63,6 +63,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   });
   const params = await searchParams;
   const selected = departments.find((item) => item.id === params.department) ?? departments[0];
+  const missingStarterDepartments = ["trauma", "neuro", "therapy"].filter((slug) => !departments.some((item) => item.slug === slug));
   const stepOptions = selected?.scenario?.steps.map((step) => ({ id: step.id, title: step.title })) ?? [];
   const mediaOptions = selected?.media.map((item) => ({ id: item.id, title: item.title })) ?? [];
 
@@ -89,10 +90,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <div className="admin-grid"><div className="admin-content">
         <section id="departments" className="admin-section">
           <div className="section-heading"><div><p className="section-kicker">Структура портала</p><h2>Отделения</h2></div><span className="section-note">На портале видны только опубликованные</span></div>
-          {!departments.length && <div className="bootstrap-panel">
+          {!!missingStarterDepartments.length && <div className="bootstrap-panel">
             <div className="bootstrap-icon"><DatabaseZap size={25} /></div>
-            <div><h3>Заполнить портал стартовыми данными</h3><p>Создаст травматологию, неврологию и терапию вместе со справками и сценариями. После этого всё можно отредактировать.</p></div>
-            <form action={bootstrapInitialContentAction}><SubmitButton pendingLabel="Создаём данные..." className="button-icon-text"><DatabaseZap size={18} />Создать начальные данные</SubmitButton></form>
+            <div><h3>Добавить стартовые отделения</h3><p>Добавит недостающие отделения вместе со справками и сценариями: {missingStarterDepartments.length}. Тестовые данные останутся без изменений.</p></div>
+            <form action={bootstrapInitialContentAction}><SubmitButton pendingLabel="Создаём данные..." className="button-icon-text"><DatabaseZap size={18} />Добавить недостающие</SubmitButton></form>
           </div>}
           <div className="department-manager">
             <div className="department-list">

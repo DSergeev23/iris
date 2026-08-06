@@ -1,4 +1,5 @@
 import { Prisma, PublicationStatus, ScenarioActionKind } from "@prisma/client";
+import { ValidationError } from "@/lib/errors";
 
 type BootstrapStep = { title: string; description: string };
 type BootstrapAction = {
@@ -116,17 +117,22 @@ const departments = [
 
 export async function createInitialContent(tx: Prisma.TransactionClient, adminUserId: string) {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('iris_initial_content'))`;
-  if (await tx.department.count()) return null;
+  const existing = await tx.department.findMany({ select: { slug: true } });
+  const existingSlugs = new Set(existing.map((item) => item.slug));
+  const missing = departments.filter((item) => !existingSlugs.has(item.slug));
+  if (!missing.length) return null;
+  if (existing.length + missing.length > 20) throw new ValidationError("Недостаточно свободных мест для стартовых отделений.");
+  const maxOrder = await tx.department.aggregate({ _max: { sortOrder: true } });
 
   const departmentIds: string[] = [];
-  for (const [departmentIndex, item] of departments.entries()) {
+  for (const [departmentIndex, item] of missing.entries()) {
     const department = await tx.department.create({
       data: {
         slug: item.slug,
         name: item.name,
         intro: item.intro,
         status: PublicationStatus.PUBLISHED,
-        sortOrder: departmentIndex,
+        sortOrder: (maxOrder._max.sortOrder ?? -1) + departmentIndex + 1,
         head: { create: item.head },
         reference: { create: item.reference },
         facts: { create: item.facts.map((fact, sortOrder) => ({ ...fact, sortOrder })) },
@@ -173,5 +179,5 @@ export async function createInitialContent(tx: Prisma.TransactionClient, adminUs
     },
   });
 
-  return departmentIds[0];
+  return { firstDepartmentId: departmentIds[0], createdCount: departmentIds.length };
 }

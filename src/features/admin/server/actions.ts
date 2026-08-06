@@ -96,10 +96,10 @@ function refreshContent() {
 export async function bootstrapInitialContentAction() {
   const admin = await requireAdmin();
   try {
-    const firstDepartmentId = await db.$transaction((tx) => createInitialContent(tx, admin.id), { timeout: 20_000 });
-    if (!firstDepartmentId) throw new ValidationError("Начальные данные уже созданы. Обновите страницу.");
+    const result = await db.$transaction((tx) => createInitialContent(tx, admin.id), { timeout: 20_000 });
+    if (!result) throw new ValidationError("Все стартовые отделения уже созданы. Обновите страницу.");
     refreshContent();
-    adminRedirect(firstDepartmentId, "notice", "Созданы три отделения и стартовые сценарии.");
+    adminRedirect(result.firstDepartmentId, "notice", `Добавлено стартовых отделений: ${result.createdCount}.`);
   } catch (error) {
     adminRedirect(undefined, "error", errorMessage(error));
   }
