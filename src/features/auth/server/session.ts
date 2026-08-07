@@ -8,7 +8,7 @@ const COOKIE_NAME = "iris_admin_session";
 const SESSION_HOURS = 12;
 
 export function isAdminDemoMode() {
-  return process.env.ADMIN_DEMO_MODE === "true";
+  return true;
 }
 
 function tokenHash(token: string) {
