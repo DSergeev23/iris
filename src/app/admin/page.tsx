@@ -6,6 +6,7 @@ import {
   Building2,
   CheckCircle2,
   DatabaseZap,
+  Eye,
   ExternalLink,
   FileText,
   LogOut,
@@ -42,7 +43,7 @@ import {
   updateScenarioStepAction,
 } from "@/features/admin/server/actions";
 import { logoutAction } from "@/features/auth/server/actions";
-import { requireAdmin } from "@/features/auth/server/session";
+import { requireAdminViewer } from "@/features/auth/server/session";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +51,7 @@ export const dynamic = "force-dynamic";
 type SearchParams = { department?: string; notice?: string; error?: string };
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const admin = await requireAdmin();
+  const { admin, isDemo } = await requireAdminViewer();
   const departments = await db.department.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     include: {
@@ -75,7 +76,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <a href="#scenario"><Workflow size={18} />Сценарий</a>
       <a href="#head"><UserRound size={18} />Заведующий</a>
       <a href="/portal" target="_blank"><ExternalLink size={18} />Открыть портал</a>
-      <form action={logoutAction}><button type="submit"><LogOut size={18} />Выйти</button></form>
+      {isDemo ? <span className="demo-nav-label"><Eye size={18} />Только просмотр</span> : <form action={logoutAction}><button type="submit"><LogOut size={18} />Выйти</button></form>}
     </aside>
 
     <section className="admin-main">
@@ -87,7 +88,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       {params.notice && <div className="feedback success" role="status"><CheckCircle2 size={21} />{params.notice}</div>}
       {params.error && <div className="feedback error" role="alert"><TriangleAlert size={21} />{params.error}</div>}
 
-      <div className="admin-grid"><div className="admin-content">
+      {isDemo && <div className="demo-banner" role="status"><Eye size={22} /><div><strong>Демонстрационный режим</strong><span>Можно открыть разделы и посмотреть настройки. Изменение данных и загрузка файлов отключены.</span></div></div>}
+
+      <fieldset className="admin-demo-lock" disabled={isDemo}><div className="admin-grid"><div className="admin-content">
         <section id="departments" className="admin-section">
           <div className="section-heading"><div><p className="section-kicker">Структура портала</p><h2>Отделения</h2></div><span className="section-note">На портале видны только опубликованные</span></div>
           {!!missingStarterDepartments.length && <div className="bootstrap-panel">
@@ -275,7 +278,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </div>
 
       <aside className="admin-aside"><section className="aside-panel"><h2>Перед публикацией</h2><ul><li>Проверьте название и описание</li><li>Заполните профиль заведующего</li><li>Настройте первый шаг сценария</li><li>Опубликуйте сценарий и отделение</li></ul></section></aside>
-      </div>
+      </div></fieldset>
     </section>
   </div></main>;
 }

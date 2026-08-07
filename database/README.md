@@ -20,6 +20,8 @@ The first administrator is created through a guarded one-time route:
 
 The setup action refuses to create a second administrator even if the route is called concurrently. `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` are not used.
 
+For a temporary customer demonstration, set `ADMIN_DEMO_MODE=true`. Anonymous visitors can then render `/admin`, but every form control is disabled and all Server Actions and upload APIs continue to require a real authenticated session. Remove the variable after the demonstration.
+
 ## Data placement
 
 | Data | Storage |

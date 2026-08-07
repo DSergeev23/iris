@@ -7,6 +7,10 @@ import { UnauthorizedError } from "@/lib/errors";
 const COOKIE_NAME = "iris_admin_session";
 const SESSION_HOURS = 12;
 
+export function isAdminDemoMode() {
+  return process.env.ADMIN_DEMO_MODE === "true";
+}
+
 function tokenHash(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -51,6 +55,19 @@ export async function requireAdmin() {
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/login");
   return admin;
+}
+
+export async function requireAdminViewer() {
+  const admin = await getCurrentAdmin();
+  if (admin) return { admin, isDemo: false } as const;
+  if (!isAdminDemoMode()) redirect("/login");
+
+  const demoAdmin = await db.adminUser.findFirst({
+    where: { isActive: true },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!demoAdmin) redirect("/login");
+  return { admin: demoAdmin, isDemo: true } as const;
 }
 
 export async function revokeCurrentSession() {
