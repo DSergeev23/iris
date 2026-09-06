@@ -6,8 +6,6 @@ import {
   Building2,
   CheckCircle2,
   DatabaseZap,
-  Eye,
-  ExternalLink,
   FileText,
   LogOut,
   Plus,
@@ -16,7 +14,8 @@ import {
   UserRound,
   Workflow,
 } from "lucide-react";
-import { ConfirmDeleteButton, SubmitButton } from "@/features/admin/components/form-buttons";
+import { AdminFormGuard } from "@/features/admin/components/admin-form-guard";
+import { CancelButton, ConfirmDeleteButton, ConfirmPublicationButton, SubmitButton } from "@/features/admin/components/form-buttons";
 import { FileUpload } from "@/features/admin/components/file-upload";
 import { ScenarioActionFields } from "@/features/admin/components/scenario-action-fields";
 import {
@@ -43,7 +42,7 @@ import {
   updateScenarioStepAction,
 } from "@/features/admin/server/actions";
 import { logoutAction } from "@/features/auth/server/actions";
-import { requireAdminViewer } from "@/features/auth/server/session";
+import { requireAdmin } from "@/features/auth/server/session";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +50,7 @@ export const dynamic = "force-dynamic";
 type SearchParams = { department?: string; notice?: string; error?: string };
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
-  const { admin, isDemo } = await requireAdminViewer();
+  const admin = await requireAdmin();
   const departments = await db.department.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     include: {
@@ -68,31 +67,30 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const stepOptions = selected?.scenario?.steps.map((step) => ({ id: step.id, title: step.title })) ?? [];
   const mediaOptions = selected?.media.map((item) => ({ id: item.id, title: item.title })) ?? [];
 
-  return <main className="admin-body"><div className="admin-shell">
+  return <main className="admin-body"><AdminFormGuard /><div className="admin-shell">
     <aside className="admin-nav">
       <a className="brand" href="/admin"><span className="brand-mark">+</span><span>ИРИС</span></a>
-      <a href="#departments" aria-current="page"><Building2 size={18} />Отделения</a>
-      <a href="#content"><FileText size={18} />Тексты и справка</a>
+      <a href="#departments"><Building2 size={18} />Отделения</a>
+      <a href="#content"><FileText size={18} />Контент отделения</a>
       <a href="#scenario"><Workflow size={18} />Сценарий</a>
+      <a href="#media"><FileText size={18} />Медиа</a>
       <a href="#head"><UserRound size={18} />Заведующий</a>
-      <a href="/portal" target="_blank"><ExternalLink size={18} />Открыть портал</a>
-      {isDemo ? <span className="demo-nav-label"><Eye size={18} />Только просмотр</span> : <form action={logoutAction}><button type="submit"><LogOut size={18} />Выйти</button></form>}
+      <form action={logoutAction}><button type="submit"><LogOut size={18} />Выйти</button></form>
     </aside>
 
     <section className="admin-main">
       <header className="admin-top">
-        <div><p className="eyebrow">Администратор: {admin.displayName}</p><h1>Контент портала</h1><p>Выберите отделение и управляйте тем, что увидит пациент.</p></div>
+        <div><p className="eyebrow">Администратор: {admin.displayName}</p><h1>Управление порталом</h1><p>Сначала выберите отделение, затем заполните нужный раздел. Все изменения сохраняются отдельно.</p></div>
         <span className="capacity"><strong>{departments.length}</strong><span>из 20 отделений</span></span>
       </header>
 
-      {params.notice && <div className="feedback success" role="status"><CheckCircle2 size={21} />{params.notice}</div>}
+      {params.notice && <div className="feedback success" role="status" aria-live="polite"><CheckCircle2 size={21} />{params.notice}</div>}
       {params.error && <div className="feedback error" role="alert"><TriangleAlert size={21} />{params.error}</div>}
 
-      {isDemo && <div className="demo-banner" role="status"><Eye size={22} /><div><strong>Демонстрационный режим</strong><span>Можно открыть разделы и посмотреть настройки. Изменение данных и загрузка файлов отключены.</span></div></div>}
-
-      <fieldset className="admin-demo-lock" disabled={isDemo}><div className="admin-grid"><div className="admin-content">
+      <div className="admin-grid"><div className="admin-content">
         <section id="departments" className="admin-section">
-          <div className="section-heading"><div><p className="section-kicker">Структура портала</p><h2>Отделения</h2></div><span className="section-note">На портале видны только опубликованные</span></div>
+          <div className="section-heading"><div><p className="section-kicker">Шаг 1 · Структура портала</p><h2>Отделения</h2></div><span className="section-note">На портале видны только опубликованные</span></div>
+          <p className="section-description">Создавайте отделения, меняйте их порядок и выбирайте то, с которым будете работать дальше.</p>
           {!!missingStarterDepartments.length && <div className="bootstrap-panel">
             <div className="bootstrap-icon"><DatabaseZap size={25} /></div>
             <div><h3>Добавить стартовые отделения</h3><p>Добавит недостающие отделения вместе со справками и сценариями: {missingStarterDepartments.length}. Тестовые данные останутся без изменений.</p></div>
@@ -111,10 +109,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               {!departments.length && <div className="empty-state"><Building2 size={28} /><strong>Отделений пока нет</strong><span>Создайте первое отделение справа.</span></div>}
             </div>
             <form action={createDepartmentAction} className="create-department">
-              <h3><Plus size={19} />Новое отделение</h3>
+              <h3><Plus size={19} />Новое отделение</h3><p>Название увидят пациенты. Адрес страницы создаётся один раз.</p>
               <label>Название<input name="name" placeholder="Например, Кардиология" required /></label>
               <label>URL-код<input name="slug" placeholder="cardiology" required pattern="[a-z0-9-]+" /><span className="field-hint">Латинские буквы, цифры и дефис</span></label>
-              <SubmitButton pendingLabel="Добавляем..." className="button-icon-text"><Plus size={18} />Добавить</SubmitButton>
+              <div className="form-actions"><SubmitButton pendingLabel="Добавляем..." className="button-icon-text"><Plus size={18} />Создать отделение</SubmitButton><CancelButton label="Очистить" /></div>
             </form>
           </div>
         </section>
@@ -122,29 +120,31 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         {selected ? <>
           <section className="admin-section department-overview">
             <div className="section-heading"><div><p className="section-kicker">Выбрано отделение</p><h2>{selected.name}</h2></div><span className={`status large ${selected.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span></div>
+            <p className="section-description">Основные данные отделения. Поля со звёздочкой обязательны для сохранения.</p>
             <div className="split-form">
               <form action={updateDepartmentIdentityAction}>
                 <input type="hidden" name="departmentId" value={selected.id} />
                 <div className="field-row"><label>Название<input name="name" defaultValue={selected.name} required /></label><label>URL-код<input name="slug" defaultValue={selected.slug} required pattern="[a-z0-9-]+" /></label></div>
-                <SubmitButton className="button-icon-text"><Save size={18} />Сохранить название</SubmitButton>
+                <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={18} />Сохранить данные</SubmitButton><CancelButton /></div>
               </form>
               <form action={toggleDepartmentPublicationAction} className="publication-control">
                 <input type="hidden" name="departmentId" value={selected.id} />
                 <input type="hidden" name="status" value={selected.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} />
-                <p>{selected.status === PublicationStatus.PUBLISHED ? "Отделение доступно пациентам." : "Отделение пока скрыто от пациентов."}</p>
-                <SubmitButton className={selected.status === PublicationStatus.PUBLISHED ? "button-secondary" : undefined}>{selected.status === PublicationStatus.PUBLISHED ? "Скрыть с портала" : "Опубликовать отделение"}</SubmitButton>
+                <h3>Публикация</h3><p>{selected.status === PublicationStatus.PUBLISHED ? "Отделение доступно пациентам." : "Отделение пока скрыто от пациентов."}</p>
+                <ConfirmPublicationButton label={`Отделение ${selected.name}`} publish={selected.status !== PublicationStatus.PUBLISHED} />
               </form>
             </div>
           </section>
 
           <section id="content" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Первый экран и справка</p><h2>Тексты отделения</h2></div></div>
+            <div className="section-heading"><div><p className="section-kicker">Шаг 2 · Первый экран и справка</p><h2>Контент отделения</h2></div><span className={`status ${selected.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span></div>
+            <p className="section-description">Тексты этого раздела увидят пациенты выбранного отделения. Сохранённые изменения сразу попадут на портал, если отделение опубликовано.</p>
             <form action={updateDepartmentContentAction}>
               <input type="hidden" name="departmentId" value={selected.id} />
-              <label>Короткое описание для первого экрана<textarea name="intro" defaultValue={selected.intro} maxLength={2000} /></label>
+              <label>Короткое описание для первого экрана<textarea name="intro" defaultValue={selected.intro} maxLength={2000} required /></label>
               <label>Заголовок справки<input name="referenceTitle" defaultValue={selected.reference?.title ?? "Об отделении"} required /></label>
-              <label>Текст об отделении<textarea className="textarea-large" name="referenceDescription" defaultValue={selected.reference?.description ?? ""} maxLength={8000} /></label>
-              <SubmitButton className="button-icon-text"><Save size={18} />Сохранить тексты</SubmitButton>
+              <label>Текст об отделении<textarea className="textarea-large" name="referenceDescription" defaultValue={selected.reference?.description ?? ""} maxLength={8000} required /></label>
+              <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={18} />Сохранить контент</SubmitButton><CancelButton /></div>
             </form>
 
             <div className="subsection-heading"><div><h3>Короткая справочная информация</h3><p>Например, время обхода, расположение поста или телефон.</p></div></div>
@@ -156,9 +156,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     <input type="hidden" name="departmentId" value={selected.id} /><input type="hidden" name="factId" value={fact.id} />
                     <div className="field-row"><label>Иконка<select name="iconKey" defaultValue={fact.iconKey}><FactIconOptions /></select></label><label>Заголовок<input name="title" defaultValue={fact.title} required /></label></div>
                     <label>Текст<input name="body" defaultValue={fact.body} required /></label>
-                    <SubmitButton className="button-icon-text"><Save size={17} />Сохранить блок</SubmitButton>
+                    <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить блок</SubmitButton><CancelButton /></div>
                   </form>
-                  <form action={deleteDepartmentFactAction} className="delete-form"><input type="hidden" name="departmentId" value={selected.id} /><input type="hidden" name="factId" value={fact.id} /><ConfirmDeleteButton label={fact.title} /></form>
+                  <form action={deleteDepartmentFactAction} className="delete-form"><input type="hidden" name="departmentId" value={selected.id} /><input type="hidden" name="factId" value={fact.id} /><ConfirmDeleteButton label={fact.title} description="Пациенты больше не увидят эту справку." /></form>
                 </div>
               </details>)}
             </div>
@@ -166,12 +166,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <input type="hidden" name="departmentId" value={selected.id} />
               <div className="field-row"><label>Иконка<select name="iconKey" defaultValue="info"><FactIconOptions /></select></label><label>Заголовок<input name="title" placeholder="Время обхода" required /></label></div>
               <label>Текст<input name="body" placeholder="Ежедневно с 09:00 до 11:00" required /></label>
-              <SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить блок</SubmitButton>
+              <div className="form-actions"><SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить блок</SubmitButton><CancelButton label="Очистить" /></div>
             </form></details>
           </section>
 
           <section id="scenario" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Маршрут пациента</p><h2>Сценарий «Провести по шагам»</h2></div>{selected.scenario && <span className={`status large ${selected.scenario.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Опубликован" : "Черновик"}</span>}</div>
+            <div className="section-heading"><div><p className="section-kicker">Шаг 3 · Маршрут пациента</p><h2>Сценарий «Провести по шагам»</h2></div>{selected.scenario && <span className={`status large ${selected.scenario.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Опубликован" : "Черновик"}</span>}</div>
+            <p className="section-description">Настройте путь пациента: сначала шаг, затем варианты выбора и результат каждого варианта.</p>
             {selected.scenario ? <>
               <div className="split-form">
                 <form action={updateScenarioAction}>
@@ -180,13 +181,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   <label>Подсказка<textarea name="description" defaultValue={selected.scenario.description} /></label>
                   <label>Заголовок срочного экрана<input name="emergencyTitle" defaultValue={selected.scenario.emergencyTitle} required /></label>
                   <label>Текст срочного экрана<textarea name="emergencyBody" defaultValue={selected.scenario.emergencyBody} /></label>
-                  <SubmitButton className="button-icon-text"><Save size={18} />Сохранить сценарий</SubmitButton>
+                  <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={18} />Сохранить сценарий</SubmitButton><CancelButton /></div>
                 </form>
                 <form action={toggleScenarioPublicationAction} className="publication-control">
                   <input type="hidden" name="scenarioId" value={selected.scenario.id} />
                   <input type="hidden" name="status" value={selected.scenario.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} />
-                  <p>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Сценарий доступен пациентам." : "Сценарий пока скрыт от пациентов."}</p>
-                  <SubmitButton className={selected.scenario.status === PublicationStatus.PUBLISHED ? "button-secondary" : undefined}>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Скрыть сценарий" : "Опубликовать сценарий"}</SubmitButton>
+                  <h3>Публикация</h3><p>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Сценарий доступен пациентам." : "Сценарий пока скрыт от пациентов."}</p>
+                  <ConfirmPublicationButton label={`Сценарий ${selected.scenario.title}`} publish={selected.scenario.status !== PublicationStatus.PUBLISHED} />
                 </form>
               </div>
 
@@ -200,13 +201,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                         <form action={moveScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><input type="hidden" name="direction" value="up" /><button className="icon-button" title="Поднять шаг" disabled={stepIndex === 0}><ArrowUp size={17} /></button></form>
                         <form action={moveScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><input type="hidden" name="direction" value="down" /><button className="icon-button" title="Опустить шаг" disabled={stepIndex === selected.scenario!.steps.length - 1}><ArrowDown size={17} /></button></form>
                       </div>
-                      <form action={deleteScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><ConfirmDeleteButton label={step.title} /></form>
+                      <form action={deleteScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><ConfirmDeleteButton label={step.title} description={`Будут удалены варианты выбора: ${step.actions.length}.`} /></form>
                     </div>
                     <form action={updateScenarioStepAction}>
                       <input type="hidden" name="scenarioId" value={selected.scenario!.id} /><input type="hidden" name="stepId" value={step.id} />
                       <label>Название шага<input name="title" defaultValue={step.title} required /></label>
                       <label>Пояснение<textarea name="description" defaultValue={step.description} /></label>
-                      <SubmitButton className="button-icon-text"><Save size={17} />Сохранить шаг</SubmitButton>
+                      <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить шаг</SubmitButton><CancelButton /></div>
                     </form>
 
                     <div className="scenario-actions">
@@ -219,12 +220,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                               <form action={moveScenarioButtonAction}><input type="hidden" name="actionId" value={action.id} /><input type="hidden" name="direction" value="up" /><button className="icon-button" title="Поднять кнопку" disabled={actionIndex === 0}><ArrowUp size={16} /></button></form>
                               <form action={moveScenarioButtonAction}><input type="hidden" name="actionId" value={action.id} /><input type="hidden" name="direction" value="down" /><button className="icon-button" title="Опустить кнопку" disabled={actionIndex === step.actions.length - 1}><ArrowDown size={16} /></button></form>
                             </div>
-                            <form action={deleteScenarioButtonAction}><input type="hidden" name="actionId" value={action.id} /><ConfirmDeleteButton label={action.title} /></form>
+                            <form action={deleteScenarioButtonAction}><input type="hidden" name="actionId" value={action.id} /><ConfirmDeleteButton label={action.title} description="Пациенты больше не увидят этот вариант." /></form>
                           </div>
                           <form action={updateScenarioButtonAction}>
                             <input type="hidden" name="actionId" value={action.id} /><input type="hidden" name="stepId" value={step.id} />
                             <ScenarioActionFields steps={stepOptions} media={mediaOptions} currentStepId={step.id} defaults={action} />
-                            <SubmitButton className="button-icon-text"><Save size={17} />Сохранить кнопку</SubmitButton>
+                            <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить вариант</SubmitButton><CancelButton /></div>
                           </form>
                         </div>
                       </details>)}
@@ -232,7 +233,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                       <details className="add-editor compact"><summary><Plus size={17} />Добавить кнопку</summary><form action={addScenarioActionAction}>
                         <input type="hidden" name="stepId" value={step.id} />
                         <ScenarioActionFields steps={stepOptions} media={mediaOptions} currentStepId={step.id} />
-                        <SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить кнопку</SubmitButton>
+                        <div className="form-actions"><SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить вариант</SubmitButton><CancelButton label="Очистить" /></div>
                       </form></details>
                     </div>
                   </div>
@@ -243,33 +244,34 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <input type="hidden" name="scenarioId" value={selected.scenario.id} />
                 <label>Название шага<input name="title" placeholder="Например, Что вас беспокоит?" required /></label>
                 <label>Пояснение<textarea name="description" placeholder="Помогите пациенту сделать понятный выбор" /></label>
-                <SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить шаг</SubmitButton>
+                <div className="form-actions"><SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить шаг</SubmitButton><CancelButton label="Очистить" /></div>
               </form></details>
             </> : <div className="empty-state"><Workflow size={28} /><strong>Сценарий не создан</strong><span>Создайте отделение заново или восстановите сценарий.</span></div>}
           </section>
 
           <section id="media" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Материалы отделения</p><h2>Видео и памятки</h2></div><span className="section-note">{selected.media.length} материалов</span></div>
+            <div className="section-heading"><div><p className="section-kicker">Шаг 4 · Материалы отделения</p><h2>Медиа</h2></div><span className="section-note">{selected.media.length} материалов</span></div>
             <p className="section-description">Загрузите MP4, PDF, JPG, PNG или WebP. Новый материал создаётся как черновик и появится у пациентов только после публикации.</p>
             <FileUpload departmentId={selected.id} purpose="MEDIA" />
             <div className="editor-list media-editors">{selected.media.map((item) => <details className="editor-item" key={item.id}>
               <summary><span><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : item.kind === "DOCUMENT" ? "Памятка PDF" : "Изображение"}</small></span><span className={`status ${item.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{item.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span><span className="edit-label">Настроить</span></summary>
               <div className="editor-body">
-                <form action={updateMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><label>Название<input name="title" defaultValue={item.title} required /></label><label>Описание<textarea name="description" defaultValue={item.description} /></label><SubmitButton className="button-icon-text"><Save size={17} />Сохранить материал</SubmitButton></form>
-                <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><SubmitButton className={item.status === PublicationStatus.PUBLISHED ? "button-secondary" : undefined}>{item.status === PublicationStatus.PUBLISHED ? "Скрыть с портала" : "Опубликовать материал"}</SubmitButton></form>
+                <form action={updateMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><label>Название<input name="title" defaultValue={item.title} required /></label><label>Описание<textarea name="description" defaultValue={item.description} /></label><div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить материал</SubmitButton><CancelButton /></div></form>
+                <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><ConfirmPublicationButton label={`Материал ${item.title}`} publish={item.status !== PublicationStatus.PUBLISHED} /></form>
               </div>
             </details>)}</div>
             {!selected.media.length && <div className="inline-empty">Загруженных материалов пока нет.</div>}
           </section>
 
           <section id="head" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Команда отделения</p><h2>Заведующий отделением</h2></div></div>
+            <div className="section-heading"><div><p className="section-kicker">Шаг 5 · Команда отделения</p><h2>Заведующий отделением</h2></div><span className={`status ${selected.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.status === PublicationStatus.PUBLISHED ? "Видно пациентам" : "Черновик отделения"}</span></div>
+            <p className="section-description">Укажите данные руководителя и загрузите фотографию. После сохранения изменения появятся на портале опубликованного отделения.</p>
             <form action={updateDepartmentHeadAction}>
               <input type="hidden" name="departmentId" value={selected.id} />
-              <div className="field-row three"><label>Имя<input name="firstName" defaultValue={selected.head?.firstName ?? ""} /></label><label>Фамилия<input name="lastName" defaultValue={selected.head?.lastName ?? ""} /></label><label>Отчество<input name="middleName" defaultValue={selected.head?.middleName ?? ""} /></label></div>
-              <label>Должность<input name="roleTitle" defaultValue={selected.head?.roleTitle ?? ""} placeholder="Заведующий отделением, врач-травматолог" /></label>
+              <div className="field-row three"><label>Имя<input name="firstName" defaultValue={selected.head?.firstName ?? ""} required /></label><label>Фамилия<input name="lastName" defaultValue={selected.head?.lastName ?? ""} required /></label><label>Отчество<input name="middleName" defaultValue={selected.head?.middleName ?? ""} /></label></div>
+              <label>Должность<input name="roleTitle" defaultValue={selected.head?.roleTitle ?? ""} placeholder="Заведующий отделением, врач-травматолог" required /></label>
               <label>Описание<textarea className="textarea-large" name="biography" defaultValue={selected.head?.biography ?? ""} /></label>
-              <SubmitButton className="button-icon-text"><Save size={18} />Сохранить профиль</SubmitButton>
+              <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={18} />Сохранить профиль</SubmitButton><CancelButton /></div>
             </form>
             <div className="subsection-heading"><div><h3>Фотография</h3><p>{selected.head?.photoObjectKey ? "Фотография загружена и используется на портале." : "Добавьте портрет заведующего в JPG, PNG или WebP."}</p></div></div>
             <FileUpload departmentId={selected.id} purpose="HEAD_PHOTO" />
@@ -277,8 +279,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </> : <section className="admin-section"><div className="empty-state"><Building2 size={30} /><strong>Создайте первое отделение</strong><span>После этого появятся редакторы текстов, сценария и заведующего.</span></div></section>}
       </div>
 
-      <aside className="admin-aside"><section className="aside-panel"><h2>Перед публикацией</h2><ul><li>Проверьте название и описание</li><li>Заполните профиль заведующего</li><li>Настройте первый шаг сценария</li><li>Опубликуйте сценарий и отделение</li></ul></section></aside>
-      </div></fieldset>
+      <aside className="admin-aside"><section className="aside-panel"><h2>Перед публикацией</h2><p>Система проверит заполнение и подскажет, чего не хватает.</p><ul><li>Заполните описание и справку</li><li>Укажите данные и фотографию заведующего</li><li>Добавьте шаги и варианты выбора</li><li>Сначала опубликуйте сценарий, затем отделение</li></ul></section></aside>
+      </div>
     </section>
   </div></main>;
 }

@@ -62,6 +62,11 @@ export function FileUpload({ departmentId, purpose }: { departmentId: string; pu
   }
 
   const isPhoto = purpose === "HEAD_PHOTO";
+  function reset() {
+    setProgress(0);
+    setState("idle");
+    setMessage("");
+  }
   return <form ref={formRef} className="upload-form" onSubmit={submit}>
     <div className="upload-heading">{isPhoto ? <ImageUp size={20} /> : <Upload size={20} />}<strong>{isPhoto ? "Фотография заведующего" : "Добавить видео или памятку"}</strong></div>
     {!isPhoto && <><label>Название материала<input name="title" required maxLength={180} placeholder="Например, Как безопасно вставать" /></label><label>Короткое описание<textarea name="description" maxLength={2000} placeholder="Что пациент увидит в материале" /></label></>}
@@ -69,6 +74,6 @@ export function FileUpload({ departmentId, purpose }: { departmentId: string; pu
     <label>Файл<input name="file" type="file" required accept={isPhoto ? "image/jpeg,image/png,image/webp" : "video/mp4,application/pdf,image/jpeg,image/png,image/webp"} /></label>
     {state === "uploading" && <div className="upload-progress" aria-label={`Загрузка ${progress}%`}><span style={{ width: `${progress}%` }} /></div>}
     {message && <p className={`upload-message ${state}`} role={state === "error" ? "alert" : "status"}>{message}</p>}
-    <button type="submit" disabled={state === "uploading"}>{state === "uploading" ? `Загрузка ${progress}%` : isPhoto ? "Загрузить фотографию" : "Загрузить материал"}</button>
+    <div className="form-actions"><button type="submit" disabled={state === "uploading"}>{state === "uploading" ? `Загрузка ${progress}%` : isPhoto ? "Загрузить фотографию" : "Загрузить материал"}</button><button type="reset" className="button-secondary" disabled={state === "uploading"} onClick={reset}>Отменить изменения</button></div>
   </form>;
 }

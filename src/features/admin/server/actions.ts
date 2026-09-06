@@ -17,16 +17,16 @@ const departmentSchema = z.object({
 });
 const departmentContentSchema = z.object({
   departmentId: idSchema,
-  intro: z.string().trim().max(2000),
+  intro: z.string().trim().min(2).max(2000),
   referenceTitle: z.string().trim().min(2).max(180),
-  referenceDescription: z.string().trim().max(8000),
+  referenceDescription: z.string().trim().min(2).max(8000),
 });
 const headSchema = z.object({
   departmentId: idSchema,
-  firstName: z.string().trim().max(100),
-  lastName: z.string().trim().max(100),
+  firstName: z.string().trim().min(2).max(100),
+  lastName: z.string().trim().min(2).max(100),
   middleName: z.string().trim().max(100),
-  roleTitle: z.string().trim().max(250),
+  roleTitle: z.string().trim().min(2).max(250),
   biography: z.string().trim().max(5000),
 });
 const factSchema = z.object({
@@ -60,6 +60,29 @@ const actionSchema = z.object({
   targetMediaId: idSchema.optional(),
 });
 const directionSchema = z.enum(["up", "down"]);
+
+async function publicationReadiness(departmentId: string) {
+  const department = await db.department.findUniqueOrThrow({
+    where: { id: departmentId },
+    select: {
+      intro: true,
+      reference: { select: { title: true, description: true } },
+      head: { select: { firstName: true, lastName: true, roleTitle: true, photoObjectKey: true } },
+      scenario: { select: { status: true, steps: { select: { actions: { select: { id: true } } } } } },
+    },
+  });
+  const missing = [];
+  if (!department.intro) missing.push("краткое описание");
+  if (!department.reference?.title || !department.reference.description) missing.push("справку об отделении");
+  if (!department.head?.firstName || !department.head.lastName || !department.head.roleTitle || !department.head.photoObjectKey) missing.push("профиль и фотографию заведующего");
+  if (department.scenario?.status !== PublicationStatus.PUBLISHED || !department.scenario.steps.length || department.scenario.steps.some((step) => !step.actions.length)) missing.push("опубликованный сценарий со всеми вариантами выбора");
+  return missing;
+}
+
+async function scenarioPublicationReadiness(scenarioId: string) {
+  const scenario = await db.scenario.findUniqueOrThrow({ where: { id: scenarioId }, select: { steps: { select: { actions: { select: { id: true } } } } } });
+  return !scenario.steps.length || scenario.steps.some((step) => !step.actions.length);
+}
 
 function optionalId(value: FormDataEntryValue | null) {
   const normalized = typeof value === "string" ? value.trim() : "";
@@ -151,6 +174,10 @@ export async function toggleDepartmentPublicationAction(formData: FormData) {
   if (!departmentId || !status.success || status.data === PublicationStatus.ARCHIVED) adminRedirect(departmentId, "error", "Некорректный статус отделения.");
   try {
     await requireDepartmentWrite(admin, departmentId);
+    if (status.data === PublicationStatus.PUBLISHED) {
+      const missing = await publicationReadiness(departmentId);
+      if (missing.length) throw new ValidationError(`Перед публикацией заполните: ${missing.join(", ")}.`);
+    }
     await db.department.update({ where: { id: departmentId }, data: { status: status.data } });
     await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "department", entityId: departmentId, action: "publication", payload: { status: status.data } } });
     refreshContent();
@@ -293,6 +320,9 @@ export async function toggleScenarioPublicationAction(formData: FormData) {
   if (!scenarioId.success || !status.success || status.data === PublicationStatus.ARCHIVED) adminRedirect(undefined, "error", "Некорректный статус сценария.", "scenario");
   try {
     const scenario = await requireScenarioWrite(admin, scenarioId.data);
+    if (status.data === PublicationStatus.PUBLISHED && await scenarioPublicationReadiness(scenario.id)) {
+      throw new ValidationError("Перед публикацией добавьте хотя бы один шаг и вариант выбора в каждый шаг.");
+    }
     await db.scenario.update({ where: { id: scenario.id }, data: { status: status.data } });
     refreshContent();
     adminRedirect(scenario.departmentId, "notice", status.data === PublicationStatus.PUBLISHED ? "Сценарий опубликован." : "Сценарий скрыт с портала.", "scenario");

@@ -18,9 +18,9 @@ The first administrator is created through a guarded one-time route:
 4. Verify that `/admin` opens and `/login` accepts the new credentials.
 5. Remove `ADMIN_SETUP_TOKEN` from Timeweb and redeploy.
 
-The setup action refuses to create a second administrator even if the route is called concurrently. `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` are not used.
+The setup action refuses to create a second administrator even if the route is called concurrently. `INITIAL_ADMIN_EMAIL` and `INITIAL_ADMIN_PASSWORD` are not used. There is no demo or guest access to `/admin`.
 
-For a temporary customer demonstration, set `ADMIN_DEMO_MODE=true`. Anonymous visitors can then render `/admin`, but every form control is disabled and all Server Actions and upload APIs continue to require a real authenticated session. Remove the variable after the demonstration.
+The project owner is responsible for storing the administrator email and password in the approved password manager. If access is lost, the owner must use a controlled password-reset procedure that writes a new Argon2id hash; never edit `password_hash` as plaintext in PostgreSQL.
 
 ## Data placement
 
