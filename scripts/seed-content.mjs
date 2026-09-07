@@ -12,12 +12,12 @@ try {
   for (const [sortOrder, record] of records.entries()) {
     const [slug, name, intro, firstName, lastName, roleTitle, biography, referenceTitle, referenceDescription, mediaTitle] = record;
     await db.department.create({ data: {
-      slug, name, intro, sortOrder, status: PublicationStatus.PUBLISHED,
+      slug, name, intro, sortOrder, status: PublicationStatus.DRAFT,
       head: { create: { firstName, lastName, roleTitle, biography } },
       reference: { create: { title: referenceTitle, description: referenceDescription } },
-      facts: { create: [{ iconKey: "clock", title: "Врачебный обход", body: "Уточните время на посту медсестры", sortOrder: 0 }, { iconKey: "building", title: "Пост медсестры", body: "Обратитесь к персоналу вашего этажа", sortOrder: 1 }] },
+      facts: { create: [{ iconKey: "clock", title: "Врачебный обход", body: "Уточните время на посту медсестры", sortOrder: 0 }, { iconKey: "heart-pulse", title: "Пост медсестры", body: "Обратитесь к персоналу вашего этажа", sortOrder: 1 }] },
       media: { create: { kind: MediaKind.VIDEO, title: mediaTitle, description: "Демонстрационная карточка: замените на загруженный файл.", status: PublicationStatus.DRAFT, storageObjectKey: `seed/${slug}/placeholder.mp4`, originalFilename: "placeholder.mp4", mimeType: "video/mp4", fileSizeBytes: BigInt(0), sortOrder: 0 } },
-      scenario: { create: { title: "Провести по шагам", description: "Ответьте на несколько простых вопросов.", emergencyBody: "Позовите медсестру кнопкой вызова у кровати или обратитесь на пост.", status: PublicationStatus.PUBLISHED, steps: { create: { title: "Что нужно сейчас?", description: "Выберите самый подходящий вариант.", sortOrder: 0, actions: { create: [{ title: "Нужны рекомендации", body: "Хочу понять следующий шаг.", actionLabel: "Продолжить", kind: "INFORMATION", sortOrder: 0 }, { title: "Хочу посмотреть видео", body: "Нужно короткое объяснение.", actionLabel: "Открыть", kind: "MEDIA", sortOrder: 1 }] } } } } },
+      scenario: { create: { title: "Провести по шагам", description: "Ответьте на несколько простых вопросов.", emergencyBody: "Позовите медсестру кнопкой вызова у кровати или обратитесь на пост.", status: PublicationStatus.DRAFT, steps: { create: { title: "Что нужно сейчас?", description: "Выберите самый подходящий вариант.", sortOrder: 0, actions: { create: [{ title: "Нужны рекомендации", body: "Хочу понять следующий шаг.", actionLabel: "Продолжить", kind: "INFORMATION", sortOrder: 0 }, { title: "Хочу посмотреть видео", body: "Нужно короткое объяснение.", actionLabel: "Открыть", kind: "MEDIA", sortOrder: 1 }] } } } } },
     } });
   }
   console.log("Initial portal content created.");

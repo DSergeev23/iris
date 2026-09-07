@@ -4,7 +4,7 @@ import { ValidationError } from "@/lib/errors";
 export type AdminActor = { id: string };
 
 export async function requireDepartmentWrite(_admin: AdminActor, departmentId: string) {
-  const department = await db.department.findUnique({ where: { id: departmentId }, select: { id: true } });
+  const department = await db.department.findUnique({ where: { id: departmentId }, select: { id: true, status: true } });
   if (!department) throw new ValidationError("Отделение не найдено.");
   return department;
 }
@@ -12,7 +12,7 @@ export async function requireDepartmentWrite(_admin: AdminActor, departmentId: s
 export async function requireScenarioWrite(_admin: AdminActor, scenarioId: string) {
   const scenario = await db.scenario.findUnique({
     where: { id: scenarioId },
-    select: { id: true, departmentId: true },
+    select: { id: true, departmentId: true, status: true },
   });
   if (!scenario) throw new ValidationError("Сценарий не найден.");
   return scenario;

@@ -15,12 +15,15 @@ import {
   Workflow,
 } from "lucide-react";
 import { AdminFormGuard } from "@/features/admin/components/admin-form-guard";
-import { CancelButton, ConfirmDeleteButton, ConfirmPublicationButton, SubmitButton } from "@/features/admin/components/form-buttons";
+import { CancelButton, ConfirmArchiveButton, ConfirmDeleteButton, ConfirmPublicationButton, SubmitButton } from "@/features/admin/components/form-buttons";
 import { FileUpload } from "@/features/admin/components/file-upload";
 import { ScenarioActionFields } from "@/features/admin/components/scenario-action-fields";
 import {
   addScenarioActionAction,
   addScenarioStepAction,
+  archiveDepartmentAction,
+  archiveMediaItemAction,
+  archiveScenarioAction,
   bootstrapInitialContentAction,
   createDepartmentAction,
   deleteDepartmentFactAction,
@@ -100,7 +103,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <div className="department-list">
               {departments.map((item, index) => <div className={`department-row ${selected?.id === item.id ? "selected" : ""}`} key={item.id}>
                 <Link href={`/admin?department=${item.id}#departments`}><span>{item.name}</span><small>{item.slug}</small></Link>
-                <span className={`status ${item.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{item.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span>
+                <span className={`status ${statusClass(item.status)}`}>{statusLabel(item.status)}</span>
                 <div className="row-actions" aria-label={`Порядок: ${item.name}`}>
                   <form action={moveDepartmentAction}><input type="hidden" name="departmentId" value={item.id} /><input type="hidden" name="direction" value="up" /><button className="icon-button" title="Поднять выше" disabled={index === 0}><ArrowUp size={17} /></button></form>
                   <form action={moveDepartmentAction}><input type="hidden" name="departmentId" value={item.id} /><input type="hidden" name="direction" value="down" /><button className="icon-button" title="Опустить ниже" disabled={index === departments.length - 1}><ArrowDown size={17} /></button></form>
@@ -117,9 +120,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </div>
         </section>
 
-        {selected ? <>
+        {selected ? <div key={selected.id} className="selected-department-editor">
           <section className="admin-section department-overview">
-            <div className="section-heading"><div><p className="section-kicker">Выбрано отделение</p><h2>{selected.name}</h2></div><span className={`status large ${selected.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span></div>
+            <div className="section-heading"><div><p className="section-kicker">Выбрано отделение</p><h2>{selected.name}</h2></div><span className={`status large ${statusClass(selected.status)}`}>{statusLabel(selected.status)}</span></div>
             <p className="section-description">Основные данные отделения. Поля со звёздочкой обязательны для сохранения.</p>
             <div className="split-form">
               <form action={updateDepartmentIdentityAction}>
@@ -127,17 +130,18 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <div className="field-row"><label>Название<input name="name" defaultValue={selected.name} required /></label><label>URL-код<input name="slug" defaultValue={selected.slug} required pattern="[a-z0-9-]+" /></label></div>
                 <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={18} />Сохранить данные</SubmitButton><CancelButton /></div>
               </form>
-              <form action={toggleDepartmentPublicationAction} className="publication-control">
+              {selected.status !== PublicationStatus.ARCHIVED && <form action={toggleDepartmentPublicationAction} className="publication-control">
                 <input type="hidden" name="departmentId" value={selected.id} />
                 <input type="hidden" name="status" value={selected.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} />
                 <h3>Публикация</h3><p>{selected.status === PublicationStatus.PUBLISHED ? "Отделение доступно пациентам." : "Отделение пока скрыто от пациентов."}</p>
                 <ConfirmPublicationButton label={`Отделение ${selected.name}`} publish={selected.status !== PublicationStatus.PUBLISHED} />
-              </form>
+              </form>}
+              <form action={archiveDepartmentAction} className="publication-control archive-control"><input type="hidden" name="departmentId" value={selected.id} /><h3>{selected.status === PublicationStatus.ARCHIVED ? "Восстановление" : "Архив"}</h3><p>{selected.status === PublicationStatus.ARCHIVED ? "Восстановит отделение как черновик." : "Скроет отделение, сценарий и материалы, сохранив все записи."}</p><ConfirmArchiveButton label={selected.name} restore={selected.status === PublicationStatus.ARCHIVED} /></form>
             </div>
           </section>
 
           <section id="content" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Шаг 2 · Первый экран и справка</p><h2>Контент отделения</h2></div><span className={`status ${selected.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span></div>
+            <div className="section-heading"><div><p className="section-kicker">Шаг 2 · Первый экран и справка</p><h2>Контент отделения</h2></div><span className={`status ${statusClass(selected.status)}`}>{statusLabel(selected.status)}</span></div>
             <p className="section-description">Тексты этого раздела увидят пациенты выбранного отделения. Сохранённые изменения сразу попадут на портал, если отделение опубликовано.</p>
             <form action={updateDepartmentContentAction}>
               <input type="hidden" name="departmentId" value={selected.id} />
@@ -171,7 +175,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </section>
 
           <section id="scenario" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Шаг 3 · Маршрут пациента</p><h2>Сценарий «Провести по шагам»</h2></div>{selected.scenario && <span className={`status large ${selected.scenario.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Опубликован" : "Черновик"}</span>}</div>
+            <div className="section-heading"><div><p className="section-kicker">Шаг 3 · Маршрут пациента</p><h2>Сценарий «Провести по шагам»</h2></div>{selected.scenario && <span className={`status large ${statusClass(selected.scenario.status)}`}>{statusLabel(selected.scenario.status)}</span>}</div>
             <p className="section-description">Настройте путь пациента: сначала шаг, затем варианты выбора и результат каждого варианта.</p>
             {selected.scenario ? <>
               <div className="split-form">
@@ -183,12 +187,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   <label>Текст срочного экрана<textarea name="emergencyBody" defaultValue={selected.scenario.emergencyBody} /></label>
                   <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={18} />Сохранить сценарий</SubmitButton><CancelButton /></div>
                 </form>
-                <form action={toggleScenarioPublicationAction} className="publication-control">
+                {selected.scenario.status !== PublicationStatus.ARCHIVED && <form action={toggleScenarioPublicationAction} className="publication-control">
                   <input type="hidden" name="scenarioId" value={selected.scenario.id} />
                   <input type="hidden" name="status" value={selected.scenario.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} />
                   <h3>Публикация</h3><p>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Сценарий доступен пациентам." : "Сценарий пока скрыт от пациентов."}</p>
                   <ConfirmPublicationButton label={`Сценарий ${selected.scenario.title}`} publish={selected.scenario.status !== PublicationStatus.PUBLISHED} />
-                </form>
+                </form>}
+                <form action={archiveScenarioAction} className="publication-control archive-control"><input type="hidden" name="scenarioId" value={selected.scenario.id} /><h3>{selected.scenario.status === PublicationStatus.ARCHIVED ? "Восстановление" : "Архив"}</h3><p>{selected.scenario.status === PublicationStatus.ARCHIVED ? "Восстановит сценарий как черновик." : "Сохранит сценарий, но скроет его от пациентов."}</p><ConfirmArchiveButton label={selected.scenario.title} restore={selected.scenario.status === PublicationStatus.ARCHIVED} /></form>
               </div>
 
               <div className="subsection-heading"><div><h3>Шаги и кнопки</h3><p>Порядок сверху вниз соответствует пути пациента.</p></div></div>
@@ -254,17 +259,18 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <p className="section-description">Загрузите MP4, PDF, JPG, PNG или WebP. Новый материал создаётся как черновик и появится у пациентов только после публикации.</p>
             <FileUpload departmentId={selected.id} purpose="MEDIA" />
             <div className="editor-list media-editors">{selected.media.map((item) => <details className="editor-item" key={item.id}>
-              <summary><span><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : item.kind === "DOCUMENT" ? "Памятка PDF" : "Изображение"}</small></span><span className={`status ${item.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{item.status === PublicationStatus.PUBLISHED ? "Опубликовано" : "Черновик"}</span><span className="edit-label">Настроить</span></summary>
+              <summary><span><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : item.kind === "DOCUMENT" ? "Памятка PDF" : "Изображение"}</small></span><span className={`status ${statusClass(item.status)}`}>{statusLabel(item.status)}</span><span className="edit-label">Настроить</span></summary>
               <div className="editor-body">
                 <form action={updateMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><label>Название<input name="title" defaultValue={item.title} required /></label><label>Описание<textarea name="description" defaultValue={item.description} /></label><div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить материал</SubmitButton><CancelButton /></div></form>
-                <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><ConfirmPublicationButton label={`Материал ${item.title}`} publish={item.status !== PublicationStatus.PUBLISHED} /></form>
+                {item.status !== PublicationStatus.ARCHIVED && <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><ConfirmPublicationButton label={`Материал ${item.title}`} publish={item.status !== PublicationStatus.PUBLISHED} /></form>}
+                <form action={archiveMediaItemAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><ConfirmArchiveButton label={item.title} restore={item.status === PublicationStatus.ARCHIVED} /></form>
               </div>
             </details>)}</div>
             {!selected.media.length && <div className="inline-empty">Загруженных материалов пока нет.</div>}
           </section>
 
           <section id="head" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Шаг 5 · Команда отделения</p><h2>Заведующий отделением</h2></div><span className={`status ${selected.status === PublicationStatus.PUBLISHED ? "published" : "draft"}`}>{selected.status === PublicationStatus.PUBLISHED ? "Видно пациентам" : "Черновик отделения"}</span></div>
+            <div className="section-heading"><div><p className="section-kicker">Шаг 5 · Команда отделения</p><h2>Заведующий отделением</h2></div><span className={`status ${statusClass(selected.status)}`}>{selected.status === PublicationStatus.PUBLISHED ? "Видно пациентам" : statusLabel(selected.status)}</span></div>
             <p className="section-description">Укажите данные руководителя и загрузите фотографию. После сохранения изменения появятся на портале опубликованного отделения.</p>
             <form action={updateDepartmentHeadAction}>
               <input type="hidden" name="departmentId" value={selected.id} />
@@ -276,7 +282,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <div className="subsection-heading"><div><h3>Фотография</h3><p>{selected.head?.photoObjectKey ? "Фотография загружена и используется на портале." : "Добавьте портрет заведующего в JPG, PNG или WebP."}</p></div></div>
             <FileUpload departmentId={selected.id} purpose="HEAD_PHOTO" />
           </section>
-        </> : <section className="admin-section"><div className="empty-state"><Building2 size={30} /><strong>Создайте первое отделение</strong><span>После этого появятся редакторы текстов, сценария и заведующего.</span></div></section>}
+        </div> : <section className="admin-section"><div className="empty-state"><Building2 size={30} /><strong>Создайте первое отделение</strong><span>После этого появятся редакторы текстов, сценария и заведующего.</span></div></section>}
       </div>
 
       <aside className="admin-aside"><section className="aside-panel"><h2>Перед публикацией</h2><p>Система проверит заполнение и подскажет, чего не хватает.</p><ul><li>Заполните описание и справку</li><li>Укажите данные и фотографию заведующего</li><li>Добавьте шаги и варианты выбора</li><li>Сначала опубликуйте сценарий, затем отделение</li></ul></section></aside>
@@ -291,4 +297,12 @@ function FactIconOptions() {
 
 function actionKindLabel(kind: string) {
   return { STEP: "Переход к шагу", MEDIA: "Видео или памятка", EMERGENCY: "Срочная помощь", INFORMATION: "Пояснение" }[kind] ?? kind;
+}
+
+function statusClass(status: PublicationStatus) {
+  return status === PublicationStatus.PUBLISHED ? "published" : status === PublicationStatus.ARCHIVED ? "archived" : "draft";
+}
+
+function statusLabel(status: PublicationStatus) {
+  return status === PublicationStatus.PUBLISHED ? "Опубликовано" : status === PublicationStatus.ARCHIVED ? "В архиве" : "Черновик";
 }

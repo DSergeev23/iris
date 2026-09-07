@@ -158,7 +158,8 @@ export async function updateDepartmentIdentityAction(formData: FormData) {
   const parsed = departmentSchema.safeParse({ name: formData.get("name"), slug: formData.get("slug") });
   if (!departmentId || !parsed.success) adminRedirect(departmentId, "error", "Проверьте название и URL-код отделения.");
   try {
-    await requireDepartmentWrite(admin, departmentId);
+    const department = await requireDepartmentWrite(admin, departmentId);
+    if (department.status === PublicationStatus.ARCHIVED) throw new ValidationError("Сначала восстановите отделение из архива.");
     await db.department.update({ where: { id: departmentId }, data: parsed.data });
     refreshContent();
     adminRedirect(departmentId, "notice", "Название отделения сохранено.");
@@ -173,7 +174,8 @@ export async function toggleDepartmentPublicationAction(formData: FormData) {
   const status = z.nativeEnum(PublicationStatus).safeParse(formData.get("status"));
   if (!departmentId || !status.success || status.data === PublicationStatus.ARCHIVED) adminRedirect(departmentId, "error", "Некорректный статус отделения.");
   try {
-    await requireDepartmentWrite(admin, departmentId);
+    const department = await requireDepartmentWrite(admin, departmentId);
+    if (department.status === PublicationStatus.ARCHIVED) throw new ValidationError("Сначала восстановите отделение из архива.");
     if (status.data === PublicationStatus.PUBLISHED) {
       const missing = await publicationReadiness(departmentId);
       if (missing.length) throw new ValidationError(`Перед публикацией заполните: ${missing.join(", ")}.`);
@@ -182,6 +184,32 @@ export async function toggleDepartmentPublicationAction(formData: FormData) {
     await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "department", entityId: departmentId, action: "publication", payload: { status: status.data } } });
     refreshContent();
     adminRedirect(departmentId, "notice", status.data === PublicationStatus.PUBLISHED ? "Отделение опубликовано." : "Отделение скрыто с портала.");
+  } catch (error) {
+    adminRedirect(departmentId, "error", errorMessage(error));
+  }
+}
+
+export async function archiveDepartmentAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const departmentId = departmentIdFrom(formData);
+  if (!departmentId) adminRedirect(undefined, "error", "Отделение не найдено.");
+  try {
+    const department = await db.department.findUnique({ where: { id: departmentId }, select: { id: true, status: true } });
+    if (!department) throw new ValidationError("Отделение не найдено.");
+    await requireDepartmentWrite(admin, department.id);
+    const restoring = department.status === PublicationStatus.ARCHIVED;
+    await db.$transaction(async (tx) => {
+      if (restoring) {
+        await tx.department.update({ where: { id: department.id }, data: { status: PublicationStatus.DRAFT } });
+        return;
+      }
+      await tx.department.update({ where: { id: department.id }, data: { status: PublicationStatus.ARCHIVED } });
+      await tx.scenario.updateMany({ where: { departmentId: department.id }, data: { status: PublicationStatus.ARCHIVED } });
+      await tx.mediaItem.updateMany({ where: { departmentId: department.id }, data: { status: PublicationStatus.ARCHIVED } });
+    });
+    await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "department", entityId: department.id, action: restoring ? "restore" : "archive" } });
+    refreshContent();
+    adminRedirect(department.id, "notice", restoring ? "Отделение восстановлено как черновик." : "Отделение и его материалы перемещены в архив.");
   } catch (error) {
     adminRedirect(departmentId, "error", errorMessage(error));
   }
@@ -320,12 +348,31 @@ export async function toggleScenarioPublicationAction(formData: FormData) {
   if (!scenarioId.success || !status.success || status.data === PublicationStatus.ARCHIVED) adminRedirect(undefined, "error", "Некорректный статус сценария.", "scenario");
   try {
     const scenario = await requireScenarioWrite(admin, scenarioId.data);
+    if (scenario.status === PublicationStatus.ARCHIVED) throw new ValidationError("Сначала восстановите сценарий из архива.");
     if (status.data === PublicationStatus.PUBLISHED && await scenarioPublicationReadiness(scenario.id)) {
       throw new ValidationError("Перед публикацией добавьте хотя бы один шаг и вариант выбора в каждый шаг.");
     }
     await db.scenario.update({ where: { id: scenario.id }, data: { status: status.data } });
     refreshContent();
     adminRedirect(scenario.departmentId, "notice", status.data === PublicationStatus.PUBLISHED ? "Сценарий опубликован." : "Сценарий скрыт с портала.", "scenario");
+  } catch (error) {
+    adminRedirect(undefined, "error", errorMessage(error), "scenario");
+  }
+}
+
+export async function archiveScenarioAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const scenarioId = idSchema.safeParse(formData.get("scenarioId"));
+  if (!scenarioId.success) adminRedirect(undefined, "error", "Сценарий не найден.", "scenario");
+  try {
+    const scenario = await db.scenario.findUnique({ where: { id: scenarioId.data }, select: { id: true, departmentId: true, status: true } });
+    if (!scenario) throw new ValidationError("Сценарий не найден.");
+    await requireScenarioWrite(admin, scenario.id);
+    const restoring = scenario.status === PublicationStatus.ARCHIVED;
+    await db.scenario.update({ where: { id: scenario.id }, data: { status: restoring ? PublicationStatus.DRAFT : PublicationStatus.ARCHIVED } });
+    await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "scenario", entityId: scenario.id, action: restoring ? "restore" : "archive" } });
+    refreshContent();
+    adminRedirect(scenario.departmentId, "notice", restoring ? "Сценарий восстановлен как черновик." : "Сценарий перемещён в архив.", "scenario");
   } catch (error) {
     adminRedirect(undefined, "error", errorMessage(error), "scenario");
   }
@@ -367,6 +414,10 @@ export async function deleteScenarioStepAction(formData: FormData) {
   if (!stepId.success) adminRedirect(undefined, "error", "Шаг не найден.", "scenario");
   try {
     const step = await requireScenarioStepWrite(admin, stepId.data);
+    const incomingActions = await db.scenarioAction.count({ where: { targetStepId: step.id } });
+    if (incomingActions) {
+      throw new ValidationError(`На этот шаг ведёт ${incomingActions} ${incomingActions === 1 ? "кнопка" : "кнопки"}. Сначала удалите или перенастройте эти переходы.`);
+    }
     await db.scenarioStep.delete({ where: { id: step.id } });
     refreshContent();
     adminRedirect(step.scenario.departmentId, "notice", "Шаг удалён.", "scenario");
@@ -526,13 +577,36 @@ export async function toggleMediaPublicationAction(formData: FormData) {
   const status = z.nativeEnum(PublicationStatus).safeParse(formData.get("status"));
   if (!mediaId.success || !status.success || status.data === PublicationStatus.ARCHIVED) adminRedirect(undefined, "error", "Некорректный статус материала.", "media");
   try {
-    const media = await db.mediaItem.findUnique({ where: { id: mediaId.data }, select: { id: true, departmentId: true } });
+    const media = await db.mediaItem.findUnique({ where: { id: mediaId.data }, select: { id: true, departmentId: true, status: true } });
     if (!media) throw new ValidationError("Материал не найден.");
     await requireDepartmentWrite(admin, media.departmentId);
+    if (media.status === PublicationStatus.ARCHIVED) throw new ValidationError("Сначала восстановите материал из архива.");
     await db.mediaItem.update({ where: { id: media.id }, data: { status: status.data } });
     await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: media.id, action: "publication", payload: { status: status.data } } });
     refreshContent();
     adminRedirect(media.departmentId, "notice", status.data === PublicationStatus.PUBLISHED ? "Материал опубликован." : "Материал скрыт с портала.", "media");
+  } catch (error) {
+    adminRedirect(undefined, "error", errorMessage(error), "media");
+  }
+}
+
+export async function archiveMediaItemAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const mediaId = idSchema.safeParse(formData.get("mediaId"));
+  if (!mediaId.success) adminRedirect(undefined, "error", "Материал не найден.", "media");
+  try {
+    const media = await db.mediaItem.findUnique({ where: { id: mediaId.data }, select: { id: true, departmentId: true, status: true } });
+    if (!media) throw new ValidationError("Материал не найден.");
+    await requireDepartmentWrite(admin, media.departmentId);
+    const restoring = media.status === PublicationStatus.ARCHIVED;
+    if (!restoring) {
+      const incomingActions = await db.scenarioAction.count({ where: { targetMediaId: media.id } });
+      if (incomingActions) throw new ValidationError("На этот материал ведёт кнопка сценария. Сначала удалите или перенастройте её.");
+    }
+    await db.mediaItem.update({ where: { id: media.id }, data: { status: restoring ? PublicationStatus.DRAFT : PublicationStatus.ARCHIVED } });
+    await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: media.id, action: restoring ? "restore" : "archive" } });
+    refreshContent();
+    adminRedirect(media.departmentId, "notice", restoring ? "Материал восстановлен как черновик." : "Материал перемещён в архив.", "media");
   } catch (error) {
     adminRedirect(undefined, "error", errorMessage(error), "media");
   }
