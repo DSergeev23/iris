@@ -285,7 +285,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </div> : <section className="admin-section"><div className="empty-state"><Building2 size={30} /><strong>Создайте первое отделение</strong><span>После этого появятся редакторы текстов, сценария и заведующего.</span></div></section>}
       </div>
 
-      <aside className="admin-aside"><section className="aside-panel"><h2>Перед публикацией</h2><p>Система проверит заполнение и подскажет, чего не хватает.</p><ul><li>Заполните описание и справку</li><li>Укажите данные и фотографию заведующего</li><li>Добавьте шаги и варианты выбора</li><li>Сначала опубликуйте сценарий, затем отделение</li></ul></section></aside>
+      <aside className="admin-aside"><section className="aside-panel"><h2>Перед публикацией</h2><p>Система проверит заполнение и подскажет, чего не хватает.</p><ul><li>Добавьте шаги и варианты выбора</li><li>Сначала опубликуйте сценарий, затем отделение</li></ul></section></aside>
       </div>
     </section>
   </div></main>;

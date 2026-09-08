@@ -36,3 +36,8 @@ test("стартовое заполнение создаёт черновики 
 test("портал читает только опубликованные записи", () => {
   assert.match(portalRepository, /where: \{ status: PublicationStatus\.PUBLISHED \}/);
 });
+
+test("публикация отделения не требует контент или профиль заведующего", () => {
+  const readiness = actions.slice(actions.indexOf("async function publicationReadiness"), actions.indexOf("async function scenarioPublicationReadiness"));
+  assert.doesNotMatch(readiness, /intro|reference|head|краткое описание|справку об отделении|профиль и фотографию заведующего/);
+});

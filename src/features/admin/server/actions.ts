@@ -65,16 +65,10 @@ async function publicationReadiness(departmentId: string) {
   const department = await db.department.findUniqueOrThrow({
     where: { id: departmentId },
     select: {
-      intro: true,
-      reference: { select: { title: true, description: true } },
-      head: { select: { firstName: true, lastName: true, roleTitle: true, photoObjectKey: true } },
       scenario: { select: { status: true, steps: { select: { actions: { select: { id: true } } } } } },
     },
   });
   const missing = [];
-  if (!department.intro) missing.push("краткое описание");
-  if (!department.reference?.title || !department.reference.description) missing.push("справку об отделении");
-  if (!department.head?.firstName || !department.head.lastName || !department.head.roleTitle || !department.head.photoObjectKey) missing.push("профиль и фотографию заведующего");
   if (department.scenario?.status !== PublicationStatus.PUBLISHED || !department.scenario.steps.length || department.scenario.steps.some((step) => !step.actions.length)) missing.push("опубликованный сценарий со всеми вариантами выбора");
   return missing;
 }
