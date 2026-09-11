@@ -35,6 +35,6 @@ export function ScenarioActionFields({
     {kind === "MEDIA" && <label>Видео или памятка<select name="targetMediaId" defaultValue={defaults?.targetMediaId ?? ""} required>
       <option value="">Выберите материал</option>
       {media.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
-    </select>{!media.length && <span className="field-hint">Сначала добавьте материал в разделе «Видео и памятки».</span>}</label>}
+    </select>{!media.length && <span className="field-hint">Сначала добавьте и опубликуйте материал в разделе «Видео и памятки».</span>}</label>}
   </>;
 }

@@ -6,16 +6,13 @@ import { demoDepartments } from "./demo-data";
 import type { PortalDepartment } from "../types";
 
 async function mapDepartment(item: Awaited<ReturnType<typeof getRawDepartment>>): Promise<PortalDepartment> {
-  const [photoUrl, mediaUrls] = await Promise.all([
-    item.head?.photoObjectKey ? getS3ReadUrl(item.head.photoObjectKey) : Promise.resolve(null),
-    Promise.all(item.media.map((media) => getS3ReadUrl(media.storageObjectKey))),
-  ]);
+  const photoUrl = item.head?.photoObjectKey ? await getS3ReadUrl(item.head.photoObjectKey) : null;
   return {
     id: item.id, slug: item.slug, name: item.name, intro: item.intro,
     head: item.head ? { name: [item.head.firstName, item.head.middleName, item.head.lastName].filter(Boolean).join(" "), role: item.head.roleTitle, biography: item.head.biography, photoUrl } : null,
     reference: item.reference ? { title: item.reference.title, description: item.reference.description } : null,
     facts: item.facts.map((fact) => ({ id: fact.id, iconKey: fact.iconKey, title: fact.title, body: fact.body })),
-    media: item.media.map((media, index) => ({ id: media.id, title: media.title, description: media.description, kind: media.kind, mimeType: media.mimeType, url: mediaUrls[index] })),
+    media: item.media.map((media) => ({ id: media.id, title: media.title, description: media.description, kind: media.kind, mimeType: media.mimeType, url: `/api/portal/media/${media.id}` })),
     scenario: item.scenario ? {
       title: item.scenario.title, description: item.scenario.description, emergencyTitle: item.scenario.emergencyTitle, emergencyBody: item.scenario.emergencyBody,
       steps: item.scenario.steps.map((step) => ({

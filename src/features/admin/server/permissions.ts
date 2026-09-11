@@ -21,7 +21,7 @@ export async function requireScenarioWrite(_admin: AdminActor, scenarioId: strin
 export async function requireScenarioStepWrite(_admin: AdminActor, stepId: string) {
   const step = await db.scenarioStep.findUnique({
     where: { id: stepId },
-    select: { id: true, scenarioId: true, scenario: { select: { departmentId: true } } },
+    select: { id: true, scenarioId: true, scenario: { select: { id: true, departmentId: true, status: true } } },
   });
   if (!step) throw new ValidationError("Шаг сценария не найден.");
   return step;

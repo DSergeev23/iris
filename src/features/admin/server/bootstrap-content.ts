@@ -168,6 +168,22 @@ export async function createInitialContent(tx: Prisma.TransactionClient, adminUs
         },
       });
     }
+
+    for (const [stepIndex, step] of steps.entries()) {
+      if (stepIndex === 0) continue;
+      const nextStep = steps[stepIndex + 1];
+      await tx.scenarioAction.create({
+        data: {
+          stepId: step.id,
+          title: nextStep ? "Продолжить" : "Понятно",
+          body: nextStep ? "Перейти к следующему шагу." : "Вернуться к материалам отделения.",
+          actionLabel: nextStep ? "Продолжить" : "Завершить",
+          kind: nextStep ? ScenarioActionKind.STEP : ScenarioActionKind.INFORMATION,
+          targetStepId: nextStep?.id ?? null,
+          sortOrder: 0,
+        },
+      });
+    }
   }
 
   await tx.auditLog.create({

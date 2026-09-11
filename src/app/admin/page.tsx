@@ -68,7 +68,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const selected = departments.find((item) => item.id === params.department) ?? departments[0];
   const missingStarterDepartments = ["trauma", "neuro", "therapy"].filter((slug) => !departments.some((item) => item.slug === slug));
   const stepOptions = selected?.scenario?.steps.map((step) => ({ id: step.id, title: step.title })) ?? [];
-  const mediaOptions = selected?.media.map((item) => ({ id: item.id, title: item.title })) ?? [];
+  const mediaOptions = selected?.media.filter((item) => item.status === PublicationStatus.PUBLISHED).map((item) => ({ id: item.id, title: item.title })) ?? [];
 
   return <main className="admin-body"><AdminFormGuard /><div className="admin-shell">
     <aside className="admin-nav">
@@ -127,7 +127,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             <div className="split-form">
               <form action={updateDepartmentIdentityAction}>
                 <input type="hidden" name="departmentId" value={selected.id} />
-                <div className="field-row"><label>Название<input name="name" defaultValue={selected.name} required /></label><label>URL-код<input name="slug" defaultValue={selected.slug} required pattern="[a-z0-9-]+" /></label></div>
+                <div className="field-row"><label>Название<input name="name" defaultValue={selected.name} required /></label><label>URL-код<input value={selected.slug} readOnly aria-describedby="slug-hint" /><span id="slug-hint" className="field-hint">Постоянный адрес для QR-кодов</span></label></div>
                 <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={18} />Сохранить данные</SubmitButton><CancelButton /></div>
               </form>
               {selected.status !== PublicationStatus.ARCHIVED && <form action={toggleDepartmentPublicationAction} className="publication-control">
@@ -196,10 +196,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <form action={archiveScenarioAction} className="publication-control archive-control"><input type="hidden" name="scenarioId" value={selected.scenario.id} /><h3>{selected.scenario.status === PublicationStatus.ARCHIVED ? "Восстановление" : "Архив"}</h3><p>{selected.scenario.status === PublicationStatus.ARCHIVED ? "Восстановит сценарий как черновик." : "Сохранит сценарий, но скроет его от пациентов."}</p><ConfirmArchiveButton label={selected.scenario.title} restore={selected.scenario.status === PublicationStatus.ARCHIVED} /></form>
               </div>
 
-              <div className="subsection-heading"><div><h3>Шаги и кнопки</h3><p>Порядок сверху вниз соответствует пути пациента.</p></div></div>
+              <div className="subsection-heading"><div><h3>Шаги и кнопки</h3><p>Первый шаг — стартовый; перед публикацией все остальные должны быть достижимы из него.</p></div></div>
               <div className="scenario-steps">
                 {selected.scenario.steps.map((step, stepIndex) => <details className="scenario-step" key={step.id} open={stepIndex === 0}>
-                  <summary><span className="step-number">{stepIndex + 1}</span><span><strong>{step.title}</strong><small>{step.actions.length} кнопок</small></span><span className="edit-label">Открыть</span></summary>
+                  <summary><span className="step-number">{stepIndex + 1}</span><span><strong>{step.title}</strong><small>{stepIndex === 0 ? "Стартовый шаг · " : ""}{step.actions.length} кнопок</small></span><span className="edit-label">Открыть</span></summary>
                   <div className="step-body">
                     <div className="item-toolbar">
                       <div className="row-actions">

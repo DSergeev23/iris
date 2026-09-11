@@ -43,9 +43,12 @@ function cx(...names: Array<string | false | null | undefined>) {
 }
 
 export function PortalClient({ departments, initialSlug }: Props) {
-  const initialIndex = Math.max(0, departments.findIndex((item) => item.slug === initialSlug));
-  const [departmentIndex, setDepartmentIndex] = useState(initialIndex);
+  const matchedInitialIndex = departments.findIndex((item) => item.slug === initialSlug);
+  const [departmentIndex, setDepartmentIndex] = useState(Math.max(0, matchedInitialIndex));
+  const [isUnavailableAddress, setIsUnavailableAddress] = useState(Boolean(initialSlug && matchedInitialIndex === -1));
   const [history, setHistory] = useState<View[]>([]);
+  const [patientName, setPatientName] = useState("");
+  const [hasPersonalDataConsent, setHasPersonalDataConsent] = useState(false);
   const department = departments[departmentIndex] ?? departments[0];
   const view = history.at(-1) ?? null;
 
@@ -68,9 +71,21 @@ export function PortalClient({ departments, initialSlug }: Props) {
     </main>;
   }
 
+  if (isUnavailableAddress) {
+    return <main className={styles.empty}>
+      <Stethoscope size={48} />
+      <h1>Страница отделения недоступна</h1>
+      <p>Возможно, отделение временно скрыто. Выберите доступное отделение.</p>
+      <div className={styles.emptyActions}>{departments.map((item, index) => <button className={styles.chip} key={item.id} type="button" onClick={() => selectDepartment(index)}><DepartmentIcon department={item} />{item.name}</button>)}</div>
+    </main>;
+  }
+
   function selectDepartment(index: number) {
     setDepartmentIndex(index);
+    setIsUnavailableAddress(false);
     setHistory([]);
+    setPatientName("");
+    setHasPersonalDataConsent(false);
     const selected = departments[index];
     if (selected) {
       const url = new URL(window.location.href);
@@ -85,6 +100,8 @@ export function PortalClient({ departments, initialSlug }: Props) {
 
   function close() {
     setHistory([]);
+    setPatientName("");
+    setHasPersonalDataConsent(false);
   }
 
   function goBack() {
@@ -106,7 +123,7 @@ export function PortalClient({ departments, initialSlug }: Props) {
           <div className={styles.intro}>
             <div className={styles.brandline}><Sparkles />ГКБ №1 им. Н.И. Пирогов<Sparkles /></div>
             <h1>ИРИС помогает пациенту не потеряться в больнице</h1>
-            <p>Сканируйте QR-код, выбирайте свой этап и смотрите понятные памятки или видео восстановления. Крупно, спокойно, без регистрации.</p>
+            <p>{department.intro}</p>
             <nav className={styles.clinicalChips} aria-label="Выбор отделения">
               {departments.map((item, index) => <button
                 key={item.id}
@@ -118,7 +135,7 @@ export function PortalClient({ departments, initialSlug }: Props) {
             </nav>
           </div>
           <div className={styles.topActions}>
-            <button className={cx(styles.pill, styles.primaryPill)} onClick={() => open({ type: "steps" })}>Провести по шагам</button>
+            <button className={cx(styles.pill, styles.primaryPill)} onClick={() => open({ type: "steps" })}>Помочь мне сориентироваться</button>
             <a className={cx(styles.pill, styles.secondaryPill)} href="#department-info"><Hospital />Об отделении</a>
           </div>
         </header>
@@ -132,7 +149,7 @@ export function PortalClient({ departments, initialSlug }: Props) {
               <p className={styles.mutedLight}>Выберите один из двух понятных путей. Если плохо или боль усиливается, зовите медсестру.</p>
             </div>
             <div className={styles.actions}>
-              <ActionButton icon={<ClipboardList />} title={department.scenario?.title ?? "Провести по шагам"} body={department.scenario?.description || "Подскажу, что делать на Вашем этапе"} onClick={() => open({ type: "steps" })} />
+              <ActionButton icon={<ClipboardList />} title="Помочь мне сориентироваться" body={department.scenario?.description || "Подскажу, что делать на Вашем этапе"} onClick={() => open({ type: "steps" })} />
               <ActionButton icon={<Video />} title="Видео и памятки" body="Открыть сразу, без вопросов" onClick={() => open({ type: "media" })} />
             </div>
           </article>
@@ -196,18 +213,19 @@ export function PortalClient({ departments, initialSlug }: Props) {
           <button className={styles.navButton} onClick={close}>В начало</button>
           <span className={styles.navTitle}>ИРИС · {department.name}</span>
         </nav>
-        <div className={cx(styles.screen, styles.glass, styles.noise)}><PanelContent department={department} view={view} open={open} onAction={handleAction} /></div>
+        <div className={cx(styles.screen, styles.glass, styles.noise)}><PanelContent department={department} view={view} open={open} onAction={handleAction} patientName={patientName} setPatientName={setPatientName} hasPersonalDataConsent={hasPersonalDataConsent} setHasPersonalDataConsent={setHasPersonalDataConsent} onStart={() => setHasPersonalDataConsent(true)} /></div>
       </div>
     </section>}
   </main>;
 }
 
-function PanelContent({ department, view, open, onAction }: { department: PortalDepartment; view: View; open: (view: View) => void; onAction: (action: ScenarioAction) => void }) {
+function PanelContent({ department, view, open, onAction, patientName, setPatientName, hasPersonalDataConsent, setHasPersonalDataConsent, onStart }: { department: PortalDepartment; view: View; open: (view: View) => void; onAction: (action: ScenarioAction) => void; patientName: string; setPatientName: (name: string) => void; hasPersonalDataConsent: boolean; setHasPersonalDataConsent: (hasConsent: boolean) => void; onStart: () => void }) {
   const scenario = department.scenario;
   const firstStep = scenario?.steps[0];
 
   if (view.type === "steps") {
-    return <><h2>{firstStep?.title || `${department.name}: что сейчас важно?`}</h2><p>{firstStep?.description || "Сценарий пока не опубликован."}</p><div className={styles.stepGrid}>{firstStep?.actions.map((action) => <PanelAction key={action.id} action={action} onClick={() => onAction(action)} />)}</div></>;
+    if (!hasPersonalDataConsent) return <ScenarioStart patientName={patientName} setPatientName={setPatientName} hasPersonalDataConsent={hasPersonalDataConsent} setHasPersonalDataConsent={setHasPersonalDataConsent} onStart={onStart} />;
+    return <><h2>{patientName ? `${patientName}, ${firstStep?.title || "что сейчас важно?"}` : firstStep?.title || `${department.name}: что сейчас важно?`}</h2><p>{firstStep?.description || "Сценарий пока не опубликован."}</p><div className={styles.stepGrid}>{firstStep?.actions.map((action) => <PanelAction key={action.id} action={action} onClick={() => onAction(action)} />)}</div></>;
   }
 
   if (view.type === "step") {
@@ -225,10 +243,27 @@ function PanelContent({ department, view, open, onAction }: { department: Portal
 
   if (view.type === "media-detail") {
     const item = department.media.find((media) => media.id === view.mediaId);
-    return <><h2>{item?.title || "Материал не найден"}</h2><p>{item?.description}</p>{item?.url && item.kind === "VIDEO" ? <video className={styles.videoPlayer} controls preload="metadata" src={item.url}>Ваш браузер не поддерживает видео.</video> : item?.url ? <a className={styles.documentLink} href={item.url} target="_blank" rel="noreferrer"><FileText />Открыть памятку</a> : <div className={styles.videoBox}>{item?.kind === "VIDEO" ? <Play /> : <FileText />}</div>}<div className={styles.warn}><div><strong>Важно:</strong> если состояние ухудшилось, остановитесь и позовите медсестру.</div></div></>;
+    return <MediaDetail key={item?.id} item={item} />;
   }
 
   return <><h2>{scenario?.emergencyTitle || "Когда срочно звать помощь"}</h2><p>Список адаптирован под отделение: {department.name}.</p><div className={styles.warn}><div><CircleAlert /><span>{scenario?.emergencyBody || "Позовите медицинскую сестру кнопкой вызова у кровати или обратитесь на пост."}</span></div></div></>;
+}
+
+function MediaDetail({ item }: { item?: PortalDepartment["media"][number] }) {
+  const [retry, setRetry] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const url = item?.url ? `${item.url}?retry=${retry}` : undefined;
+
+  return <><h2>{item?.title || "Материал не найден"}</h2><p>{item?.description}</p>{url && item?.kind === "VIDEO" ? <><video key={url} className={styles.videoPlayer} controls preload="metadata" src={url} onError={() => setLoadFailed(true)}>Ваш браузер не поддерживает видео.</video>{loadFailed && <div className={styles.mediaReload}><p>Не удалось загрузить видео. Проверьте соединение и попробуйте ещё раз.</p><button className={styles.startButton} type="button" onClick={() => { setLoadFailed(false); setRetry((value) => value + 1); }}>Загрузить ещё раз</button></div>}</> : url ? <a className={styles.documentLink} href={url} target="_blank" rel="noreferrer"><FileText />Открыть памятку</a> : <div className={styles.videoBox}>{item?.kind === "VIDEO" ? <Play /> : <FileText />}</div>}<div className={styles.warn}><div><CircleAlert /><span><strong>Важно:</strong> если состояние ухудшилось, остановитесь и позовите медсестру.</span></div></div></>;
+}
+
+function ScenarioStart({ patientName, setPatientName, hasPersonalDataConsent, setHasPersonalDataConsent, onStart }: { patientName: string; setPatientName: (name: string) => void; hasPersonalDataConsent: boolean; setHasPersonalDataConsent: (hasConsent: boolean) => void; onStart: () => void }) {
+  return <form className={styles.scenarioStart} onSubmit={(event) => { event.preventDefault(); if (patientName.trim() && hasPersonalDataConsent) onStart(); }}>
+    <div><h2>Давайте познакомимся</h2><p>Напишите, как к Вам обращаться, чтобы начать.</p></div>
+    <label className={styles.nameField}>Ваше имя<input value={patientName} onChange={(event) => setPatientName(event.target.value)} autoComplete="name" maxLength={100} required /></label>
+    <label className={styles.consent}><input type="checkbox" checked={hasPersonalDataConsent} onChange={(event) => setHasPersonalDataConsent(event.target.checked)} required /><span>Согласен на обработку персональных данных</span></label>
+    <button className={styles.startButton} type="submit" disabled={!patientName.trim() || !hasPersonalDataConsent}>Начать</button>
+  </form>;
 }
 
 function ActionButton({ icon, title, body, onClick }: { icon: ReactNode; title: string; body: string; onClick: () => void }) {
