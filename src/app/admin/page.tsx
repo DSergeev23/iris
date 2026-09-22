@@ -26,7 +26,11 @@ import {
   archiveScenarioAction,
   bootstrapInitialContentAction,
   createDepartmentAction,
+  createScenarioAction,
   deleteDepartmentFactAction,
+  deleteDraftDepartmentAction,
+  deleteDraftMediaItemAction,
+  deleteDraftScenarioAction,
   deleteScenarioButtonAction,
   deleteScenarioStepAction,
   moveDepartmentAction,
@@ -137,6 +141,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <ConfirmPublicationButton label={`Отделение ${selected.name}`} publish={selected.status !== PublicationStatus.PUBLISHED} />
               </form>}
               <form action={archiveDepartmentAction} className="publication-control archive-control"><input type="hidden" name="departmentId" value={selected.id} /><h3>{selected.status === PublicationStatus.ARCHIVED ? "Восстановление" : "Архив"}</h3><p>{selected.status === PublicationStatus.ARCHIVED ? "Восстановит отделение как черновик." : "Скроет отделение, сценарий и материалы, сохранив все записи."}</p><ConfirmArchiveButton label={selected.name} restore={selected.status === PublicationStatus.ARCHIVED} /></form>
+              {selected.status === PublicationStatus.DRAFT && <details className="danger-menu"><summary>Удаление черновика</summary><p>Удалит отделение, его сценарий, справку и черновые материалы вместе с файлами. Опубликованные или архивные вложения сначала нужно обработать отдельно.</p><form action={deleteDraftDepartmentAction}><input type="hidden" name="departmentId" value={selected.id} /><ConfirmDeleteButton label={`отделение ${selected.name}`} description="Все связанные черновые данные будут удалены." /></form></details>}
             </div>
           </section>
 
@@ -162,7 +167,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     <label>Текст<input name="body" defaultValue={fact.body} required /></label>
                     <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить блок</SubmitButton><CancelButton /></div>
                   </form>
-                  <form action={deleteDepartmentFactAction} className="delete-form"><input type="hidden" name="departmentId" value={selected.id} /><input type="hidden" name="factId" value={fact.id} /><ConfirmDeleteButton label={fact.title} description="Пациенты больше не увидят эту справку." /></form>
+                  <details className="danger-menu"><summary>Удаление блока</summary><form action={deleteDepartmentFactAction}><input type="hidden" name="departmentId" value={selected.id} /><input type="hidden" name="factId" value={fact.id} /><ConfirmDeleteButton label={fact.title} description="Пациенты больше не увидят эту справку." /></form></details>
                 </div>
               </details>)}
             </div>
@@ -194,6 +199,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   <ConfirmPublicationButton label={`Сценарий ${selected.scenario.title}`} publish={selected.scenario.status !== PublicationStatus.PUBLISHED} />
                 </form>}
                 <form action={archiveScenarioAction} className="publication-control archive-control"><input type="hidden" name="scenarioId" value={selected.scenario.id} /><h3>{selected.scenario.status === PublicationStatus.ARCHIVED ? "Восстановление" : "Архив"}</h3><p>{selected.scenario.status === PublicationStatus.ARCHIVED ? "Восстановит сценарий как черновик." : "Сохранит сценарий, но скроет его от пациентов."}</p><ConfirmArchiveButton label={selected.scenario.title} restore={selected.scenario.status === PublicationStatus.ARCHIVED} /></form>
+                {selected.scenario.status === PublicationStatus.DRAFT && <details className="danger-menu"><summary>Удаление черновика</summary><p>{selected.status === PublicationStatus.PUBLISHED ? "Сначала скройте отделение с портала." : "Удалит сценарий со всеми шагами и кнопками. При необходимости его можно будет создать заново."}</p>{selected.status !== PublicationStatus.PUBLISHED && <form action={deleteDraftScenarioAction}><input type="hidden" name="scenarioId" value={selected.scenario.id} /><ConfirmDeleteButton label={`сценарий ${selected.scenario.title}`} description="Все шаги и кнопки будут удалены." /></form>}</details>}
               </div>
 
               <div className="subsection-heading"><div><h3>Шаги и кнопки</h3><p>Первый шаг — стартовый; перед публикацией все остальные должны быть достижимы из него.</p></div></div>
@@ -206,7 +212,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                         <form action={moveScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><input type="hidden" name="direction" value="up" /><button className="icon-button" title="Поднять шаг" disabled={stepIndex === 0}><ArrowUp size={17} /></button></form>
                         <form action={moveScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><input type="hidden" name="direction" value="down" /><button className="icon-button" title="Опустить шаг" disabled={stepIndex === selected.scenario!.steps.length - 1}><ArrowDown size={17} /></button></form>
                       </div>
-                      <form action={deleteScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><ConfirmDeleteButton label={step.title} description={`Будут удалены варианты выбора: ${step.actions.length}.`} /></form>
+                      <details className="danger-menu compact"><summary>Удаление шага</summary><form action={deleteScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><ConfirmDeleteButton label={step.title} description={`Будут удалены варианты выбора: ${step.actions.length}.`} /></form></details>
                     </div>
                     <form action={updateScenarioStepAction}>
                       <input type="hidden" name="scenarioId" value={selected.scenario!.id} /><input type="hidden" name="stepId" value={step.id} />
@@ -225,7 +231,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                               <form action={moveScenarioButtonAction}><input type="hidden" name="actionId" value={action.id} /><input type="hidden" name="direction" value="up" /><button className="icon-button" title="Поднять кнопку" disabled={actionIndex === 0}><ArrowUp size={16} /></button></form>
                               <form action={moveScenarioButtonAction}><input type="hidden" name="actionId" value={action.id} /><input type="hidden" name="direction" value="down" /><button className="icon-button" title="Опустить кнопку" disabled={actionIndex === step.actions.length - 1}><ArrowDown size={16} /></button></form>
                             </div>
-                            <form action={deleteScenarioButtonAction}><input type="hidden" name="actionId" value={action.id} /><ConfirmDeleteButton label={action.title} description="Пациенты больше не увидят этот вариант." /></form>
+                            <details className="danger-menu compact"><summary>Удаление кнопки</summary><form action={deleteScenarioButtonAction}><input type="hidden" name="actionId" value={action.id} /><ConfirmDeleteButton label={action.title} description="Пациенты больше не увидят этот вариант." /></form></details>
                           </div>
                           <form action={updateScenarioButtonAction}>
                             <input type="hidden" name="actionId" value={action.id} /><input type="hidden" name="stepId" value={step.id} />
@@ -251,7 +257,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <label>Пояснение<textarea name="description" placeholder="Помогите пациенту сделать понятный выбор" /></label>
                 <div className="form-actions"><SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить шаг</SubmitButton><CancelButton label="Очистить" /></div>
               </form></details>
-            </> : <div className="empty-state"><Workflow size={28} /><strong>Сценарий не создан</strong><span>Создайте отделение заново или восстановите сценарий.</span></div>}
+            </> : <div className="empty-state"><Workflow size={28} /><strong>Сценарий не создан</strong><span>{selected.status === PublicationStatus.ARCHIVED ? "Сначала восстановите отделение из архива." : "Создайте новый черновик сценария для отделения."}</span>{selected.status !== PublicationStatus.ARCHIVED && <form action={createScenarioAction}><input type="hidden" name="departmentId" value={selected.id} /><SubmitButton pendingLabel="Создаём...">Создать сценарий</SubmitButton></form>}</div>}
           </section>
 
           <section id="media" className="admin-section">
@@ -264,6 +270,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <form action={updateMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><label>Название<input name="title" defaultValue={item.title} required /></label><label>Описание<textarea name="description" defaultValue={item.description} /></label><div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить материал</SubmitButton><CancelButton /></div></form>
                 {item.status !== PublicationStatus.ARCHIVED && <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><ConfirmPublicationButton label={`Материал ${item.title}`} publish={item.status !== PublicationStatus.PUBLISHED} /></form>}
                 <form action={archiveMediaItemAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><ConfirmArchiveButton label={item.title} restore={item.status === PublicationStatus.ARCHIVED} /></form>
+                {item.status === PublicationStatus.DRAFT && <details className="danger-menu"><summary>Удаление черновика</summary><p>Удалит материал и его файл из хранилища.</p><form action={deleteDraftMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><ConfirmDeleteButton label={`материал ${item.title}`} description="Файл также будет удалён из хранилища." /></form></details>}
               </div>
             </details>)}</div>
             {!selected.media.length && <div className="inline-empty">Загруженных материалов пока нет.</div>}

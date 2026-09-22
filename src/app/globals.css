@@ -145,6 +145,13 @@ h1 { max-width:760px; margin:0; font-size:clamp(34px, 5vw, 58px); line-height:1.
 .edit-label { margin-left:auto; color:var(--deep); font-size:12px; font-weight:800; white-space:nowrap; }
 .editor-body, .step-body, .action-editor, .add-editor > form { padding:18px; border-top:1px solid var(--line); background:#fff; }
 .delete-form { margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
+.danger-menu { grid-column:1/-1; margin-top:14px; padding:12px 16px; border:1px solid #e5c7c7; border-radius:7px; background:#fffafa; }
+.danger-menu > summary { width:max-content; max-width:100%; cursor:pointer; color:#8f3030; font-size:13px; font-weight:800; }
+.danger-menu > summary:focus-visible { outline:2px solid #a43333; outline-offset:3px; }
+.danger-menu p { margin:10px 0; color:#7a4545; font-size:13px; line-height:1.45; }
+.danger-menu form { margin-top:12px; }
+.danger-menu.compact { margin:0; padding:8px 10px; }
+.danger-menu.compact[open] { align-self:stretch; }
 .admin-section .button-secondary { background:#e5f3f1; color:var(--deep); }
 .admin-section .button-secondary:hover { background:#d6e9e7; }
 .admin-section .button-danger { background:#fff0f0; color:#a43333; }
