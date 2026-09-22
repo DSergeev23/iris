@@ -67,8 +67,8 @@ const actionSchema = z.object({
 });
 const directionSchema = z.enum(["up", "down"]);
 
-async function publicationReadiness(departmentId: string) {
-  const department = await db.department.findUniqueOrThrow({
+async function publicationReadiness(departmentId: string, client: Pick<Prisma.TransactionClient, "department" | "scenario">) {
+  const department = await client.department.findUniqueOrThrow({
     where: { id: departmentId },
     select: {
       scenario: { select: { id: true, status: true } },
@@ -78,7 +78,7 @@ async function publicationReadiness(departmentId: string) {
   if (department.scenario?.status !== PublicationStatus.PUBLISHED) {
     missing.push("опубликованный сценарий");
   } else {
-    const readinessIssue = await scenarioPublicationReadiness(department.scenario.id, db);
+    const readinessIssue = await scenarioPublicationReadiness(department.scenario.id, client);
     if (readinessIssue) missing.push(readinessIssue);
   }
   return missing;
@@ -106,6 +106,7 @@ function errorMessage(error: unknown) {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     if (error.code === "P2002") return "Такое значение уже используется. Проверьте URL-код и порядок.";
     if (error.code === "P2025") return "Запись не найдена. Обновите страницу и повторите действие.";
+    if (error.code === "P2034") return "Данные изменились одновременно. Обновите страницу и повторите действие.";
   }
   return "Не удалось сохранить изменения. Обновите страницу и повторите попытку.";
 }
@@ -120,6 +121,11 @@ function adminRedirect(departmentId: string | undefined, type: "notice" | "error
 function refreshContent() {
   revalidatePath("/portal");
   revalidatePath("/admin");
+}
+
+async function requireDraftDepartment(tx: Prisma.TransactionClient, departmentId: string) {
+  const department = await tx.department.findUnique({ where: { id: departmentId }, select: { status: true } });
+  if (department?.status !== PublicationStatus.DRAFT) throw new ValidationError("Сначала переведите отделение в черновик.");
 }
 
 async function removeStoredFiles(keys: string[]) {
@@ -190,11 +196,9 @@ export async function deleteDraftDepartmentAction(formData: FormData) {
     const keys = await db.$transaction(async (tx) => {
       const department = await tx.department.findUnique({
         where: { id: departmentId },
-        select: { status: true, head: { select: { photoObjectKey: true } }, scenario: { select: { status: true } }, media: { select: { status: true, storageObjectKey: true, posterObjectKey: true } } },
+        select: { status: true, head: { select: { photoObjectKey: true } }, media: { select: { storageObjectKey: true, posterObjectKey: true } } },
       });
-      if (department?.status !== PublicationStatus.DRAFT) throw new ValidationError("Удалить можно только черновик отделения.");
-      if (department.scenario && department.scenario.status !== PublicationStatus.DRAFT) throw new ValidationError("Сначала скройте или удалите сценарий отделения.");
-      if (department.media.some((item) => item.status !== PublicationStatus.DRAFT)) throw new ValidationError("Сначала скройте или удалите опубликованные и архивные материалы.");
+      if (department?.status !== PublicationStatus.DRAFT) throw new ValidationError("Сначала переведите отделение в черновик.");
       const result = await tx.department.deleteMany({ where: { id: departmentId, status: PublicationStatus.DRAFT } });
       if (!result.count) throw new ValidationError("Отделение уже изменено. Обновите страницу.");
       const keys = [department.head?.photoObjectKey, ...department.media.flatMap((item) => [item.storageObjectKey, item.posterObjectKey])].filter((key): key is string => Boolean(key));
@@ -231,14 +235,17 @@ export async function toggleDepartmentPublicationAction(formData: FormData) {
   const status = z.nativeEnum(PublicationStatus).safeParse(formData.get("status"));
   if (!departmentId || !status.success || status.data === PublicationStatus.ARCHIVED) adminRedirect(departmentId, "error", "Некорректный статус отделения.");
   try {
-    const department = await requireDepartmentWrite(admin, departmentId);
-    if (department.status === PublicationStatus.ARCHIVED) throw new ValidationError("Сначала восстановите отделение из архива.");
-    if (status.data === PublicationStatus.PUBLISHED) {
-      const missing = await publicationReadiness(departmentId);
-      if (missing.length) throw new ValidationError(`Перед публикацией заполните: ${missing.join(", ")}.`);
-    }
-    await db.department.update({ where: { id: departmentId }, data: { status: status.data } });
-    await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "department", entityId: departmentId, action: "publication", payload: { status: status.data } } });
+    await requireDepartmentWrite(admin, departmentId);
+    await db.$transaction(async (tx) => {
+      const department = await tx.department.findUnique({ where: { id: departmentId }, select: { status: true } });
+      if (!department || department.status === PublicationStatus.ARCHIVED) throw new ValidationError("Сначала восстановите отделение из архива.");
+      if (status.data === PublicationStatus.PUBLISHED) {
+        const missing = await publicationReadiness(departmentId, tx);
+        if (missing.length) throw new ValidationError(`Перед публикацией заполните: ${missing.join(", ")}.`);
+      }
+      await tx.department.update({ where: { id: departmentId }, data: { status: status.data } });
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "department", entityId: departmentId, action: "publication", payload: { status: status.data } } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     refreshContent();
     adminRedirect(departmentId, "notice", status.data === PublicationStatus.PUBLISHED ? "Отделение опубликовано." : "Отделение скрыто с портала.");
   } catch (error) {
@@ -322,6 +329,25 @@ export async function updateDepartmentContentAction(formData: FormData) {
   }
 }
 
+export async function deleteDepartmentReferenceAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const departmentId = departmentIdFrom(formData);
+  if (!departmentId) adminRedirect(undefined, "error", "Отделение не найдено.", "content");
+  try {
+    await requireDepartmentWrite(admin, departmentId);
+    await db.$transaction(async (tx) => {
+      await requireDraftDepartment(tx, departmentId);
+      const result = await tx.departmentReferenceSection.deleteMany({ where: { departmentId } });
+      if (!result.count) throw new ValidationError("Справка уже удалена. Обновите страницу.");
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "department_reference", entityId: departmentId, action: "delete" } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    refreshContent();
+    adminRedirect(departmentId, "notice", "Справка удалена. Её можно заполнить заново.", "content");
+  } catch (error) {
+    adminRedirect(departmentId, "error", errorMessage(error), "content");
+  }
+}
+
 export async function saveDepartmentFactAction(formData: FormData) {
   const admin = await requireAdmin();
   const parsed = factSchema.safeParse({
@@ -354,8 +380,12 @@ export async function deleteDepartmentFactAction(formData: FormData) {
   if (!departmentId || !factId.success) adminRedirect(departmentId, "error", "Справочный блок не найден.", "content");
   try {
     await requireDepartmentWrite(admin, departmentId);
-    const result = await db.departmentFact.deleteMany({ where: { id: factId.data, departmentId } });
-    if (!result.count) throw new ValidationError("Справочный блок не найден.");
+    await db.$transaction(async (tx) => {
+      await requireDraftDepartment(tx, departmentId);
+      const result = await tx.departmentFact.deleteMany({ where: { id: factId.data, departmentId } });
+      if (!result.count) throw new ValidationError("Справочный блок не найден.");
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "department_fact", entityId: factId.data, action: "delete" } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     refreshContent();
     adminRedirect(departmentId, "notice", "Справочный блок удалён.", "content");
   } catch (error) {
@@ -383,6 +413,28 @@ export async function updateDepartmentHeadAction(formData: FormData) {
   }
 }
 
+export async function deleteDepartmentHeadAction(formData: FormData) {
+  const admin = await requireAdmin();
+  const departmentId = departmentIdFrom(formData);
+  if (!departmentId) adminRedirect(undefined, "error", "Отделение не найдено.", "head");
+  try {
+    await requireDepartmentWrite(admin, departmentId);
+    const photoKey = await db.$transaction(async (tx) => {
+      await requireDraftDepartment(tx, departmentId);
+      const head = await tx.departmentHead.findUnique({ where: { departmentId }, select: { id: true, photoObjectKey: true } });
+      if (!head) throw new ValidationError("Профиль уже удалён. Обновите страницу.");
+      await tx.departmentHead.delete({ where: { departmentId } });
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "department_head", entityId: head.id, action: "delete" } });
+      return head.photoObjectKey;
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    const failed = await removeStoredFiles(photoKey ? [photoKey] : []);
+    refreshContent();
+    adminRedirect(departmentId, "notice", failed ? "Профиль удалён, но фотографию не удалось очистить из хранилища." : photoKey ? "Профиль и фотография удалены." : "Профиль заведующего удалён.", "head");
+  } catch (error) {
+    adminRedirect(departmentId, "error", errorMessage(error), "head");
+  }
+}
+
 export async function updateScenarioAction(formData: FormData) {
   const admin = await requireAdmin();
   const parsed = scenarioSchema.safeParse(Object.fromEntries(formData));
@@ -405,12 +457,14 @@ export async function toggleScenarioPublicationAction(formData: FormData) {
   if (!scenarioId.success || !status.success || status.data === PublicationStatus.ARCHIVED) adminRedirect(undefined, "error", "Некорректный статус сценария.", "scenario");
   try {
     const scenario = await requireScenarioWrite(admin, scenarioId.data);
-    if (scenario.status === PublicationStatus.ARCHIVED) throw new ValidationError("Сначала восстановите сценарий из архива.");
-    const readinessIssue = status.data === PublicationStatus.PUBLISHED ? await scenarioPublicationReadiness(scenario.id, db) : null;
-    if (readinessIssue) {
-      throw new ValidationError(`Перед публикацией ${readinessIssue}.`);
-    }
-    await db.scenario.update({ where: { id: scenario.id }, data: { status: status.data } });
+    await db.$transaction(async (tx) => {
+      const current = await tx.scenario.findUnique({ where: { id: scenario.id }, select: { status: true } });
+      if (!current || current.status === PublicationStatus.ARCHIVED) throw new ValidationError("Сначала восстановите сценарий из архива.");
+      const readinessIssue = status.data === PublicationStatus.PUBLISHED ? await scenarioPublicationReadiness(scenario.id, tx) : null;
+      if (readinessIssue) throw new ValidationError(`Перед публикацией ${readinessIssue}.`);
+      await tx.scenario.update({ where: { id: scenario.id }, data: { status: status.data } });
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "scenario", entityId: scenario.id, action: "publication", payload: { status: status.data } } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     refreshContent();
     adminRedirect(scenario.departmentId, "notice", status.data === PublicationStatus.PUBLISHED ? "Сценарий опубликован." : "Сценарий скрыт с портала.", "scenario");
   } catch (error) {
@@ -461,15 +515,13 @@ export async function deleteDraftScenarioAction(formData: FormData) {
   try {
     const scenario = await requireScenarioWrite(admin, scenarioId.data);
     await db.$transaction(async (tx) => {
-      const current = await tx.scenario.findUnique({ where: { id: scenario.id }, select: { status: true, department: { select: { status: true } } } });
-      if (current?.status !== PublicationStatus.DRAFT) throw new ValidationError("Удалить можно только черновик сценария.");
-      if (current.department.status === PublicationStatus.PUBLISHED) throw new ValidationError("Сначала скройте отделение с портала.");
-      const result = await tx.scenario.deleteMany({ where: { id: scenario.id, status: PublicationStatus.DRAFT } });
+      await requireDraftDepartment(tx, scenario.departmentId);
+      const result = await tx.scenario.deleteMany({ where: { id: scenario.id, departmentId: scenario.departmentId } });
       if (!result.count) throw new ValidationError("Сценарий уже изменён. Обновите страницу.");
-      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "scenario", entityId: scenario.id, action: "delete_draft" } });
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "scenario", entityId: scenario.id, action: "delete" } });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     refreshContent();
-    adminRedirect(scenario.departmentId, "notice", "Черновик сценария удалён.", "scenario");
+    adminRedirect(scenario.departmentId, "notice", "Сценарий со всеми шагами и кнопками удалён.", "scenario");
   } catch (error) {
     adminRedirect(undefined, "error", errorMessage(error), "scenario");
   }
@@ -514,16 +566,18 @@ export async function deleteScenarioStepAction(formData: FormData) {
   if (!stepId.success) adminRedirect(undefined, "error", "Шаг не найден.", "scenario");
   try {
     const step = await requireScenarioStepWrite(admin, stepId.data);
-    await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
+      await requireDraftDepartment(tx, step.scenario.departmentId);
       const incomingActions = await tx.scenarioAction.count({ where: { targetStepId: step.id } });
-      if (incomingActions) {
-        throw new ValidationError(`На этот шаг ведёт ${incomingActions} ${incomingActions === 1 ? "кнопка" : "кнопки"}. Сначала удалите или перенастройте эти переходы.`);
-      }
-      await tx.scenarioStep.delete({ where: { id: step.id } });
-      await ensurePublishedScenarioReadiness(step.scenario, tx);
-    });
+      await tx.scenarioAction.deleteMany({ where: { targetStepId: step.id } });
+      const deleted = await tx.scenarioStep.deleteMany({ where: { id: step.id, scenarioId: step.scenarioId } });
+      if (!deleted.count) throw new ValidationError("Шаг уже удалён. Обновите страницу.");
+      const demoted = await tx.scenario.updateMany({ where: { id: step.scenarioId, status: PublicationStatus.PUBLISHED }, data: { status: PublicationStatus.DRAFT } });
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "scenario_step", entityId: step.id, action: "delete", payload: { incomingActions } } });
+      return { incomingActions, demoted: Boolean(demoted.count) };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     refreshContent();
-    adminRedirect(step.scenario.departmentId, "notice", "Шаг удалён.", "scenario");
+    adminRedirect(step.scenario.departmentId, "notice", `Шаг удалён.${result.incomingActions ? ` Связанные кнопки удалены: ${result.incomingActions}.` : ""}${result.demoted ? " Сценарий переведён в черновик." : ""} Проверьте маршрут перед публикацией.`, "scenario");
   } catch (error) {
     adminRedirect(undefined, "error", errorMessage(error), "scenario");
   }
@@ -629,12 +683,16 @@ export async function deleteScenarioButtonAction(formData: FormData) {
     const action = await db.scenarioAction.findUnique({ where: { id: actionId.data }, select: { id: true, stepId: true } });
     if (!action) throw new ValidationError("Кнопка сценария не найдена.");
     const step = await requireScenarioStepWrite(admin, action.stepId);
-    await db.$transaction(async (tx) => {
-      await tx.scenarioAction.delete({ where: { id: action.id } });
-      await ensurePublishedScenarioReadiness(step.scenario, tx);
-    });
+    const demoted = await db.$transaction(async (tx) => {
+      await requireDraftDepartment(tx, step.scenario.departmentId);
+      const deleted = await tx.scenarioAction.deleteMany({ where: { id: action.id, stepId: step.id } });
+      if (!deleted.count) throw new ValidationError("Кнопка уже удалена. Обновите страницу.");
+      const result = await tx.scenario.updateMany({ where: { id: step.scenarioId, status: PublicationStatus.PUBLISHED }, data: { status: PublicationStatus.DRAFT } });
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "scenario_action", entityId: action.id, action: "delete" } });
+      return Boolean(result.count);
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     refreshContent();
-    adminRedirect(step.scenario.departmentId, "notice", "Кнопка сценария удалена.", "scenario");
+    adminRedirect(step.scenario.departmentId, "notice", `Кнопка сценария удалена.${demoted ? " Сценарий переведён в черновик." : ""} Проверьте маршрут перед публикацией.`, "scenario");
   } catch (error) {
     adminRedirect(undefined, "error", errorMessage(error), "scenario");
   }
@@ -740,20 +798,22 @@ export async function deleteDraftMediaItemAction(formData: FormData) {
     if (!media) throw new ValidationError("Материал не найден.");
     departmentId = media.departmentId;
     await requireDepartmentWrite(admin, departmentId);
-    const keys = await db.$transaction(async (tx) => {
-      const current = await tx.mediaItem.findUnique({ where: { id: mediaId.data }, select: { status: true, storageObjectKey: true, posterObjectKey: true } });
-      if (current?.status !== PublicationStatus.DRAFT) throw new ValidationError("Удалить можно только черновик материала.");
+    const { keys, references, demoted } = await db.$transaction(async (tx) => {
+      const current = await tx.mediaItem.findUnique({ where: { id: mediaId.data }, select: { departmentId: true, storageObjectKey: true, posterObjectKey: true } });
+      if (!current) throw new ValidationError("Материал не найден.");
+      await requireDraftDepartment(tx, current.departmentId);
       const references = await tx.scenarioAction.count({ where: { targetMediaId: mediaId.data } });
-      if (references) throw new ValidationError("На материал ведёт кнопка сценария. Сначала удалите или перенастройте её.");
-      const result = await tx.mediaItem.deleteMany({ where: { id: mediaId.data, status: PublicationStatus.DRAFT } });
+      await tx.scenarioAction.deleteMany({ where: { targetMediaId: mediaId.data } });
+      const result = await tx.mediaItem.deleteMany({ where: { id: mediaId.data, departmentId: current.departmentId } });
       if (!result.count) throw new ValidationError("Материал уже изменён. Обновите страницу.");
+      const scenario = references ? await tx.scenario.updateMany({ where: { departmentId: current.departmentId, status: PublicationStatus.PUBLISHED }, data: { status: PublicationStatus.DRAFT } }) : { count: 0 };
       const keys = [current.storageObjectKey, current.posterObjectKey].filter((key): key is string => Boolean(key));
-      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: mediaId.data, action: "delete_draft", payload: { storageObjectKeys: keys } } });
-      return keys;
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: mediaId.data, action: "delete", payload: { storageObjectKeys: keys, removedActions: references } } });
+      return { keys, references, demoted: Boolean(scenario.count) };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     const failed = await removeStoredFiles(keys);
     refreshContent();
-    adminRedirect(departmentId, "notice", failed ? "Черновик удалён, но файл не удалось очистить из хранилища." : "Черновик материала удалён.", "media");
+    adminRedirect(departmentId, "notice", `Материал удалён.${references ? ` Связанные кнопки удалены: ${references}.` : ""}${demoted ? " Сценарий переведён в черновик." : ""}${failed ? " Файл не удалось очистить из хранилища." : ""}${references ? " Проверьте маршрут перед публикацией." : ""}`, "media");
   } catch (error) {
     adminRedirect(departmentId, "error", errorMessage(error), "media");
   }

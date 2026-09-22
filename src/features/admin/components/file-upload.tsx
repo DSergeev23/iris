@@ -74,6 +74,6 @@ export function FileUpload({ departmentId, purpose }: { departmentId: string; pu
     <label>Файл<input name="file" type="file" required accept={isPhoto ? "image/jpeg,image/png,image/webp" : "video/mp4,application/pdf,image/jpeg,image/png,image/webp"} /></label>
     {state === "uploading" && <div className="upload-progress" aria-label={`Загрузка ${progress}%`}><span style={{ width: `${progress}%` }} /></div>}
     {message && <p className={`upload-message ${state}`} role={state === "error" ? "alert" : "status"}>{message}</p>}
-    <div className="form-actions"><button type="submit" disabled={state === "uploading"}>{state === "uploading" ? `Загрузка ${progress}%` : isPhoto ? "Загрузить фотографию" : "Загрузить материал"}</button><button type="reset" className="button-secondary" disabled={state === "uploading"} onClick={reset}>Отменить изменения</button></div>
+    <div className="form-actions"><button type="submit" disabled={state === "uploading"}>{state === "uploading" ? `Загрузка ${progress}%` : state === "error" ? "Повторить загрузку" : isPhoto ? "Загрузить фотографию" : "Загрузить материал"}</button><button type="reset" className="button-secondary" disabled={state === "uploading"} onClick={reset}>Отменить изменения</button></div>
   </form>;
 }

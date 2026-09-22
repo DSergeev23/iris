@@ -5,21 +5,32 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getS3Client } from "@/lib/s3";
 import { getServerConfig } from "@/lib/config";
+import { logFailure } from "@/lib/logger";
 
 const mediaIdSchema = z.string().uuid();
+
+function unavailable(request: Request, status: number) {
+  if (request.headers.get("accept")?.includes("text/html")) {
+    return new Response("<!doctype html><html lang=\"ru\"><meta charset=\"utf-8\"><title>Материал недоступен</title><main><h1>Материал временно недоступен</h1><p>Попробуйте открыть его позже.</p><a href=\"/portal\">Вернуться в портал</a></main></html>", {
+      status,
+      headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "Content-Security-Policy": "default-src 'none'" },
+    });
+  }
+  return NextResponse.json({ error: "Материал временно недоступен. Попробуйте ещё раз." }, { status });
+}
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request, { params }: { params: Promise<{ mediaId: string }> }) {
   const parsed = mediaIdSchema.safeParse((await params).mediaId);
-  if (!parsed.success) return NextResponse.json({ error: "Материал недоступен." }, { status: 404 });
+  if (!parsed.success) return unavailable(request, 404);
 
   try {
     const media = await db.mediaItem.findFirst({
       where: { id: parsed.data, status: PublicationStatus.PUBLISHED, department: { status: PublicationStatus.PUBLISHED } },
       select: { storageObjectKey: true, mimeType: true },
     });
-    if (!media) return NextResponse.json({ error: "Материал недоступен." }, { status: 404 });
+    if (!media) return unavailable(request, 404);
 
     const range = request.headers.get("range") ?? undefined;
     const object = await getS3Client().send(new GetObjectCommand({
@@ -37,7 +48,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ medi
     if (object.ContentLength !== undefined) headers.set("Content-Length", String(object.ContentLength));
     if (object.ContentRange) headers.set("Content-Range", object.ContentRange);
     return new Response(object.Body.transformToWebStream(), { status: object.ContentRange ? 206 : 200, headers });
-  } catch {
-    return NextResponse.json({ error: "Не удалось загрузить материал. Попробуйте ещё раз." }, { status: 503 });
+  } catch (error) {
+    logFailure("portal_media_load_failed", error, { mediaId: parsed.data });
+    return unavailable(request, 503);
   }
 }

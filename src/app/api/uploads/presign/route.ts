@@ -10,6 +10,7 @@ import { AppError, ValidationError } from "@/lib/errors";
 import { db } from "@/lib/db";
 import { consumeUploadPresignAttempt } from "@/lib/rate-limit";
 import { getS3Client } from "@/lib/s3";
+import { logFailure } from "@/lib/logger";
 
 const MAX_UPLOAD_BYTES_BY_TYPE = {
   "image/jpeg": 10 * 1024 * 1024,
@@ -34,6 +35,7 @@ function jsonError(error: unknown) {
   if (error instanceof AppError) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
+  logFailure("upload_presign_failed", error);
   return NextResponse.json({ error: "Не удалось подготовить загрузку." }, { status: 500 });
 }
 

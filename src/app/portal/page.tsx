@@ -1,10 +1,19 @@
 import { PortalClient } from "@/features/portal/components/portal-client";
-import { getPublishedPortal } from "@/features/portal/server/repository";
+import { getPortalAddressStatus, getPublishedPortal } from "@/features/portal/server/repository";
+import { logFailure } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
 export default async function PortalPage({ searchParams }: { searchParams: Promise<{ department?: string }> }) {
-  const departments = await getPublishedPortal();
   const { department } = await searchParams;
-  return <PortalClient departments={departments} initialSlug={department} />;
+  try {
+    const departments = await getPublishedPortal();
+    const addressStatus = department && !departments.some((item) => item.slug === department)
+      ? await getPortalAddressStatus(department)
+      : undefined;
+    return <PortalClient departments={departments} initialSlug={department} addressStatus={addressStatus} />;
+  } catch (error) {
+    logFailure("portal_content_load_failed", error);
+    return <PortalClient departments={[]} loadError />;
+  }
 }

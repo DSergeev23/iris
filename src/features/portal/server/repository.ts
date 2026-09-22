@@ -1,12 +1,11 @@
 import { PublicationStatus } from "@prisma/client";
 import { hasDatabaseConfig } from "@/lib/config";
 import { db } from "@/lib/db";
-import { getS3ReadUrl } from "@/lib/s3";
 import { demoDepartments } from "./demo-data";
 import type { PortalDepartment } from "../types";
 
-async function mapDepartment(item: Awaited<ReturnType<typeof getRawDepartment>>): Promise<PortalDepartment> {
-  const photoUrl = item.head?.photoObjectKey ? await getS3ReadUrl(item.head.photoObjectKey) : null;
+function mapDepartment(item: Awaited<ReturnType<typeof getRawDepartment>>): PortalDepartment {
+  const photoUrl = item.head?.photoObjectKey ? `/api/portal/head-photo/${item.id}` : null;
   return {
     id: item.id, slug: item.slug, name: item.name, intro: item.intro,
     head: item.head ? { name: [item.head.firstName, item.head.middleName, item.head.lastName].filter(Boolean).join(" "), role: item.head.roleTitle, biography: item.head.biography, photoUrl } : null,
@@ -56,5 +55,12 @@ export async function getPublishedPortal() {
       scenario: { where: { status: PublicationStatus.PUBLISHED }, include: { steps: { orderBy: { sortOrder: "asc" }, include: { actions: { orderBy: { sortOrder: "asc" } } } } } },
     },
   });
-  return Promise.all(departments.map((item) => mapDepartment(item as Awaited<ReturnType<typeof getRawDepartment>>)));
+  return departments.map((item) => mapDepartment(item as Awaited<ReturnType<typeof getRawDepartment>>));
+}
+
+export async function getPortalAddressStatus(slug: string): Promise<"not-found" | "unpublished"> {
+  if (!/^[a-z0-9-]{1,60}$/.test(slug)) return "not-found";
+  if (!hasDatabaseConfig() && process.env.NODE_ENV !== "production") return "not-found";
+  const department = await db.department.findUnique({ where: { slug }, select: { status: true } });
+  return department?.status !== PublicationStatus.PUBLISHED && department ? "unpublished" : "not-found";
 }

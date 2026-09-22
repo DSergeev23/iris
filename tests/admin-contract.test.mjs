@@ -9,16 +9,31 @@ const bootstrap = read("src/features/admin/server/bootstrap-content.ts");
 const seed = read("scripts/seed-content.mjs");
 const portalRepository = read("src/features/portal/server/repository.ts");
 const portalClient = read("src/features/portal/components/portal-client.tsx");
+const portalPage = read("src/app/portal/page.tsx");
 const portalMediaRoute = read("src/app/api/portal/media/[mediaId]/route.ts");
+const portalHeadPhotoRoute = read("src/app/api/portal/head-photo/[departmentId]/route.ts");
 const scenarioReadiness = read("src/features/admin/server/scenario-readiness.ts");
 
 test("смена отделения перемонтирует редактор и не оставляет defaultValue предыдущего", () => {
   assert.match(adminPage, /<div key=\{selected\.id\} className="selected-department-editor">/);
 });
 
-test("нельзя удалить шаг, пока на него ведёт переход", () => {
-  assert.match(actions, /scenarioAction\.count\(\{ where: \{ targetStepId: step\.id \} \}\)/);
-  assert.match(actions, /Сначала удалите или перенастройте эти переходы/);
+test("удаление доступно только для черновика отделения и убирает связанные кнопки", () => {
+  for (const name of ["deleteDepartmentReferenceAction", "deleteDepartmentFactAction", "deleteDepartmentHeadAction", "deleteDraftScenarioAction", "deleteScenarioStepAction", "deleteScenarioButtonAction", "deleteDraftMediaItemAction"]) {
+    const start = actions.indexOf(`export async function ${name}`);
+    const end = actions.indexOf("\nexport async function", start + 1);
+    const body = actions.slice(start, end < 0 ? undefined : end);
+    assert.match(body, /requireDraftDepartment\(tx,/);
+  }
+  assert.match(actions, /department\?\.status !== PublicationStatus\.DRAFT/);
+  assert.match(actions, /scenarioAction\.deleteMany\(\{ where: \{ targetStepId: step\.id \} \}\)/);
+  assert.match(actions, /scenarioAction\.deleteMany\(\{ where: \{ targetMediaId: mediaId\.data \} \}\)/);
+  assert.match(actions, /status: PublicationStatus\.PUBLISHED \}, data: \{ status: PublicationStatus\.DRAFT \}/);
+  assert.match(actions, /publicationReadiness\(departmentId, tx\)/);
+  assert.match(actions, /scenarioPublicationReadiness\(scenario\.id, tx\)/);
+  assert.equal((adminPage.match(/selected\.status === PublicationStatus\.DRAFT && <details className="danger-menu/g) ?? []).length, 6);
+  assert.match(adminPage, /selected\.status === PublicationStatus\.DRAFT && selected\.reference && <details className="danger-menu"/);
+  assert.match(adminPage, /selected\.status === PublicationStatus\.DRAFT && selected\.head && <details className="danger-menu"/);
 });
 
 test("админка поддерживает обратимое архивирование отделений, сценариев и медиа", () => {
@@ -109,8 +124,26 @@ test("медиа получают свежую ссылку только для 
 
 test("неизвестный адрес отделения не подменяется первым доступным", () => {
   assert.match(portalClient, /isUnavailableAddress/);
-  assert.match(portalClient, /Страница отделения недоступна/);
+  assert.match(portalClient, /Раздел не найден/);
+  assert.match(portalClient, /В начало портала/);
   assert.match(portalClient, /Выберите доступное отделение/);
+});
+
+test("неопубликованное отделение и ошибка загрузки не показывают технические детали", () => {
+  assert.match(portalRepository, /getPortalAddressStatus/);
+  assert.match(portalClient, /Раздел временно недоступен/);
+  assert.match(portalPage, /logFailure\("portal_content_load_failed"/);
+  assert.match(portalMediaRoute, /logFailure\("portal_media_load_failed"/);
+  assert.match(portalMediaRoute, /text\/html/);
+  assert.match(portalMediaRoute, /Материал временно недоступен/);
+  assert.match(portalHeadPhotoRoute, /department: \{ status: PublicationStatus\.PUBLISHED \}/);
+  assert.match(portalHeadPhotoRoute, /logFailure\("portal_head_photo_load_failed"/);
+});
+
+test("отсутствующие профиль, сценарий и PDF не дают пустых действий", () => {
+  assert.match(portalClient, /hasHead && <article/);
+  assert.match(portalClient, /department\.scenario && <ActionButton/);
+  assert.match(portalClient, /item\?\.kind === "DOCUMENT"/);
 });
 
 test("URL-код отделения сохраняется для QR-кодов", () => {

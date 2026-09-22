@@ -9,6 +9,7 @@ import { getServerConfig } from "@/lib/config";
 import { db } from "@/lib/db";
 import { AppError, ValidationError } from "@/lib/errors";
 import { getS3Client } from "@/lib/s3";
+import { logFailure } from "@/lib/logger";
 
 const completeSchema = z.object({
   departmentId: z.string().uuid(),
@@ -29,6 +30,7 @@ function mediaKind(contentType: string) {
 
 function jsonError(error: unknown) {
   if (error instanceof AppError) return NextResponse.json({ error: error.message }, { status: error.status });
+  logFailure("upload_complete_failed", error);
   return NextResponse.json({ error: "Не удалось завершить загрузку." }, { status: 500 });
 }
 

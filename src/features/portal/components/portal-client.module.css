@@ -99,6 +99,7 @@
 .emptyMedia { color: var(--muted-on-dark); font-size: 17px; }
 
 .departmentInfo { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: 18px; scroll-margin-top: 18px; }
+.departmentInfo.departmentInfoSingle { grid-template-columns: minmax(0,1fr); }
 .doctorCard, .referenceCard { min-height: 260px; }
 .doctorLayout { display: grid; grid-template-columns: 132px 1fr; gap: 20px; align-items: start; height: 100%; }
 .doctorPhoto { width: 132px; aspect-ratio: 1; border-radius: 30px; display: grid; place-items: center; color: var(--white); background: linear-gradient(160deg,rgba(12,111,120,.9),rgba(33,166,166,.72)); box-shadow: 0 18px 38px rgba(15,84,91,.18); font-size: 34px; font-weight: 800; }
@@ -128,9 +129,8 @@
 .lightMediaRow { color: var(--ink); background: rgba(255,255,255,.84); border-color: rgba(12,111,120,.12); box-shadow: 0 12px 30px rgba(15,84,91,.1); }
 .lightMediaRow .mediaIcon { color: var(--medical-2); background: rgba(33,166,166,.12); }
 .lightMediaRow small { color: var(--muted); }
-.videoBox { aspect-ratio: 16/10; border-radius: 24px; display: grid; place-items: center; margin: 20px 0; background: linear-gradient(135deg,rgba(12,111,120,.24),rgba(111,91,214,.18)), radial-gradient(320px 220px at 70% 20%,rgba(255,255,255,.72),transparent 70%), #d8efec; color: var(--medical-2); }
-.videoBox svg { width: 88px; height: 88px; padding: 24px; border-radius: 50%; background: rgba(255,255,255,.72); }
 .videoPlayer { width:100%; aspect-ratio:16/10; margin:20px 0; border-radius:24px; background:#073b46; }
+.materialImage { display:block; width:100%; max-height:70vh; object-fit:contain; margin:20px 0; border-radius:24px; background:#d8efec; }
 .mediaReload { display: grid; gap: 12px; margin: 0 0 20px; }
 .mediaReload p { margin: 0; color: var(--danger); font-size: 18px; line-height: 1.45; }
 .documentLink { min-height:76px; margin:20px 0; border-radius:22px; padding:18px; display:flex; align-items:center; justify-content:center; gap:12px; color:var(--white); background:linear-gradient(135deg,var(--medical),var(--medical-2)); font-size:20px; font-weight:800; text-decoration:none; }

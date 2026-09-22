@@ -26,7 +26,7 @@ import {
 import type { PortalDepartment } from "../types";
 import styles from "./portal-client.module.css";
 
-type Props = { departments: PortalDepartment[]; initialSlug?: string };
+type Props = { departments: PortalDepartment[]; initialSlug?: string; addressStatus?: "not-found" | "unpublished"; loadError?: boolean };
 type Scenario = NonNullable<PortalDepartment["scenario"]>;
 type ScenarioStep = Scenario["steps"][number];
 type ScenarioAction = ScenarioStep["actions"][number];
@@ -42,7 +42,7 @@ function cx(...names: Array<string | false | null | undefined>) {
   return names.filter(Boolean).join(" ");
 }
 
-export function PortalClient({ departments, initialSlug }: Props) {
+export function PortalClient({ departments, initialSlug, addressStatus, loadError = false }: Props) {
   const matchedInitialIndex = departments.findIndex((item) => item.slug === initialSlug);
   const [departmentIndex, setDepartmentIndex] = useState(Math.max(0, matchedInitialIndex));
   const [isUnavailableAddress, setIsUnavailableAddress] = useState(Boolean(initialSlug && matchedInitialIndex === -1));
@@ -58,25 +58,37 @@ export function PortalClient({ departments, initialSlug }: Props) {
   }, [view]);
 
   const media = department?.media ?? [];
+  const hasVideo = media.some((item) => item.kind === "VIDEO");
+  const hasHead = Boolean(department?.head?.name.trim());
   const initials = useMemo(() => {
     if (!department?.head?.name) return "И";
     return department.head.name.split(" ").filter(Boolean).map((part) => part[0]).slice(0, 2).join("");
   }, [department]);
 
-  if (!department) {
+  if (loadError) {
     return <main className={styles.empty}>
       <Stethoscope size={48} />
-      <h1>Отделения пока не опубликованы</h1>
-      <p>Материалы появятся здесь после заполнения администратором.</p>
+      <h1>Раздел временно недоступен</h1>
+      <p>Не удалось загрузить материалы. Попробуйте открыть страницу позже.</p>
+      <a className={styles.chip} href={initialSlug ? `/portal?department=${encodeURIComponent(initialSlug)}` : "/portal"}>Повторить загрузку</a>
     </main>;
   }
 
   if (isUnavailableAddress) {
     return <main className={styles.empty}>
       <Stethoscope size={48} />
-      <h1>Страница отделения недоступна</h1>
-      <p>Возможно, отделение временно скрыто. Выберите доступное отделение.</p>
+      <h1>{addressStatus === "unpublished" ? "Раздел временно недоступен" : "Раздел не найден"}</h1>
+      <p>{addressStatus === "unpublished" ? "Отделение сейчас не опубликовано. Выберите доступное отделение." : "Проверьте адрес или выберите доступное отделение."}</p>
+      <a className={styles.chip} href="/portal">В начало портала</a>
       <div className={styles.emptyActions}>{departments.map((item, index) => <button className={styles.chip} key={item.id} type="button" onClick={() => selectDepartment(index)}><DepartmentIcon department={item} />{item.name}</button>)}</div>
+    </main>;
+  }
+
+  if (!department) {
+    return <main className={styles.empty}>
+      <Stethoscope size={48} />
+      <h1>Отделения пока не опубликованы</h1>
+      <p>Раздел временно недоступен. Попробуйте зайти позже.</p>
     </main>;
   }
 
@@ -135,7 +147,7 @@ export function PortalClient({ departments, initialSlug }: Props) {
             </nav>
           </div>
           <div className={styles.topActions}>
-            <button className={cx(styles.pill, styles.primaryPill)} onClick={() => open({ type: "steps" })}>Помочь мне сориентироваться</button>
+            {department.scenario && <button className={cx(styles.pill, styles.primaryPill)} onClick={() => open({ type: "steps" })}>Помочь мне сориентироваться</button>}
             <a className={cx(styles.pill, styles.secondaryPill)} href="#department-info"><Hospital />Об отделении</a>
           </div>
         </header>
@@ -146,18 +158,18 @@ export function PortalClient({ departments, initialSlug }: Props) {
               <div className={styles.cardTitle}><Sparkles />Помощник пациента<Sparkles /></div>
               <div className={styles.irisMark}>И</div>
               <p className={styles.bigText}>Что Вам нужно сейчас?</p>
-              <p className={styles.mutedLight}>Выберите один из двух понятных путей. Если плохо или боль усиливается, зовите медсестру.</p>
+              <p className={styles.mutedLight}>{department.scenario ? "Выберите подходящий путь." : "Сценарий пока недоступен."} Если плохо или боль усиливается, зовите медсестру.</p>
             </div>
             <div className={styles.actions}>
-              <ActionButton icon={<ClipboardList />} title="Помочь мне сориентироваться" body={department.scenario?.description || "Подскажу, что делать на Вашем этапе"} onClick={() => open({ type: "steps" })} />
-              <ActionButton icon={<Video />} title="Видео и памятки" body="Открыть сразу, без вопросов" onClick={() => open({ type: "media" })} />
+              {department.scenario && <ActionButton icon={<ClipboardList />} title="Помочь мне сориентироваться" body={department.scenario.description || "Подскажу, что делать на Вашем этапе"} onClick={() => open({ type: "steps" })} />}
+              {media.length ? <ActionButton icon={<Video />} title="Видео и памятки" body="Открыть сразу, без вопросов" onClick={() => open({ type: "media" })} /> : <p className={styles.emptyMedia}>Материалы пока не опубликованы.</p>}
             </div>
           </article>
 
           <div className={styles.stack}>
             <article className={cx(styles.card, styles.noticeCard, styles.glass, styles.noise)}>
-              <div className={styles.leftCardTitle}>Больничный сценарий</div>
-              <p>ИРИС не пытается быть врачом. Он показывает памятки отделения, видео и помогает быстро найти следующий шаг.</p>
+              <div className={styles.leftCardTitle}>{department.scenario ? "Больничный сценарий" : "Информация отделения"}</div>
+              <p>{department.scenario ? "ИРИС не пытается быть врачом. Он показывает памятки отделения, видео и помогает быстро найти следующий шаг." : "Сценарий пока недоступен. Вы можете посмотреть справку об отделении и при необходимости позвать персонал."}</p>
             </article>
             <article className={cx(styles.card, styles.emergencyCard, styles.glass, styles.noise)}>
               <div className={styles.leftCardTitle}>Если стало плохо</div>
@@ -170,10 +182,10 @@ export function PortalClient({ departments, initialSlug }: Props) {
           <article className={cx(styles.card, styles.mediaCard, styles.glass, styles.noise)}>
             <div>
               <div className={styles.cardTitle}><Sparkles />Медиатека<Sparkles /></div>
-              <p className={styles.bigText}>Короткие видео восстановления</p>
-              <div className={styles.marquee} aria-hidden="true"><div className={styles.marqueeTrack}>
+              <p className={styles.bigText}>{hasVideo ? "Короткие видео восстановления" : media.length ? "Памятки отделения" : "Видео и памятки"}</p>
+              {hasVideo && <div className={styles.marquee} aria-hidden="true"><div className={styles.marqueeTrack}>
                 {[Bed, Accessibility, Bone, Stethoscope, HeartPulse, Building2, Video, Bed].map((Icon, index) => <span className={styles.tile} key={index}><Icon /></span>)}
-              </div></div>
+              </div></div>}
             </div>
             <div className={styles.mediaList}>
               {media.slice(0, 3).map((item) => <MediaRow key={item.id} item={item} onClick={() => open({ type: "media-detail", mediaId: item.id })} />)}
@@ -182,17 +194,17 @@ export function PortalClient({ departments, initialSlug }: Props) {
           </article>
         </section>
 
-        <section className={styles.departmentInfo} id="department-info">
-          <article className={cx(styles.card, styles.doctorCard, styles.glass, styles.noise)}>
+        <section className={cx(styles.departmentInfo, !hasHead && styles.departmentInfoSingle)} id="department-info">
+          {hasHead && <article className={cx(styles.card, styles.doctorCard, styles.glass, styles.noise)}>
             <div className={styles.doctorLayout}>
-              <div className={styles.doctorPhoto}>{department.head?.photoUrl ? <img src={department.head.photoUrl} alt={department.head.name ? `Заведующий отделением ${department.head.name}` : "Заведующий отделением"} /> : initials}</div>
+              <HeadPhoto key={department.id} photoUrl={department.head?.photoUrl} name={department.head?.name || ""} initials={initials} />
               <div>
                 <div className={styles.doctorRole}>{department.head?.role || "Заведующий отделением"}</div>
                 <h2>{department.head?.name || "Команда отделения"}</h2>
                 <p>{department.head?.biography || "Информация о заведующем появится после заполнения в админке."}</p>
               </div>
             </div>
-          </article>
+          </article>}
           <article className={cx(styles.card, styles.referenceCard, styles.glass, styles.noise)}>
             <div className={styles.doctorRole}>Справка по отделению</div>
             <h2>{department.reference?.title || department.name}</h2>
@@ -254,7 +266,24 @@ function MediaDetail({ item }: { item?: PortalDepartment["media"][number] }) {
   const [loadFailed, setLoadFailed] = useState(false);
   const url = item?.url ? `${item.url}?retry=${retry}` : undefined;
 
-  return <><h2>{item?.title || "Материал не найден"}</h2><p>{item?.description}</p>{url && item?.kind === "VIDEO" ? <><video key={url} className={styles.videoPlayer} controls preload="metadata" src={url} onError={() => setLoadFailed(true)}>Ваш браузер не поддерживает видео.</video>{loadFailed && <div className={styles.mediaReload}><p>Не удалось загрузить видео. Проверьте соединение и попробуйте ещё раз.</p><button className={styles.startButton} type="button" onClick={() => { setLoadFailed(false); setRetry((value) => value + 1); }}>Загрузить ещё раз</button></div>}</> : url ? <a className={styles.documentLink} href={url} target="_blank" rel="noreferrer"><FileText />Открыть памятку</a> : <div className={styles.videoBox}>{item?.kind === "VIDEO" ? <Play /> : <FileText />}</div>}<div className={styles.warn}><div><CircleAlert /><span><strong>Важно:</strong> если состояние ухудшилось, остановитесь и позовите медсестру.</span></div></div></>;
+  return <>
+    <h2>{item?.title || "Материал не найден"}</h2>
+    <p>{item?.description}</p>
+    {url && item?.kind === "VIDEO" && <video key={url} className={styles.videoPlayer} controls preload="metadata" src={url} onError={() => setLoadFailed(true)}>Ваш браузер не поддерживает видео.</video>}
+    {url && item?.kind === "DOCUMENT" && <a className={styles.documentLink} href={url} target="_blank" rel="noreferrer"><FileText />Открыть PDF</a>}
+    {url && item?.kind === "IMAGE" && !loadFailed && <img key={url} className={styles.materialImage} src={url} alt={item.title} onError={() => setLoadFailed(true)} />}
+    {(!url || !item || !["VIDEO", "DOCUMENT", "IMAGE"].includes(item.kind)) && <p>Материал недоступен.</p>}
+    {loadFailed && <div className={styles.mediaReload}>
+      <p>Не удалось загрузить {item?.kind === "IMAGE" ? "изображение" : "видео"}. Проверьте соединение и попробуйте ещё раз.</p>
+      <button className={styles.startButton} type="button" onClick={() => { setLoadFailed(false); setRetry((value) => value + 1); }}>Загрузить ещё раз</button>
+    </div>}
+    <div className={styles.warn}><div><CircleAlert /><span><strong>Важно:</strong> если состояние ухудшилось, остановитесь и позовите медсестру.</span></div></div>
+  </>;
+}
+
+function HeadPhoto({ photoUrl, name, initials }: { photoUrl?: string | null; name: string; initials: string }) {
+  const [failed, setFailed] = useState(false);
+  return <div className={styles.doctorPhoto}>{photoUrl && !failed ? <img src={photoUrl} alt={`Заведующий отделением ${name}`} onError={() => setFailed(true)} /> : initials}</div>;
 }
 
 function ScenarioStart({ patientName, setPatientName, hasPersonalDataConsent, setHasPersonalDataConsent, onStart }: { patientName: string; setPatientName: (name: string) => void; hasPersonalDataConsent: boolean; setHasPersonalDataConsent: (hasConsent: boolean) => void; onStart: () => void }) {
@@ -275,7 +304,7 @@ function PanelAction({ action, onClick }: { action: ScenarioAction; onClick: () 
 }
 
 function MediaRow({ item, onClick, light = false }: { item: PortalDepartment["media"][number]; onClick: () => void; light?: boolean }) {
-  return <button className={cx(styles.mediaRow, light && styles.lightMediaRow)} onClick={onClick}><span className={styles.mediaIcon}>{item.kind === "VIDEO" ? <Play /> : <FileText />}</span><span><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : "Памятка"}</small></span></button>;
+  return <button className={cx(styles.mediaRow, light && styles.lightMediaRow)} onClick={onClick}><span className={styles.mediaIcon}>{item.kind === "VIDEO" ? <Play /> : <FileText />}</span><span><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : item.kind === "DOCUMENT" ? "PDF" : "Изображение"}</small></span></button>;
 }
 
 function DepartmentIcon({ department }: { department: PortalDepartment }) {
