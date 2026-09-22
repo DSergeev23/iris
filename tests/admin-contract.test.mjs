@@ -97,7 +97,10 @@ test("короткое описание отделения выводится н
 
 test("медиа получают свежую ссылку только для опубликованного материала", () => {
   assert.match(portalMediaRoute, /status: PublicationStatus\.PUBLISHED, department: \{ status: PublicationStatus\.PUBLISHED \}/);
-  assert.match(portalMediaRoute, /getS3ReadUrl\(media\.storageObjectKey\)/);
+  assert.match(portalMediaRoute, /new GetObjectCommand/);
+  assert.match(portalMediaRoute, /Range: range/);
+  assert.match(portalMediaRoute, /Content-Range/);
+  assert.match(portalMediaRoute, /object\.ContentRange \? 206 : 200/);
   assert.match(portalMediaRoute, /Cache-Control.*no-store/);
   assert.match(portalRepository, /url: `\/api\/portal\/media\/\$\{media\.id\}`/);
   assert.match(portalClient, /onError=\{\(\) => setLoadFailed\(true\)\}/);
