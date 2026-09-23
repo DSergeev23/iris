@@ -4,17 +4,16 @@ import {
   ArrowDown,
   ArrowUp,
   Building2,
-  CheckCircle2,
   DatabaseZap,
   FileText,
   LogOut,
   Plus,
   Save,
-  TriangleAlert,
   UserRound,
   Workflow,
 } from "lucide-react";
 import { AdminFormGuard } from "@/features/admin/components/admin-form-guard";
+import { AdminToast } from "@/features/admin/components/admin-toast";
 import { CancelButton, ConfirmArchiveButton, ConfirmDeleteButton, ConfirmPublicationButton, SubmitButton } from "@/features/admin/components/form-buttons";
 import { FileUpload } from "@/features/admin/components/file-upload";
 import { ScenarioActionFields } from "@/features/admin/components/scenario-action-fields";
@@ -77,8 +76,10 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
   const scenarioActions = selected?.scenario?.steps.flatMap((step) => step.actions) ?? [];
   const stepOptions = selected?.scenario?.steps.map((step) => ({ id: step.id, title: step.title })) ?? [];
   const mediaOptions = selected?.media.filter((item) => item.status === PublicationStatus.PUBLISHED).map((item) => ({ id: item.id, title: item.title })) ?? [];
-  const scenarioIssue = selected?.status === PublicationStatus.DRAFT && selected.scenario?.status === PublicationStatus.DRAFT
-    ? await scenarioPublicationReadiness(selected.scenario.id, db)
+  const scenarioIssue = selected?.scenario?.status === PublicationStatus.DRAFT
+    ? selected.status !== PublicationStatus.PUBLISHED
+      ? "сначала опубликуйте отделение"
+      : await scenarioPublicationReadiness(selected.scenario.id, db)
     : null;
 
   return <main className="admin-body"><AdminFormGuard /><div className="admin-shell">
@@ -98,12 +99,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         <span className="capacity"><strong>{departments.length}</strong><span>из 20 отделений</span></span>
       </header>
 
-      {params.notice && <div className="feedback success" role="status" aria-live="polite"><CheckCircle2 size={21} />{params.notice}</div>}
-      {params.error && <div className="feedback error" role="alert"><TriangleAlert size={21} />{params.error}</div>}
+      {params.notice && <AdminToast message={params.notice} tone="success" />}
+      {params.error && <AdminToast message={params.error} tone="error" />}
 
       <div className="admin-grid"><div className="admin-content">
         <section id="departments" className="admin-section">
-          <div className="section-heading"><div><p className="section-kicker">Шаг 1 · Структура портала</p><h2>Отделения</h2></div><span className="section-note">На портале видны только опубликованные</span></div>
+          <div className="section-heading"><div><p className="section-kicker">Этап 1 · Структура портала</p><h2>Отделения</h2></div><span className="section-note">На портале видны только опубликованные</span></div>
           <p className="section-description">Создавайте отделения, меняйте их порядок и выбирайте то, с которым будете работать дальше.</p>
           {!!missingStarterDepartments.length && <div className="bootstrap-panel">
             <div className="bootstrap-icon"><DatabaseZap size={25} /></div>
@@ -123,9 +124,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               {!departments.length && <div className="empty-state"><Building2 size={28} /><strong>Отделений пока нет</strong><span>Создайте первое отделение справа.</span></div>}
             </div>
             <form action={createDepartmentAction} className="create-department">
-              <h3><Plus size={19} />Новое отделение</h3><p>Название увидят пациенты. Адрес страницы создаётся один раз.</p>
+              <h3><Plus size={19} />Новое отделение</h3><p>Название увидят пациенты. Адрес страницы создастся автоматически.</p>
               <label>Название<input name="name" placeholder="Например, Кардиология" required /></label>
-              <label>URL-код<input name="slug" placeholder="cardiology" required pattern="[a-z0-9-]+" /><span className="field-hint">Латинские буквы, цифры и дефис</span></label>
               <div className="form-actions"><SubmitButton pendingLabel="Добавляем..." className="button-icon-text"><Plus size={18} />Создать отделение</SubmitButton><CancelButton label="Очистить" /></div>
             </form>
           </div>
@@ -145,8 +145,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               {selected.status !== PublicationStatus.ARCHIVED && <form action={toggleDepartmentPublicationAction} className="publication-control">
                 <input type="hidden" name="departmentId" value={selected.id} />
                 <input type="hidden" name="status" value={selected.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} />
-                <h3>Публикация</h3><p>{selected.status === PublicationStatus.PUBLISHED ? "Отделение доступно пациентам." : "Отделение пока скрыто от пациентов."}</p>
-                <ConfirmPublicationButton label={`Отделение ${selected.name}`} publish={selected.status !== PublicationStatus.PUBLISHED} />
+                <h3>Публикация</h3><p>{selected.status === PublicationStatus.PUBLISHED ? "Отделение доступно пациентам. При скрытии его сценарий и материалы станут черновиками." : "Опубликуйте отделение первым, затем материалы и сценарий."}</p>
+                <ConfirmPublicationButton label={`Отделение ${selected.name}`} publish={selected.status !== PublicationStatus.PUBLISHED} warning={selected.status === PublicationStatus.PUBLISHED ? "Сценарий и материалы этого отделения станут черновиками." : "Сценарий и материалы останутся черновиками — опубликуйте их после отделения."} />
               </form>}
               <form action={archiveDepartmentAction} className="publication-control archive-control"><input type="hidden" name="departmentId" value={selected.id} /><h3>{selected.status === PublicationStatus.ARCHIVED ? "Восстановление" : "Архив"}</h3><p>{selected.status === PublicationStatus.ARCHIVED ? "Восстановит отделение как черновик." : "Скроет отделение, сценарий и материалы, сохранив все записи."}</p><ConfirmArchiveButton label={selected.name} restore={selected.status === PublicationStatus.ARCHIVED} /></form>
               {selected.status === PublicationStatus.DRAFT && <details className="danger-menu"><summary>Удаление отделения</summary><p>Удалит отделение со всем содержимым и файлами, независимо от статуса материалов и сценария.</p><form action={deleteDraftDepartmentAction}><input type="hidden" name="departmentId" value={selected.id} /><ConfirmDeleteButton label={`отделение ${selected.name}`} description="Все связанные данные и файлы будут удалены." /></form></details>}
@@ -154,7 +154,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </section>
 
           <section id="content" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Шаг 2 · Первый экран и справка</p><h2>Контент отделения</h2></div><span className={`status ${statusClass(selected.status)}`}>{statusLabel(selected.status)}</span></div>
+            <div className="section-heading"><div><p className="section-kicker">Этап 2 · Первый экран и справка</p><h2>Контент отделения</h2></div><span className={`status ${statusClass(selected.status)}`}>{statusLabel(selected.status)}</span></div>
             <p className="section-description">Тексты этого раздела увидят пациенты выбранного отделения. Сохранённые изменения сразу попадут на портал, если отделение опубликовано.</p>
             <form action={updateDepartmentContentAction}>
               <input type="hidden" name="departmentId" value={selected.id} />
@@ -189,8 +189,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </section>
 
           <section id="scenario" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Шаг 3 · Маршрут пациента</p><h2>Сценарий «Провести по шагам»</h2></div>{selected.scenario && <span className={`status large ${statusClass(selected.scenario.status)}`}>{statusLabel(selected.scenario.status)}</span>}</div>
-            <p className="section-description">Настройте путь пациента: сначала шаг, затем варианты выбора и результат каждого варианта.</p>
+            <div className="section-heading"><div><p className="section-kicker">Этап 3 · Маршрут пациента</p><h2>Сценарий «Провести по этапам»</h2></div>{selected.scenario && <span className={`status large ${statusClass(selected.scenario.status)}`}>{statusLabel(selected.scenario.status)}</span>}</div>
+            <p className="section-description">Настройте путь пациента: сначала этап, затем варианты выбора и результат каждого варианта.</p>
             {scenarioIssue && <p className="inline-empty" role="status">Перед публикацией: {scenarioIssue}.</p>}
             {selected.scenario ? <>
               <div className="split-form">
@@ -205,34 +205,34 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 {selected.scenario.status !== PublicationStatus.ARCHIVED && <form action={toggleScenarioPublicationAction} className="publication-control">
                   <input type="hidden" name="scenarioId" value={selected.scenario.id} />
                   <input type="hidden" name="status" value={selected.scenario.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} />
-                  <h3>Публикация</h3><p>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Сценарий доступен пациентам." : "Сценарий пока скрыт от пациентов."}</p>
-                  <ConfirmPublicationButton label={`Сценарий ${selected.scenario.title}`} publish={selected.scenario.status !== PublicationStatus.PUBLISHED} />
+                  <h3>Публикация</h3><p>{selected.scenario.status === PublicationStatus.PUBLISHED ? "Сценарий доступен пациентам." : selected.status !== PublicationStatus.PUBLISHED ? "Сначала опубликуйте отделение." : "Сценарий пока скрыт от пациентов."}</p>
+                  <ConfirmPublicationButton label={`Сценарий ${selected.scenario.title}`} publish={selected.scenario.status !== PublicationStatus.PUBLISHED} blockedReason={selected.status !== PublicationStatus.PUBLISHED ? "Сначала опубликуйте отделение. После этого можно опубликовать сценарий." : undefined} />
                 </form>}
                 <form action={archiveScenarioAction} className="publication-control archive-control"><input type="hidden" name="scenarioId" value={selected.scenario.id} /><h3>{selected.scenario.status === PublicationStatus.ARCHIVED ? "Восстановление" : "Архив"}</h3><p>{selected.scenario.status === PublicationStatus.ARCHIVED ? "Восстановит сценарий как черновик." : "Сохранит сценарий, но скроет его от пациентов."}</p><ConfirmArchiveButton label={selected.scenario.title} restore={selected.scenario.status === PublicationStatus.ARCHIVED} /></form>
-                {selected.status === PublicationStatus.DRAFT && <details className="danger-menu"><summary>Удаление сценария</summary><p>Удалит сценарий со всеми шагами и кнопками. При необходимости его можно будет создать заново.</p><form action={deleteDraftScenarioAction}><input type="hidden" name="scenarioId" value={selected.scenario.id} /><ConfirmDeleteButton label={`сценарий ${selected.scenario.title}`} description="Все шаги и кнопки будут удалены." /></form></details>}
+                {selected.status === PublicationStatus.DRAFT && <details className="danger-menu"><summary>Удаление сценария</summary><p>Удалит сценарий со всеми этапами и кнопками. При необходимости его можно будет создать заново.</p><form action={deleteDraftScenarioAction}><input type="hidden" name="scenarioId" value={selected.scenario.id} /><ConfirmDeleteButton label={`сценарий ${selected.scenario.title}`} description="Все этапы и кнопки будут удалены." /></form></details>}
               </div>
 
-              <div className="subsection-heading"><div><h3>Шаги и кнопки</h3><p>Первый шаг — стартовый; перед публикацией все остальные должны быть достижимы из него.</p></div></div>
+              <div className="subsection-heading"><div><h3>Этапы и кнопки</h3><p>Первый этап — стартовый; перед публикацией все остальные должны быть достижимы из него.</p></div></div>
               <div className="scenario-steps">
                 {selected.scenario.steps.map((step, stepIndex) => <details className="scenario-step" key={step.id} open={stepIndex === 0}>
-                  <summary><span className="step-number">{stepIndex + 1}</span><span><strong>{step.title}</strong><small>{stepIndex === 0 ? "Стартовый шаг · " : ""}{step.actions.length} кнопок</small></span><span className="edit-label">Открыть</span></summary>
+                  <summary><span className="step-number">{stepIndex + 1}</span><span><strong>{step.title}</strong><small>{stepIndex === 0 ? "Стартовый этап · " : ""}{step.actions.length} кнопок</small></span><span className="edit-label"><span className="details-closed-label">Открыть</span><span className="details-open-label">Закрыть</span></span></summary>
                   <div className="step-body">
                     <div className="item-toolbar">
                       <div className="row-actions">
-                        <form action={moveScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><input type="hidden" name="direction" value="up" /><button className="icon-button" title="Поднять шаг" disabled={stepIndex === 0}><ArrowUp size={17} /></button></form>
-                        <form action={moveScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><input type="hidden" name="direction" value="down" /><button className="icon-button" title="Опустить шаг" disabled={stepIndex === selected.scenario!.steps.length - 1}><ArrowDown size={17} /></button></form>
+                        <form action={moveScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><input type="hidden" name="direction" value="up" /><button className="icon-button" title="Поднять этап" disabled={stepIndex === 0}><ArrowUp size={17} /></button></form>
+                        <form action={moveScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><input type="hidden" name="direction" value="down" /><button className="icon-button" title="Опустить этап" disabled={stepIndex === selected.scenario!.steps.length - 1}><ArrowDown size={17} /></button></form>
                       </div>
-                      {selected.status === PublicationStatus.DRAFT && <details className="danger-menu compact"><summary>Удаление шага</summary><form action={deleteScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><ConfirmDeleteButton label={step.title} description={`Будут удалены кнопки шага: ${step.actions.length}; кнопки перехода к нему: ${scenarioActions.filter((action) => action.targetStepId === step.id).length}. Опубликованный сценарий станет черновиком; проверьте маршрут перед публикацией.`} /></form></details>}
+                      {selected.status === PublicationStatus.DRAFT && <details className="danger-menu compact"><summary>Удаление этапа</summary><form action={deleteScenarioStepAction}><input type="hidden" name="stepId" value={step.id} /><ConfirmDeleteButton label={step.title} description={`Будут удалены кнопки этапа: ${step.actions.length}; кнопки перехода к нему: ${scenarioActions.filter((action) => action.targetStepId === step.id).length}. Опубликованный сценарий станет черновиком; проверьте маршрут перед публикацией.`} /></form></details>}
                     </div>
                     <form action={updateScenarioStepAction}>
                       <input type="hidden" name="scenarioId" value={selected.scenario!.id} /><input type="hidden" name="stepId" value={step.id} />
-                      <label>Название шага<input name="title" defaultValue={step.title} required /></label>
+                      <label>Название этапа<input name="title" defaultValue={step.title} required /></label>
                       <label>Пояснение<textarea name="description" defaultValue={step.description} /></label>
-                      <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить шаг</SubmitButton><CancelButton /></div>
+                      <div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить этап</SubmitButton><CancelButton /></div>
                     </form>
 
                     <div className="scenario-actions">
-                      <h4>Кнопки этого шага</h4>
+                      <h4>Кнопки этого этапа</h4>
                       {step.actions.map((action, actionIndex) => <details className="scenario-action" key={action.id}>
                         <summary><span><strong>{action.title}</strong><small>{actionKindLabel(action.kind)}</small></span><span className="edit-label">Настроить</span></summary>
                         <div className="action-editor">
@@ -250,7 +250,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                           </form>
                         </div>
                       </details>)}
-                      {!step.actions.length && <p className="inline-empty">Добавьте первую кнопку для этого шага.</p>}
+                      {!step.actions.length && <p className="inline-empty">Добавьте первую кнопку для этого этапа.</p>}
                       <details className="add-editor compact"><summary><Plus size={17} />Добавить кнопку</summary><form action={addScenarioActionAction}>
                         <input type="hidden" name="stepId" value={step.id} />
                         <ScenarioActionFields steps={stepOptions} media={mediaOptions} currentStepId={step.id} />
@@ -259,26 +259,26 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     </div>
                   </div>
                 </details>)}
-                {!selected.scenario.steps.length && <div className="empty-state"><Workflow size={28} /><strong>Шагов пока нет</strong><span>Добавьте первый вопрос для пациента.</span></div>}
+                {!selected.scenario.steps.length && <div className="empty-state"><Workflow size={28} /><strong>Этапов пока нет</strong><span>Добавьте первый вопрос для пациента.</span></div>}
               </div>
-              <details className="add-editor"><summary><Plus size={18} />Добавить шаг</summary><form action={addScenarioStepAction}>
+              <details className="add-editor"><summary><Plus size={18} />Добавить этап</summary><form action={addScenarioStepAction}>
                 <input type="hidden" name="scenarioId" value={selected.scenario.id} />
-                <label>Название шага<input name="title" placeholder="Например, Что вас беспокоит?" required /></label>
+                <label>Название этапа<input name="title" placeholder="Например, Что вас беспокоит?" required /></label>
                 <label>Пояснение<textarea name="description" placeholder="Помогите пациенту сделать понятный выбор" /></label>
-                <div className="form-actions"><SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить шаг</SubmitButton><CancelButton label="Очистить" /></div>
+                <div className="form-actions"><SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить этап</SubmitButton><CancelButton label="Очистить" /></div>
               </form></details>
             </> : <div className="empty-state"><Workflow size={28} /><strong>Сценарий не создан</strong><span>{selected.status === PublicationStatus.ARCHIVED ? "Сначала восстановите отделение из архива." : "Создайте новый черновик сценария для отделения."}</span>{selected.status !== PublicationStatus.ARCHIVED && <form action={createScenarioAction}><input type="hidden" name="departmentId" value={selected.id} /><SubmitButton pendingLabel="Создаём...">Создать сценарий</SubmitButton></form>}</div>}
           </section>
 
           <section id="media" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Шаг 4 · Материалы отделения</p><h2>Медиа</h2></div><span className="section-note">{selected.media.length} материалов</span></div>
+            <div className="section-heading"><div><p className="section-kicker">Этап 4 · Материалы отделения</p><h2>Медиа</h2></div><span className="section-note">{selected.media.length} материалов</span></div>
             <p className="section-description">Загрузите MP4, PDF, JPG, PNG или WebP. Новый материал создаётся как черновик и появится у пациентов только после публикации.</p>
             <FileUpload departmentId={selected.id} purpose="MEDIA" />
             <div className="editor-list media-editors">{selected.media.map((item) => <details className="editor-item" key={item.id}>
               <summary><span><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : item.kind === "DOCUMENT" ? "Памятка PDF" : "Изображение"}</small></span><span className={`status ${statusClass(item.status)}`}>{statusLabel(item.status)}</span><span className="edit-label">Настроить</span></summary>
               <div className="editor-body">
                 <form action={updateMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><label>Название<input name="title" defaultValue={item.title} required /></label><label>Описание<textarea name="description" defaultValue={item.description} /></label><div className="form-actions"><SubmitButton className="button-icon-text"><Save size={17} />Сохранить материал</SubmitButton><CancelButton /></div></form>
-                {item.status !== PublicationStatus.ARCHIVED && <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><ConfirmPublicationButton label={`Материал ${item.title}`} publish={item.status !== PublicationStatus.PUBLISHED} /></form>}
+                {item.status !== PublicationStatus.ARCHIVED && <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><ConfirmPublicationButton label={`Материал ${item.title}`} publish={item.status !== PublicationStatus.PUBLISHED} blockedReason={selected.status !== PublicationStatus.PUBLISHED ? "Сначала опубликуйте отделение. После этого можно опубликовать материал." : undefined} /></form>}
                 <form action={archiveMediaItemAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><ConfirmArchiveButton label={item.title} restore={item.status === PublicationStatus.ARCHIVED} /></form>
                 {selected.status === PublicationStatus.DRAFT && <details className="danger-menu"><summary>Удаление материала</summary><p>Удалит материал, его файл и связанные кнопки сценария.</p><form action={deleteDraftMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><ConfirmDeleteButton label={`материал ${item.title}`} description={`Файл и связанные кнопки (${scenarioActions.filter((action) => action.targetMediaId === item.id).length}) будут удалены. Если сценарий был опубликован, он станет черновиком; проверьте маршрут.`} /></form></details>}
               </div>
@@ -287,7 +287,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
           </section>
 
           <section id="head" className="admin-section">
-            <div className="section-heading"><div><p className="section-kicker">Шаг 5 · Команда отделения</p><h2>Заведующий отделением</h2></div><span className={`status ${statusClass(selected.status)}`}>{selected.status === PublicationStatus.PUBLISHED ? "Видно пациентам" : statusLabel(selected.status)}</span></div>
+            <div className="section-heading"><div><p className="section-kicker">Этап 5 · Команда отделения</p><h2>Заведующий отделением</h2></div><span className={`status ${statusClass(selected.status)}`}>{selected.status === PublicationStatus.PUBLISHED ? "Видно пациентам" : statusLabel(selected.status)}</span></div>
             <p className="section-description">Укажите данные руководителя и загрузите фотографию. После сохранения изменения появятся на портале опубликованного отделения.</p>
             <form action={updateDepartmentHeadAction}>
               <input type="hidden" name="departmentId" value={selected.id} />
@@ -303,7 +303,18 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </div> : <section className="admin-section"><div className="empty-state"><Building2 size={30} /><strong>Создайте первое отделение</strong><span>После этого появятся редакторы текстов, сценария и заведующего.</span></div></section>}
       </div>
 
-      <aside className="admin-aside"><section className="aside-panel"><h2>Перед публикацией</h2><p>Система проверит заполнение и подскажет, чего не хватает.</p><ul><li>Добавьте шаги и варианты выбора</li><li>Сначала опубликуйте сценарий, затем отделение</li></ul></section></aside>
+      <aside className="admin-aside">
+        <section className="current-department-panel" aria-labelledby="current-department-title">
+          <div className="current-department-label"><Building2 size={20} aria-hidden="true" /><span>Сейчас настраивается</span></div>
+          <h2 id="current-department-title">{selected?.name ?? "Отделение не выбрано"}</h2>
+          {selected ? <>
+            <span className={`status ${statusClass(selected.status)}`}>{statusLabel(selected.status)}</span>
+            <p>Все формы на странице относятся к этому отделению.</p>
+            <a href="#departments">Сменить отделение</a>
+          </> : <p>Создайте первое отделение, чтобы начать настройку.</p>}
+        </section>
+        <section className="aside-panel"><h2>Порядок публикации</h2><p>Система проверит зависимости и подскажет, чего не хватает.</p><ul><li>Сначала опубликуйте отделение</li><li>Затем опубликуйте нужные материалы</li><li>После материалов опубликуйте сценарий</li></ul></section>
+      </aside>
       </div>
     </section>
   </div></main>;
@@ -314,7 +325,7 @@ function FactIconOptions() {
 }
 
 function actionKindLabel(kind: string) {
-  return { STEP: "Переход к шагу", MEDIA: "Видео или памятка", EMERGENCY: "Срочная помощь", INFORMATION: "Пояснение" }[kind] ?? kind;
+  return { STEP: "Переход к этапу", MEDIA: "Видео или памятка", EMERGENCY: "Срочная помощь", INFORMATION: "Пояснение" }[kind] ?? kind;
 }
 
 function statusClass(status: PublicationStatus) {

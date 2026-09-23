@@ -23,6 +23,6 @@ export async function requireScenarioStepWrite(_admin: AdminActor, stepId: strin
     where: { id: stepId },
     select: { id: true, scenarioId: true, scenario: { select: { id: true, departmentId: true, status: true } } },
   });
-  if (!step) throw new ValidationError("Шаг сценария не найден.");
+  if (!step) throw new ValidationError("Этап сценария не найден.");
   return step;
 }

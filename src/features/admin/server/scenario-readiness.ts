@@ -7,8 +7,8 @@ export async function scenarioPublicationReadiness(scenarioId: string, client: S
     where: { id: scenarioId },
     select: { steps: { orderBy: { sortOrder: "asc" }, select: { id: true, title: true, actions: { select: { kind: true, targetStepId: true, targetMedia: { select: { status: true } } } } } } },
   });
-  if (!scenario.steps.length) return "добавьте хотя бы один шаг";
-  if (scenario.steps.some((step) => !step.actions.length)) return "добавьте хотя бы одну кнопку в каждый шаг";
+  if (!scenario.steps.length) return "добавьте хотя бы один этап";
+  if (scenario.steps.some((step) => !step.actions.length)) return "добавьте хотя бы одну кнопку в каждый этап";
   if (scenario.steps.some((step) => step.actions.some((action) => action.kind === ScenarioActionKind.MEDIA && action.targetMedia?.status !== PublicationStatus.PUBLISHED))) {
     return "опубликуйте все материалы, выбранные для кнопок сценария";
   }
@@ -21,7 +21,7 @@ export async function scenarioPublicationReadiness(scenarioId: string, client: S
     if (!step) continue;
     for (const action of step.actions) {
       if (action.kind !== ScenarioActionKind.STEP) continue;
-      if (!action.targetStepId || !stepsById.has(action.targetStepId)) return "проверьте переходы между шагами";
+      if (!action.targetStepId || !stepsById.has(action.targetStepId)) return "проверьте переходы между этапами";
       if (!reachableStepIds.has(action.targetStepId)) {
         reachableStepIds.add(action.targetStepId);
         pendingStepIds.push(action.targetStepId);
@@ -30,5 +30,5 @@ export async function scenarioPublicationReadiness(scenarioId: string, client: S
   }
 
   const unreachableSteps = scenario.steps.filter((step) => !reachableStepIds.has(step.id)).map((step) => step.title);
-  return unreachableSteps.length ? `свяжите со стартовым шагом: ${unreachableSteps.join(", ")}` : null;
+  return unreachableSteps.length ? `свяжите со стартовым этапом: ${unreachableSteps.join(", ")}` : null;
 }

@@ -14,7 +14,7 @@ const departments = [
   {
     slug: "trauma",
     name: "Травматология",
-    intro: "Понятные шаги восстановления после травмы или операции. Выберите, что нужно сделать сейчас.",
+    intro: "Понятные этапы восстановления после травмы или операции. Выберите, что нужно сделать сейчас.",
     head: {
       firstName: "Андрей",
       lastName: "Константинов",
@@ -31,7 +31,7 @@ const departments = [
       { iconKey: "heart-pulse", title: "Пост медсестры", body: "Обратитесь к персоналу вашего этажа." },
     ],
     scenario: {
-      description: "Подскажем безопасный следующий шаг после травмы или операции.",
+      description: "Подскажем безопасный следующий этап после травмы или операции.",
       emergencyBody: "Позовите персонал при резком усилении боли, кровотечении, падении, онемении или внезапной слабости.",
       steps: [
         { title: "Что нужно сейчас?", description: "Выберите вариант, который лучше всего описывает вашу ситуацию." },
@@ -138,7 +138,7 @@ export async function createInitialContent(tx: Prisma.TransactionClient, adminUs
         facts: { create: item.facts.map((fact, sortOrder) => ({ ...fact, sortOrder })) },
         scenario: {
           create: {
-            title: "Провести по шагам",
+            title: "Провести по этапам",
             description: item.scenario.description,
             emergencyTitle: "Сразу позовите медсестру",
             emergencyBody: item.scenario.emergencyBody,
@@ -176,7 +176,7 @@ export async function createInitialContent(tx: Prisma.TransactionClient, adminUs
         data: {
           stepId: step.id,
           title: nextStep ? "Продолжить" : "Понятно",
-          body: nextStep ? "Перейти к следующему шагу." : "Вернуться к материалам отделения.",
+          body: nextStep ? "Перейти к следующему этапу." : "Вернуться к материалам отделения.",
           actionLabel: nextStep ? "Продолжить" : "Завершить",
           kind: nextStep ? ScenarioActionKind.STEP : ScenarioActionKind.INFORMATION,
           targetStepId: nextStep?.id ?? null,

@@ -21,15 +21,15 @@ test("публикация сохраняет только достижимый 
   });
   t.after(async () => { await db.department.delete({ where: { id: department.id } }); });
 
-  assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), "добавьте хотя бы один шаг");
+  assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), "добавьте хотя бы один этап");
 
   const firstStep = await db.scenarioStep.create({ data: { scenarioId: department.scenario!.id, title: "Старт", sortOrder: 0 } });
   const secondStep = await db.scenarioStep.create({ data: { scenarioId: department.scenario!.id, title: "Продолжение", sortOrder: 1 } });
   await db.scenarioAction.create({ data: { stepId: secondStep.id, title: "Завершить", actionLabel: "Готово", kind: ScenarioActionKind.INFORMATION, sortOrder: 0 } });
-  assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), "добавьте хотя бы одну кнопку в каждый шаг");
+  assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), "добавьте хотя бы одну кнопку в каждый этап");
 
   const startAction = await db.scenarioAction.create({ data: { stepId: firstStep.id, title: "Понятно", actionLabel: "Готово", kind: ScenarioActionKind.INFORMATION, sortOrder: 0 } });
-  assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), "свяжите со стартовым шагом: Продолжение");
+  assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), "свяжите со стартовым этапом: Продолжение");
 
   await db.scenarioAction.update({ where: { id: startAction.id }, data: { title: "Дальше", actionLabel: "Продолжить", kind: ScenarioActionKind.STEP, targetStepId: secondStep.id } });
   assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), null);

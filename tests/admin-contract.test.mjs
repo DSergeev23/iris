@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { departmentSlugBase, uniqueDepartmentSlug } from "../src/features/admin/server/department-slug.ts";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const adminPage = read("src/app/admin/page.tsx");
+const globalStyles = read("src/app/globals.css");
 const actions = read("src/features/admin/server/actions.ts");
 const bootstrap = read("src/features/admin/server/bootstrap-content.ts");
 const seed = read("scripts/seed-content.mjs");
@@ -12,10 +14,39 @@ const portalClient = read("src/features/portal/components/portal-client.tsx");
 const portalPage = read("src/app/portal/page.tsx");
 const portalMediaRoute = read("src/app/api/portal/media/[mediaId]/route.ts");
 const portalHeadPhotoRoute = read("src/app/api/portal/head-photo/[departmentId]/route.ts");
+const stageTerminologyMigration = read("prisma/migrations/20260923084500_rename_admin_steps_to_stages/migration.sql");
+const scenarioActionFields = read("src/features/admin/components/scenario-action-fields.tsx");
+const formButtons = read("src/features/admin/components/form-buttons.tsx");
+const adminActionDialog = read("src/features/admin/components/admin-action-dialog.tsx");
+const adminFormGuard = read("src/features/admin/components/admin-form-guard.tsx");
+const adminToast = read("src/features/admin/components/admin-toast.tsx");
 const scenarioReadiness = read("src/features/admin/server/scenario-readiness.ts");
+const adminPermissions = read("src/features/admin/server/permissions.ts");
 
 test("смена отделения перемонтирует редактор и не оставляет defaultValue предыдущего", () => {
   assert.match(adminPage, /<div key=\{selected\.id\} className="selected-department-editor">/);
+});
+
+test("этап показывает действие, соответствующее состоянию раскрытия", () => {
+  assert.match(adminPage, /className="details-closed-label">Открыть/);
+  assert.match(adminPage, /className="details-open-label">Закрыть/);
+  assert.match(globalStyles, /details\[open\] > summary \.details-closed-label \{ display:none; \}/);
+  assert.match(globalStyles, /details\[open\] > summary \.details-open-label \{ display:inline; \}/);
+});
+
+test("боковая колонка всегда показывает, какое отделение настраивается", () => {
+  assert.match(adminPage, /Сейчас настраивается/);
+  assert.match(adminPage, /selected\?\.name \?\? "Отделение не выбрано"/);
+  assert.match(adminPage, /Все формы на странице относятся к этому отделению/);
+  assert.match(adminPage, /href="#departments">Сменить отделение/);
+  assert.match(globalStyles, /\.current-department-panel/);
+});
+
+test("обязательные поля показывают спокойную подсказку и ошибку только после взаимодействия", () => {
+  assert.match(globalStyles, /label:has\(:required:invalid\)::after/);
+  assert.match(globalStyles, /label:has\(:required:user-invalid\)::after/);
+  assert.match(globalStyles, /:required:user-invalid/);
+  assert.doesNotMatch(globalStyles, /label:has\(:required\)::after/);
 });
 
 test("удаление доступно только для черновика отделения и убирает связанные кнопки", () => {
@@ -29,7 +60,6 @@ test("удаление доступно только для черновика �
   assert.match(actions, /scenarioAction\.deleteMany\(\{ where: \{ targetStepId: step\.id \} \}\)/);
   assert.match(actions, /scenarioAction\.deleteMany\(\{ where: \{ targetMediaId: mediaId\.data \} \}\)/);
   assert.match(actions, /status: PublicationStatus\.PUBLISHED \}, data: \{ status: PublicationStatus\.DRAFT \}/);
-  assert.match(actions, /publicationReadiness\(departmentId, tx\)/);
   assert.match(actions, /scenarioPublicationReadiness\(scenario\.id, tx\)/);
   assert.equal((adminPage.match(/selected\.status === PublicationStatus\.DRAFT && <details className="danger-menu/g) ?? []).length, 6);
   assert.match(adminPage, /selected\.status === PublicationStatus\.DRAFT && selected\.reference && <details className="danger-menu"/);
@@ -65,17 +95,65 @@ test("портал читает только опубликованные зап
   assert.match(portalRepository, /where: \{ status: PublicationStatus\.PUBLISHED \}/);
 });
 
-test("публикация отделения не требует контент или профиль заведующего", () => {
-  const readiness = actions.slice(actions.indexOf("async function publicationReadiness"), actions.indexOf("async function ensurePublishedScenarioReadiness"));
-  assert.doesNotMatch(readiness, /intro|reference|head|краткое описание|справку об отделении|профиль и фотографию заведующего/);
+test("публикация следует иерархии отделение — материалы — сценарий", () => {
+  const departmentAction = actions.slice(actions.indexOf("export async function toggleDepartmentPublicationAction"), actions.indexOf("export async function archiveDepartmentAction"));
+  const scenarioAction = actions.slice(actions.indexOf("export async function toggleScenarioPublicationAction"), actions.indexOf("export async function archiveScenarioAction"));
+  const mediaAction = actions.slice(actions.indexOf("export async function toggleMediaPublicationAction"), actions.indexOf("export async function archiveMediaItemAction"));
+  assert.doesNotMatch(departmentAction, /scenarioPublicationReadiness|опубликованный сценарий/);
+  assert.match(departmentAction, /tx\.scenario\.updateMany\(\{ where: \{ departmentId, status: PublicationStatus\.PUBLISHED \}, data: \{ status: PublicationStatus\.DRAFT \} \}\)/);
+  assert.match(departmentAction, /tx\.mediaItem\.updateMany\(\{ where: \{ departmentId, status: PublicationStatus\.PUBLISHED \}, data: \{ status: PublicationStatus\.DRAFT \} \}\)/);
+  assert.match(departmentAction, /demotedScenarios: demotedScenarios\.count, demotedMedia: demotedMedia\.count/);
+  assert.match(scenarioAction, /current\.department\.status !== PublicationStatus\.PUBLISHED/);
+  assert.match(mediaAction, /current\.department\.status !== PublicationStatus\.PUBLISHED/);
+  assert.match(mediaAction, /isolationLevel: Prisma\.TransactionIsolationLevel\.Serializable/);
+  assert.match(scenarioAction, /Сначала опубликуйте отделение/);
+  assert.match(mediaAction, /Сначала опубликуйте отделение/);
+  assert.match(formButtons, /<AdminToast message=\{blockedToast\} tone="error"/);
+  assert.match(adminToast, /window\.setTimeout/);
+  assert.match(adminToast, /aria-live=\{tone === "error" \? "assertive" : "polite"\}/);
+  assert.match(adminPage, /<AdminToast message=\{params\.notice\} tone="success" \/>/);
+  assert.match(actions, /Отделение опубликовано\. Теперь опубликуйте нужные материалы, затем сценарий\./);
+  assert.match(actions, /Материал опубликован\. Теперь его можно использовать в сценарии\./);
+  assert.match(actions, /Сценарий опубликован и доступен пациентам выбранного отделения\./);
+  assert.match(adminPage, /После этого можно опубликовать сценарий/);
+  assert.match(adminPage, /После этого можно опубликовать материал/);
+  assert.match(adminPage, /Сначала опубликуйте отделение/);
 });
 
-test("публикация сценария проверяет достижимость всех шагов от стартового", () => {
+test("подтверждения действий открываются внутри админки", () => {
+  const confirmationSources = [formButtons, adminFormGuard].join("\n");
+  assert.doesNotMatch(confirmationSources, /window\.(confirm|alert)/);
+  assert.match(formButtons, /form\?\.requestSubmit\(buttonRef\.current\)/);
+  assert.match(formButtons, /Опубликовать раздел\?/);
+  assert.match(formButtons, /Переместить в архив\?/);
+  assert.match(formButtons, /Удалить без возможности восстановления\?/);
+  assert.match(formButtons, /Действие пока недоступно/);
+  assert.match(adminFormGuard, /Перейти без сохранения\?/);
+  assert.match(adminActionDialog, /dialog\.showModal\(\)/);
+  assert.match(adminActionDialog, /onCancel=/);
+  assert.match(adminActionDialog, /event\.target === event\.currentTarget/);
+});
+
+test("публикация сценария проверяет достижимость всех этапов от стартового", () => {
   assert.match(scenarioReadiness, /orderBy: \{ sortOrder: "asc" \}/);
   assert.match(scenarioReadiness, /const reachableStepIds = new Set\(\[scenario\.steps\[0\]\.id\]\)/);
   assert.match(scenarioReadiness, /action\.kind !== ScenarioActionKind\.STEP/);
-  assert.match(scenarioReadiness, /свяжите со стартовым шагом/);
-  assert.match(adminPage, /Стартовый шаг/);
+  assert.match(scenarioReadiness, /свяжите со стартовым этапом/);
+  assert.match(adminPage, /Стартовый этап/);
+});
+
+test("админка везде называет части сценария этапами", () => {
+  const adminCopy = [adminPage, actions, scenarioActionFields, scenarioReadiness, adminPermissions, bootstrap, seed].join("\n");
+  assert.doesNotMatch(adminCopy, /[Шш]аг/);
+  assert.match(adminPage, /Этапы и кнопки/);
+  assert.match(scenarioActionFields, /Следующий этап/);
+  assert.match(stageTerminologyMigration, /UPDATE "scenarios" SET "title" = 'Провести по этапам'/);
+  assert.match(stageTerminologyMigration, /WHERE "title" = 'Провести по шагам'/);
+});
+
+test("пустой выбор назначения кнопки объясняет, что нужно создать", () => {
+  assert.match(scenarioActionFields, /!nextSteps\.length && <span className="field-hint">Других этапов пока нет\. Сначала создайте ещё один этап сценария\.<\/span>/);
+  assert.match(scenarioActionFields, /!media\.length && <span className="field-hint">Сначала добавьте и опубликуйте материал/);
 });
 
 test("опубликованный сценарий не ссылается на скрытый материал", () => {
@@ -101,7 +179,7 @@ test("сценарий начинается с согласия на обраб�
 
 test("кнопки пациента используют понятную формулировку сценария", () => {
   assert.match(portalClient, /Помочь мне сориентироваться/);
-  assert.doesNotMatch(portalClient, /Провести по шагам/);
+  assert.doesNotMatch(portalClient, /Провести по этапам/);
 });
 
 test("короткое описание отделения выводится на первом экране", () => {
@@ -151,4 +229,18 @@ test("URL-код отделения сохраняется для QR-кодов"
   const updateAction = actions.slice(actions.indexOf("export async function updateDepartmentIdentityAction"), actions.indexOf("export async function toggleDepartmentPublicationAction"));
   assert.doesNotMatch(updateAction, /slug: parsed\.data\.slug/);
   assert.match(updateAction, /data: \{ name: parsed\.data\.name \}/);
+});
+
+test("URL-код нового отделения создаётся автоматически и остаётся уникальным", () => {
+  assert.doesNotMatch(adminPage, /<input name="slug"/);
+  assert.match(adminPage, /Адрес страницы создастся автоматически/);
+  assert.equal(departmentSlugBase("Травматология и ортопедия"), "travmatologiya-i-ortopediya");
+  assert.equal(departmentSlugBase("Отделение № 2"), "otdelenie-2");
+  assert.equal(uniqueDepartmentSlug("Кардиология", ["kardiologiya", "kardiologiya-2"]), "kardiologiya-3");
+  assert.equal(departmentSlugBase("***"), "department");
+  const createAction = actions.slice(actions.indexOf("export async function createDepartmentAction"), actions.indexOf("export async function deleteDraftDepartmentAction"));
+  assert.match(createAction, /const admin = await requireAdmin\(\)/);
+  assert.match(createAction, /uniqueDepartmentSlug\(parsed\.data\.name/);
+  assert.match(createAction, /await tx\.auditLog\.create/);
+  assert.match(createAction, /isolationLevel: Prisma\.TransactionIsolationLevel\.Serializable/);
 });
