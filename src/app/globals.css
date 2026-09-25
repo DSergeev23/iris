@@ -206,8 +206,9 @@ details[open] > summary .details-open-label { display:inline; }
 .upload-message { margin:10px 0; font-weight:750; }
 .upload-message.error { color:#a32929; }
 .upload-message.success { color:#176950; }
-.upload-next-step { margin:10px 0 0; line-height:1.5; color:var(--ink); }
-.upload-next-step a { color:var(--deep); font-weight:800; }
+.media-next-step { margin:0 0 18px; padding:16px 18px; border:1px solid #e6be85; border-left:5px solid #d17d28; border-radius:8px; background:#fff8ed; }
+.media-next-step strong { display:block; margin-bottom:6px; color:#78410d; font-size:17px; }
+.media-next-step p { margin:0; color:var(--ink); line-height:1.5; }
 .media-editors { margin-top:18px; scroll-margin-top:20px; }
 .publication-inline { margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
 .admin-aside { position:sticky; top:20px; display:grid; gap:14px; }

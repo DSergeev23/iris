@@ -273,8 +273,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
           <section id="media" className="admin-section">
             <div className="section-heading"><div><p className="section-kicker">Этап 4 · Материалы отделения</p><h2>Медиа</h2></div><span className="section-note">{selected.media.length} материалов</span></div>
-            <p className="section-description">Загрузите MP4, PDF, JPG, PNG или WebP. Затем откройте материал в списке ниже, проверьте настройки и опубликуйте его, чтобы он появился на портале.</p>
+            <p className="section-description">Загрузите MP4, PDF, JPG, PNG или WebP.</p>
             <FileUpload departmentId={selected.id} purpose="MEDIA" />
+            <div className="media-next-step" role="note">
+              <strong>После загрузки настройте материал ниже</strong>
+              <p>Он появится в списке как черновик. Откройте «Настроить», проверьте название и описание, затем нажмите «Опубликовать». Если отделение скрыто, сначала опубликуйте его. До публикации материал не виден на портале.</p>
+            </div>
             <div id="media-editors" className="editor-list media-editors">{selected.media.map((item) => <details className="editor-item" key={item.id} open={params.saved === `media:${item.id}`}>
               <summary><span><strong>{item.title}</strong><small>{item.kind === "VIDEO" ? "Видео" : item.kind === "DOCUMENT" ? "Памятка PDF" : "Изображение"}</small></span><span className={`status ${statusClass(item.status)}`}>{statusLabel(item.status)}</span><span className="edit-label">Настроить</span></summary>
               <div className="editor-body">
