@@ -177,7 +177,7 @@ export function PortalClient({ departments, initialSlug, addressStatus, loadErro
               <div className={styles.leftCardTitle}>Если стало плохо</div>
               <p className={styles.emergencyTitle}>{department.scenario?.emergencyTitle || "Сразу позовите медсестру"}</p>
               <p className={styles.mutedLight}>{department.scenario?.emergencyBody || "Боль, одышка, головокружение, кровотечение, онемение или падение."}</p>
-              <button className={styles.emergencyButton} onClick={() => open({ type: "emergency" })}>{department.scenario?.emergencyButtonLabel || "Что считать срочным"}</button>
+              <button className={styles.emergencyButton} onClick={() => open({ type: "emergency" })}>Что считать срочным</button>
             </article>
           </div>
 
@@ -261,7 +261,7 @@ function PanelContent({ department, view, open, onAction, patientName, setPatien
     return <MediaDetail key={item?.id} item={item} />;
   }
 
-  return <><h2>{scenario?.emergencyDetailTitle || "Когда срочно звать помощь"}</h2><div className={styles.warn}><div><CircleAlert /><span>{scenario?.emergencyDetailBody || "Позовите медицинскую сестру кнопкой вызова у кровати или обратитесь на пост."}</span></div></div></>;
+  return <><h2>{scenario?.emergencyTitle || "Когда срочно звать помощь"}</h2><div className={styles.warn}><div><CircleAlert /><span>{scenario?.emergencyBody || "Позовите медицинскую сестру кнопкой вызова у кровати или обратитесь на пост."}</span></div></div></>;
 }
 
 function MediaDetail({ item }: { item?: PortalDepartment["media"][number] }) {

@@ -201,9 +201,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   <label>Подсказка<textarea name="description" defaultValue={selected.scenario.description} /></label>
                   <label>Заголовок срочного блока<input name="emergencyTitle" defaultValue={selected.scenario.emergencyTitle} required /></label>
                   <label>Текст срочного блока<textarea name="emergencyBody" defaultValue={selected.scenario.emergencyBody} /></label>
-                  <label>Надпись на кнопке срочного блока<input name="emergencyButtonLabel" defaultValue={selected.scenario.emergencyButtonLabel} maxLength={80} required /></label>
-                  <label>Заголовок после нажатия<input name="emergencyDetailTitle" defaultValue={selected.scenario.emergencyDetailTitle} maxLength={180} required /></label>
-                  <label>Текст после нажатия<textarea className="textarea-large" name="emergencyDetailBody" defaultValue={selected.scenario.emergencyDetailBody} maxLength={3000} required /></label>
                   <div className="form-actions"><SubmitButton className="button-icon-text" trackChanges savedEvent={savedEvent("scenario")}><Save size={18} />Сохранить сценарий</SubmitButton><CancelButton /></div>
                 </form>
                 {selected.scenario.status !== PublicationStatus.ARCHIVED && <form action={toggleScenarioPublicationAction} className="publication-control">

@@ -142,8 +142,6 @@ export async function createInitialContent(tx: Prisma.TransactionClient, adminUs
             description: item.scenario.description,
             emergencyTitle: "Сразу позовите медсестру",
             emergencyBody: item.scenario.emergencyBody,
-            emergencyDetailTitle: "Сразу позовите медсестру",
-            emergencyDetailBody: item.scenario.emergencyBody,
             status: PublicationStatus.DRAFT,
           },
         },

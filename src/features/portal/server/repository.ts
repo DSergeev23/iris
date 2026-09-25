@@ -14,7 +14,6 @@ function mapDepartment(item: Awaited<ReturnType<typeof getRawDepartment>>): Port
     media: item.media.map((media) => ({ id: media.id, title: media.title, description: media.description, kind: media.kind, mimeType: media.mimeType, url: `/api/portal/media/${media.id}` })),
     scenario: item.scenario ? {
       title: item.scenario.title, description: item.scenario.description, emergencyTitle: item.scenario.emergencyTitle, emergencyBody: item.scenario.emergencyBody,
-      emergencyButtonLabel: item.scenario.emergencyButtonLabel, emergencyDetailTitle: item.scenario.emergencyDetailTitle, emergencyDetailBody: item.scenario.emergencyDetailBody,
       steps: item.scenario.steps.map((step) => ({
         id: step.id,
         title: step.title,

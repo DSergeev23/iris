@@ -47,9 +47,6 @@ const scenarioSchema = z.object({
   description: z.string().trim().max(2000),
   emergencyTitle: z.string().trim().min(2).max(180),
   emergencyBody: z.string().trim().max(3000),
-  emergencyButtonLabel: z.string().trim().min(2).max(80),
-  emergencyDetailTitle: z.string().trim().min(2).max(180),
-  emergencyDetailBody: z.string().trim().min(2).max(3000),
 });
 const stepSchema = z.object({
   scenarioId: idSchema,

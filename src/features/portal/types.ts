@@ -12,9 +12,6 @@ export type PortalDepartment = {
     description: string;
     emergencyTitle: string;
     emergencyBody: string;
-    emergencyButtonLabel: string;
-    emergencyDetailTitle: string;
-    emergencyDetailBody: string;
     steps: Array<{
       id: string;
       title: string;

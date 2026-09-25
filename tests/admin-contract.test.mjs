@@ -12,7 +12,6 @@ const seed = read("scripts/seed-content.mjs");
 const portalRepository = read("src/features/portal/server/repository.ts");
 const portalClient = read("src/features/portal/components/portal-client.tsx");
 const scenarioSchema = read("prisma/schema.prisma");
-const emergencyMigration = read("prisma/migrations/20260925090000_configure_emergency_details/migration.sql");
 const portalPage = read("src/app/portal/page.tsx");
 const portalMediaRoute = read("src/app/api/portal/media/[mediaId]/route.ts");
 const portalHeadPhotoRoute = read("src/app/api/portal/head-photo/[departmentId]/route.ts");
@@ -37,15 +36,15 @@ test("каждый редактор включает сохранение тол
   assert.match(formButtons, /showSaved && !dirty && <span className="form-saved" role="status">Изменения сохранены/);
 });
 
-test("кнопка срочного блока и её содержимое редактируются в сценарии и выводятся на портале", () => {
+test("срочный блок использует прежние поля без отдельной настройки кнопки", () => {
   for (const field of ["emergencyButtonLabel", "emergencyDetailTitle", "emergencyDetailBody"]) {
-    assert.match(adminPage, new RegExp(`name="${field}"`));
-    assert.match(actions, new RegExp(`${field}: z\\.string\\(\\)`));
-    assert.match(scenarioSchema, new RegExp(field));
-    assert.match(portalRepository, new RegExp(`item\\.scenario\\.${field}`));
-    assert.match(portalClient, new RegExp(`scenario\\?\\.${field}`));
+    for (const source of [adminPage, actions, scenarioSchema, portalRepository, portalClient]) {
+      assert.doesNotMatch(source, new RegExp(field));
+    }
   }
-  assert.match(emergencyMigration, /UPDATE "scenarios"/);
+  assert.match(portalClient, />Что считать срочным<\/button>/);
+  assert.match(portalClient, /scenario\?\.emergencyTitle \|\| "Когда срочно звать помощь"/);
+  assert.match(portalClient, /scenario\?\.emergencyBody \|\| "Позовите медицинскую сестру/);
   assert.doesNotMatch(portalClient, /Список адаптирован под отделение/);
 });
 
