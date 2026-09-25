@@ -96,6 +96,8 @@
 .mediaIcon { width: 56px; height: 56px; color: inherit; background: rgba(255,255,255,.16); }
 .mediaRow strong { display: block; font-size: 19px; line-height: 1.22; }
 .mediaRow small { display: block; margin-top: 3px; color: var(--muted-on-dark); font-size: 16px; }
+.mediaExpand { width: 100%; min-height: 48px; border: 1px solid rgba(255,255,255,.36); border-radius: 16px; padding: 10px 16px; color: var(--white); background: rgba(255,255,255,.08); cursor: pointer; font-size: 16px; font-weight: 700; }
+.mediaExpand:hover { background: rgba(255,255,255,.18); }
 .emptyMedia { color: var(--muted-on-dark); font-size: 17px; }
 
 .departmentInfo { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: 18px; scroll-margin-top: 18px; }

@@ -1,14 +1,46 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { Archive, Trash2 } from "lucide-react";
 import { AdminActionDialog } from "./admin-action-dialog";
 import { AdminToast } from "./admin-toast";
 
-export function SubmitButton({ children, pendingLabel = "Сохраняем...", className }: { children: ReactNode; pendingLabel?: string; className?: string }) {
+export function SubmitButton({ children, pendingLabel = "Сохраняем...", className, savedEvent, trackChanges = false }: { children: ReactNode; pendingLabel?: string; className?: string; savedEvent?: string; trackChanges?: boolean }) {
   const { pending } = useFormStatus();
-  return <button type="submit" className={className} disabled={pending} aria-disabled={pending}>{pending ? pendingLabel : children}</button>;
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [dirty, setDirty] = useState(false);
+  const [showSaved, setShowSaved] = useState(Boolean(savedEvent));
+
+  useEffect(() => {
+    if (!trackChanges) return;
+    const form = buttonRef.current?.form;
+    if (!form) return;
+    const snapshot = () => JSON.stringify(Array.from(new FormData(form).entries()).filter(([name]) => !name.startsWith("$ACTION_")));
+    const initial = snapshot();
+    const update = () => {
+      const changed = snapshot() !== initial;
+      setDirty(changed);
+      form.toggleAttribute("data-dirty", changed);
+      if (changed) setShowSaved(false);
+    };
+    const reset = () => window.setTimeout(update, 0);
+    form.addEventListener("input", update);
+    form.addEventListener("change", update);
+    form.addEventListener("reset", reset);
+    return () => {
+      form.removeEventListener("input", update);
+      form.removeEventListener("change", update);
+      form.removeEventListener("reset", reset);
+    };
+  }, [trackChanges, savedEvent]);
+
+  useEffect(() => {
+    setShowSaved(Boolean(savedEvent));
+    setDirty(false);
+    if (savedEvent) buttonRef.current?.scrollIntoView({ block: "center" });
+  }, [savedEvent]);
+  return <><button ref={buttonRef} type="submit" className={className} disabled={pending || (trackChanges && !dirty)} aria-disabled={pending || (trackChanges && !dirty)}>{pending ? pendingLabel : children}</button>{trackChanges && showSaved && !dirty && <span className="form-saved" role="status">Изменения сохранены</span>}</>;
 }
 
 export function CancelButton({ label = "Отменить изменения" }: { label?: string }) {

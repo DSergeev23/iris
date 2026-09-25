@@ -74,6 +74,7 @@ export function FileUpload({ departmentId, purpose }: { departmentId: string; pu
     <label>Файл<input name="file" type="file" required accept={isPhoto ? "image/jpeg,image/png,image/webp" : "video/mp4,application/pdf,image/jpeg,image/png,image/webp"} /></label>
     {state === "uploading" && <div className="upload-progress" aria-label={`Загрузка ${progress}%`}><span style={{ width: `${progress}%` }} /></div>}
     {message && <p className={`upload-message ${state}`} role={state === "error" ? "alert" : "status"}>{message}</p>}
+    {state === "success" && !isPhoto && <p className="upload-next-step">Чтобы материал появился на портале, <a href="#media-editors">откройте его ниже в списке</a>, проверьте настройки и нажмите «Опубликовать». Если отделение ещё скрыто, сначала опубликуйте его.</p>}
     <div className="form-actions"><button type="submit" disabled={state === "uploading"}>{state === "uploading" ? `Загрузка ${progress}%` : state === "error" ? "Повторить загрузку" : isPhoto ? "Загрузить фотографию" : "Загрузить материал"}</button><button type="reset" className="button-secondary" disabled={state === "uploading"} onClick={reset}>Отменить изменения</button></div>
   </form>;
 }

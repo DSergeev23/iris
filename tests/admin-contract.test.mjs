@@ -11,6 +11,8 @@ const bootstrap = read("src/features/admin/server/bootstrap-content.ts");
 const seed = read("scripts/seed-content.mjs");
 const portalRepository = read("src/features/portal/server/repository.ts");
 const portalClient = read("src/features/portal/components/portal-client.tsx");
+const scenarioSchema = read("prisma/schema.prisma");
+const emergencyMigration = read("prisma/migrations/20260925090000_configure_emergency_details/migration.sql");
 const portalPage = read("src/app/portal/page.tsx");
 const portalMediaRoute = read("src/app/api/portal/media/[mediaId]/route.ts");
 const portalHeadPhotoRoute = read("src/app/api/portal/head-photo/[departmentId]/route.ts");
@@ -27,11 +29,40 @@ test("смена отделения перемонтирует редактор 
   assert.match(adminPage, /<div key=\{selected\.id\} className="selected-department-editor">/);
 });
 
+test("каждый редактор включает сохранение только после изменений и подтверждает успешную запись", () => {
+  assert.equal((adminPage.match(/<SubmitButton[^>]*trackChanges savedEvent=/g) ?? []).length, 8);
+  assert.match(actions, /params\.set\("saved", savedKey\)/);
+  assert.match(actions, /params\.set\("saveEvent", toastEvent\)/);
+  assert.match(formButtons, /disabled=\{pending \|\| \(trackChanges && !dirty\)\}/);
+  assert.match(formButtons, /showSaved && !dirty && <span className="form-saved" role="status">Изменения сохранены/);
+});
+
+test("кнопка срочного блока и её содержимое редактируются в сценарии и выводятся на портале", () => {
+  for (const field of ["emergencyButtonLabel", "emergencyDetailTitle", "emergencyDetailBody"]) {
+    assert.match(adminPage, new RegExp(`name="${field}"`));
+    assert.match(actions, new RegExp(`${field}: z\\.string\\(\\)`));
+    assert.match(scenarioSchema, new RegExp(field));
+    assert.match(portalRepository, new RegExp(`item\\.scenario\\.${field}`));
+    assert.match(portalClient, new RegExp(`scenario\\?\\.${field}`));
+  }
+  assert.match(emergencyMigration, /UPDATE "scenarios"/);
+  assert.doesNotMatch(portalClient, /Список адаптирован под отделение/);
+});
+
 test("этап показывает действие, соответствующее состоянию раскрытия", () => {
   assert.match(adminPage, /className="details-closed-label">Открыть/);
   assert.match(adminPage, /className="details-open-label">Закрыть/);
   assert.match(globalStyles, /details\[open\] > summary \.details-closed-label \{ display:none; \}/);
   assert.match(globalStyles, /details\[open\] > summary \.details-open-label \{ display:inline; \}/);
+});
+
+test("после добавления или сохранения кнопки открыт только редактируемый этап", () => {
+  assert.match(actions, /params\.set\("openStep", openStepId\)/);
+  assert.match(actions, /Кнопка сценария добавлена\."[,\s]+"scenario", undefined, sourceStep\.id/);
+  assert.match(actions, /Кнопка сценария сохранена\."[,\s]+"scenario", `action:\$\{parsed\.data\.actionId\}`, sourceStep\.id/);
+  assert.match(adminPage, /const openStepId = selected\?\.scenario\?\.steps\.find/);
+  assert.match(adminPage, /<details id=\{`scenario-step-\$\{step\.id\}`\} className="scenario-step" name="scenario-step" key=\{step\.id\} open=\{step\.id === openStepId\}/);
+  assert.match(actions, /#\$\{openStepId \? `scenario-step-\$\{openStepId\}` : anchor\}/);
 });
 
 test("боковая колонка всегда показывает, какое отделение настраивается", () => {
@@ -49,21 +80,30 @@ test("обязательные поля показывают спокойную 
   assert.doesNotMatch(globalStyles, /label:has\(:required\)::after/);
 });
 
-test("удаление доступно только для черновика отделения и убирает связанные кнопки", () => {
-  for (const name of ["deleteDepartmentReferenceAction", "deleteDepartmentFactAction", "deleteDepartmentHeadAction", "deleteDraftScenarioAction", "deleteScenarioStepAction", "deleteScenarioButtonAction", "deleteDraftMediaItemAction"]) {
+test("удаление допускает черновики и архив, но защищает опубликованные записи", () => {
+  for (const name of ["deleteDepartmentReferenceAction", "deleteDepartmentFactAction", "deleteDepartmentHeadAction"]) {
     const start = actions.indexOf(`export async function ${name}`);
     const end = actions.indexOf("\nexport async function", start + 1);
     const body = actions.slice(start, end < 0 ? undefined : end);
-    assert.match(body, /requireDraftDepartment\(tx,/);
+    assert.match(body, /requireDeletableDepartment\(tx,/);
   }
-  assert.match(actions, /department\?\.status !== PublicationStatus\.DRAFT/);
+  for (const name of ["deleteScenarioStepAction", "deleteScenarioButtonAction"]) {
+    const start = actions.indexOf(`export async function ${name}`);
+    const end = actions.indexOf("\nexport async function", start + 1);
+    assert.match(actions.slice(start, end < 0 ? undefined : end), /requireDeletableScenario\(tx,/);
+  }
+  assert.match(actions, /department\?\.status !== PublicationStatus\.DRAFT && department\?\.status !== PublicationStatus\.ARCHIVED/);
+  assert.match(actions, /scenario\.status !== PublicationStatus\.DRAFT/);
+  assert.match(actions, /current\.status !== PublicationStatus\.ARCHIVED/);
+  assert.match(actions, /status: current\.status/);
   assert.match(actions, /scenarioAction\.deleteMany\(\{ where: \{ targetStepId: step\.id \} \}\)/);
   assert.match(actions, /scenarioAction\.deleteMany\(\{ where: \{ targetMediaId: mediaId\.data \} \}\)/);
   assert.match(actions, /status: PublicationStatus\.PUBLISHED \}, data: \{ status: PublicationStatus\.DRAFT \}/);
   assert.match(actions, /scenarioPublicationReadiness\(scenario\.id, tx\)/);
-  assert.equal((adminPage.match(/selected\.status === PublicationStatus\.DRAFT && <details className="danger-menu/g) ?? []).length, 6);
-  assert.match(adminPage, /selected\.status === PublicationStatus\.DRAFT && selected\.reference && <details className="danger-menu"/);
-  assert.match(adminPage, /selected\.status === PublicationStatus\.DRAFT && selected\.head && <details className="danger-menu"/);
+  assert.match(adminPage, /selected\.status !== PublicationStatus\.PUBLISHED && selected\.reference && <details className="danger-menu"/);
+  assert.match(adminPage, /selected\.status !== PublicationStatus\.PUBLISHED && selected\.head && <details className="danger-menu"/);
+  assert.match(adminPage, /selected\.scenario\.status === PublicationStatus\.ARCHIVED \|\| \(selected\.scenario\.status === PublicationStatus\.DRAFT/);
+  assert.match(adminPage, /item\.status === PublicationStatus\.ARCHIVED \|\| \(item\.status === PublicationStatus\.DRAFT/);
 });
 
 test("админка поддерживает обратимое архивирование отделений, сценариев и медиа", () => {
@@ -111,7 +151,10 @@ test("публикация следует иерархии отделение �
   assert.match(formButtons, /<AdminToast message=\{blockedToast\} tone="error"/);
   assert.match(adminToast, /window\.setTimeout/);
   assert.match(adminToast, /aria-live=\{tone === "error" \? "assertive" : "polite"\}/);
-  assert.match(adminPage, /<AdminToast message=\{params\.notice\} tone="success" \/>/);
+  assert.match(adminPage, /<AdminToast key=\{params\.toastEvent \?\? params\.notice\} message=\{params\.notice\} tone="success" \/>/);
+  assert.match(adminToast, /30000/);
+  assert.match(adminToast, /aria-label="Закрыть уведомление"/);
+  assert.match(actions, /params\.set\("toastEvent", toastEvent\)/);
   assert.match(actions, /Отделение опубликовано\. Теперь опубликуйте нужные материалы, затем сценарий\./);
   assert.match(actions, /Материал опубликован\. Теперь его можно использовать в сценарии\./);
   assert.match(actions, /Сценарий опубликован и доступен пациентам выбранного отделения\./);
@@ -182,9 +225,11 @@ test("кнопки пациента используют понятную фор
   assert.doesNotMatch(portalClient, /Провести по этапам/);
 });
 
-test("короткое описание отделения выводится на первом экране", () => {
-  assert.match(adminPage, /Короткое описание для первого экрана/);
-  assert.match(portalClient, /<p>\{department\.intro\}<\/p>/);
+test("редактор справки не изменяет описание первого экрана", () => {
+  assert.doesNotMatch(adminPage, /Короткое описание для первого экрана|name="intro"/);
+  const updateContent = actions.slice(actions.indexOf("export async function updateDepartmentContentAction"), actions.indexOf("export async function deleteDepartmentReferenceAction"));
+  assert.doesNotMatch(updateContent, /intro/);
+  assert.match(portalClient, /department\.intro && <p>\{department\.intro\}<\/p>/);
   assert.doesNotMatch(portalClient, /Сканируйте QR-код, выбирайте свой этап/);
 });
 
@@ -238,7 +283,7 @@ test("URL-код нового отделения создаётся автома
   assert.equal(departmentSlugBase("Отделение № 2"), "otdelenie-2");
   assert.equal(uniqueDepartmentSlug("Кардиология", ["kardiologiya", "kardiologiya-2"]), "kardiologiya-3");
   assert.equal(departmentSlugBase("***"), "department");
-  const createAction = actions.slice(actions.indexOf("export async function createDepartmentAction"), actions.indexOf("export async function deleteDraftDepartmentAction"));
+  const createAction = actions.slice(actions.indexOf("export async function createDepartmentAction"), actions.indexOf("export async function deleteDepartmentAction"));
   assert.match(createAction, /const admin = await requireAdmin\(\)/);
   assert.match(createAction, /uniqueDepartmentSlug\(parsed\.data\.name/);
   assert.match(createAction, /await tx\.auditLog\.create/);

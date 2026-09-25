@@ -16,7 +16,7 @@ try {
       head: { create: { firstName, lastName, roleTitle, biography } },
       reference: { create: { title: referenceTitle, description: referenceDescription } },
       facts: { create: [{ iconKey: "clock", title: "Врачебный обход", body: "Уточните время на посту медсестры", sortOrder: 0 }, { iconKey: "heart-pulse", title: "Пост медсестры", body: "Обратитесь к персоналу вашего этажа", sortOrder: 1 }] },
-      scenario: { create: { title: "Провести по этапам", description: "Ответьте на несколько простых вопросов.", emergencyBody: "Позовите медсестру кнопкой вызова у кровати или обратитесь на пост.", status: PublicationStatus.DRAFT } },
+      scenario: { create: { title: "Провести по этапам", description: "Ответьте на несколько простых вопросов.", emergencyBody: "Позовите медсестру кнопкой вызова у кровати или обратитесь на пост.", emergencyDetailBody: "Позовите медсестру кнопкой вызова у кровати или обратитесь на пост.", status: PublicationStatus.DRAFT } },
     }, include: { scenario: true } });
     const steps = await Promise.all([
       ["Что нужно сейчас?", "Выберите самый подходящий вариант."],
