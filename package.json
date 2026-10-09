@@ -5,13 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "npm run db:migrate && npm run import:mvp:existing && next start",
     "test": "npm run test:contract && npm run test:integration",
-    "test:contract": "node --test tests/admin-contract.test.mjs",
-    "test:integration": "node --experimental-strip-types --test tests/*.integration.test.ts",
+    "test:contract": "node --test tests/admin-contract.test.mjs tests/mvp-import.test.mjs",
+    "test:integration": "node --experimental-strip-types --test tests/*.integration.test.ts tests/*.integration.test.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "db:seed": "node scripts/seed-content.mjs"
+    "db:seed": "node scripts/seed-content.mjs",
+    "import:mvp:existing": "node scripts/import-mvp-rehabilitation.mjs --apply-existing"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.787.0",

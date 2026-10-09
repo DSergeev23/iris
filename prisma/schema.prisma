@@ -24,6 +24,7 @@ enum ScenarioActionKind {
   MEDIA
   EMERGENCY
   INFORMATION
+  RESTART
 }
 
 model AdminUser {
@@ -119,6 +120,7 @@ model Scenario {
   departmentId   String            @unique @map("department_id") @db.Uuid
   title          String
   description    String            @default("")
+  welcomeText    String            @default("") @map("welcome_text")
   emergencyTitle String            @default("Нужна срочная помощь?") @map("emergency_title")
   emergencyBody  String            @default("") @map("emergency_body")
   status         PublicationStatus @default(DRAFT)
@@ -134,15 +136,21 @@ model ScenarioStep {
   id              String           @id @default(uuid()) @db.Uuid
   scenarioId      String           @map("scenario_id") @db.Uuid
   title           String
+  displayTitle    String           @default("") @map("display_title")
   description     String           @default("")
+  feedbackInput   Boolean          @default(false) @map("feedback_input")
+  resumeOnReentry Boolean          @default(false) @map("resume_on_reentry")
+  mediaItemId     String?          @map("media_item_id") @db.Uuid
   sortOrder       Int              @default(0) @map("sort_order")
   createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
   scenario        Scenario         @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  mediaItem       MediaItem?        @relation(fields: [mediaItemId], references: [id], onDelete: SetNull)
   actions         ScenarioAction[] @relation("ActionSourceStep")
   targetedBy      ScenarioAction[] @relation("ActionTargetStep")
 
   @@unique([scenarioId, sortOrder])
+  @@index([mediaItemId])
   @@map("scenario_steps")
 }
 
@@ -184,6 +192,7 @@ model MediaItem {
   updatedAt        DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
   department       Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   scenarioActions  ScenarioAction[]
+  scenarioSteps    ScenarioStep[]
 
   @@index([departmentId, status, sortOrder])
   @@map("media_items")

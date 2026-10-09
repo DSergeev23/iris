@@ -8,16 +8,20 @@ function mapDepartment(item: Awaited<ReturnType<typeof getRawDepartment>>): Port
   const photoUrl = item.head?.photoObjectKey ? `/api/portal/head-photo/${item.id}` : null;
   return {
     id: item.id, slug: item.slug, name: item.name, intro: item.intro,
-    head: item.head ? { name: [item.head.firstName, item.head.middleName, item.head.lastName].filter(Boolean).join(" "), role: item.head.roleTitle, biography: item.head.biography, photoUrl } : null,
+    head: item.head ? { name: (item.head.middleName ? [item.head.lastName, item.head.firstName, item.head.middleName] : [item.head.firstName, item.head.lastName]).filter(Boolean).join(" "), role: item.head.roleTitle, biography: item.head.biography, photoUrl } : null,
     reference: item.reference ? { title: item.reference.title, description: item.reference.description } : null,
     facts: item.facts.map((fact) => ({ id: fact.id, iconKey: fact.iconKey, title: fact.title, body: fact.body })),
     media: item.media.map((media) => ({ id: media.id, title: media.title, description: media.description, kind: media.kind, mimeType: media.mimeType, url: `/api/portal/media/${media.id}` })),
     scenario: item.scenario ? {
-      title: item.scenario.title, description: item.scenario.description, emergencyTitle: item.scenario.emergencyTitle, emergencyBody: item.scenario.emergencyBody,
+      title: item.scenario.title, description: item.scenario.description, welcomeText: item.scenario.welcomeText, emergencyTitle: item.scenario.emergencyTitle, emergencyBody: item.scenario.emergencyBody,
       steps: item.scenario.steps.map((step) => ({
         id: step.id,
         title: step.title,
+        displayTitle: step.displayTitle,
         description: step.description,
+        feedbackInput: step.feedbackInput,
+        resumeOnReentry: step.resumeOnReentry,
+        mediaItemId: step.mediaItemId,
         actions: step.actions.map((action) => ({
           id: action.id,
           title: action.title,

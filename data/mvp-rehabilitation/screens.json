@@ -1,0 +1,766 @@
+{
+  "start_prompt": {
+    "id": "start_prompt",
+    "text": "Здравствуйте, меня зовут ИРИС!\n\nЯ информационный ресурс инновационного стационара ГКБ №1 им. Н.И. Пирогова по направлению травматология и ортопедия.\n\nКак я могу к Вам обращаться?",
+    "caption": null,
+    "video": null,
+    "buttons": []
+  },
+  "greeting_message": {
+    "id": "greeting_message",
+    "text": "Приятно познакомиться, §NAME§!",
+    "caption": null,
+    "video": null,
+    "buttons": []
+  },
+  "operation_question": {
+    "id": "operation_question",
+    "text": "§NAME§, Вы планируете операцию по эндопротезированию сустава?",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏹ Да",
+        "next": "stage_selection"
+      },
+      {
+        "text": "⏹ Нет, спасибо",
+        "next": "goodbye_message"
+      }
+    ]
+  },
+  "stage_selection": {
+    "id": "stage_selection",
+    "text": "§NAME§ выберите, на каком этапе Вы находитесь в настоящий момент, чтобы я смог Вам помочь.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏹ Я еще не обращался в ГКБ №1 им. Н.И. Пирогова",
+        "next": "consultation_info"
+      },
+      {
+        "text": "⏹ Я готовлюсь к операции",
+        "next": "pre_operation_materials"
+      },
+      {
+        "text": "⏹ Я в отделении травматологии",
+        "next": "traumatology_information"
+      },
+      {
+        "text": "⏹ Я выписываюсь домой",
+        "next": "discharge_info"
+      },
+      {
+        "text": "⏹ Реабилитация в ГКБ №1 им. Н.И. Пирогова",
+        "next": "rehabilitation_info"
+      }
+    ]
+  },
+  "consultation_info": {
+    "id": "consultation_info",
+    "text": "§NAME§, для получения консультации травматолога необходимо:\n\n✅ Получить электронное направление по форме 057/у в поликлинике по месту прикрепления\n✅ Обратиться в Единый контакт-центр для записи на прием:\n📞 8 (499) 764-50-02\n📞 В день приема приехать за 15 минут до назначенного времени\n✅ Обратиться к администраторам КДЦ для оформления электронной медицинской карты\n✅ На приеме врач-травматолог определит удобную Вам дату госпитализации",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏰ Часы работы колл-центра",
+        "next": "call_center_hours"
+      },
+      {
+        "text": "⏪ Назад",
+        "next": "stage_selection"
+      },
+      {
+        "text": "⏩ Продолжить",
+        "next": "documents_required"
+      }
+    ]
+  },
+  "call_center_schedule": {
+    "id": "call_center_schedule",
+    "text": "Часы работы консультативно-диагностического центра (КДЦ):\n\nБудни (пн-пт) с 8:00 до 20:00\n\n📞 8 (499) 764-50-02",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "consultation_info"
+      }
+    ]
+  },
+  "preoperative_examination": {
+    "id": "preoperative_examination",
+    "text": "Необходимое предоперационное обследование:\n\n📌 *Анализ крови:*\nГруппа крови, RH фактор, Kell-антиген,\nРеакция Вассермана, ВИЧ,\nГепатит A, B, C,\n\n📌 Флюорография или рентген грудной клетки,\n📌 УЗАС вен нижних конечностей,\n📌 ЭКГ, ЭХО-КГ, заключение терапевта,\n📌 ЭГДС,\n📌 Консультация эндокринолога (по показаниям),\n\n📌 Рентгенограмма в зависимости от планируемой операции:\nтаз + тазобедренный сустав до середины бедра;\nколенный сустав в 2-х проекциях,\n\n📌 КТ тазобедренного сустава (по показаниям)",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Спасибо, сделано",
+        "next": "documents_required"
+      }
+    ]
+  },
+  "anesthesiologist_consultation": {
+    "id": "anesthesiologist_consultation",
+    "text": "§NAME§, для получения консультации врача-анестезиолога необходимо:\n\n✅ Обратиться в Единый контакт-центр для записи на прием:\n📞 8 (499) 764-50-02,\n\n✅ В день приема приехать за 15 минут до назначенного времени.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏰ Часы работы КДЦ",
+        "next": "call_center_hours"
+      },
+      {
+        "text": "⏩ Продолжить",
+        "next": "anesthesiologist_documents"
+      }
+    ]
+  },
+  "call_center_hours": {
+    "id": "call_center_hours",
+    "text": "Часы работы консультативно-диагностического центра (КДЦ):\nБудни (пн-пт) с 8:00 до 20:00\n\n📞 8 (499) 764-50-02",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "anesthesiologist_consultation"
+      }
+    ]
+  },
+  "anesthesiologist_documents": {
+    "id": "anesthesiologist_documents",
+    "text": "§NAME§, необходимый пакет документов для приема врача-анестезиолога:\n\n📌 Паспорт гражданина РФ,\n📌 Полис ОМС,\n📌 СНИЛС,\n📌 Результаты предоперационного обследования.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "📃 Предоперационное обследование",
+        "next": "preoperative_examination"
+      },
+      {
+        "text": "✅ Спасибо, сделано",
+        "next": "stage_selection"
+      }
+    ]
+  },
+  "documents_required": {
+    "id": "documents_required",
+    "text": "§NAME§, необходимый пакет документов для приема врача - травматолога:✅ Паспорт гражданина РФ\n✅ Полис ОМС\n✅ СНИЛС\n✅ Рентгенограмма в зависимости от планируемой операции: таз + тазобедренный сустав до середины бедра; коленный сустав в 2-х проекциях\n✅ Предоперационное обследование\n\n👉 После подготовки пакета документов необходимо записаться к врачу-анестезиологу.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "📃 Предоперационное обследование",
+        "next": "preoperative_examination"
+      },
+      {
+        "text": "❓ Как записаться к врачу-анестезиологу",
+        "next": "anesthesiologist_consultation"
+      }
+    ]
+  },
+  "pre_operation_materials": {
+    "id": "pre_operation_materials",
+    "text": "§NAME§, предлагаю ознакомиться с материалами для подготовки к операции.\n\nВыберите интересующий Вас раздел 👇",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "🧾 Что взять с собой в больницу",
+        "next": "what_to_bring"
+      },
+      {
+        "text": "📹 Обучающее видео",
+        "next": "planned_surgery_joint"
+      },
+      {
+        "text": "❗ Перед госпитализацией",
+        "next": "hospitalization_notice"
+      },
+      {
+        "text": "⏪ Главное меню",
+        "next": "stage_selection"
+      }
+    ]
+  },
+  "what_to_bring": {
+    "id": "what_to_bring",
+    "text": "§NAME§, в больницу с собой необходимо взять:\n\n📌 Дополнительные средства опоры (ходунки, либо костыли),\n📌 Эластичные компрессионные бинты, 5 метров, 2 штуки,\n📌 Свободную, удобную одежду,\n📌 Удобную обувь, предпочтительно на 1 размер больше своего,\n📌 Средства личной гигиены,\n📌 Телефон, наушники, книгу.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Спасибо, сделано",
+        "next": "pre_operation_materials"
+      }
+    ]
+  },
+  "hospitalization_notice": {
+    "id": "hospitalization_notice",
+    "text": "§NAME§, за неделю до госпитализации с Вами свяжутся из ГКБ №1 им. Н.И. Пирогова и подтвердят готовность к запланированной дате госпитализации.\n\n❗❗❗ Обращаю Ваше внимание\n\nНесоблюдение рекомендаций и правил раннего послеоперационного периода после замены сустава может привести к опасным осложнениям.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Спасибо, сделано",
+        "next": "pre_operation_materials"
+      }
+    ]
+  },
+  "traumatology_information": {
+    "id": "traumatology_information",
+    "text": "§NAME§, предлагаю ознакомиться с информацией, которая понадобится в отделении травматологии.\n\n👉 Выберите интересующий Вас раздел:",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏹ В день госпитализации",
+        "next": "hospitalization_day_info"
+      },
+      {
+        "text": "⏹ В день операции",
+        "next": "operation_day_info"
+      },
+      {
+        "text": "⏹ После операции",
+        "next": "post_operation_info"
+      },
+      {
+        "text": "⏹ В главное меню",
+        "next": "stage_selection"
+      }
+    ]
+  },
+  "hospitalization_day_info": {
+    "id": "hospitalization_day_info",
+    "text": "§NAME§, в день госпитализации обратите внимание на следующее:\n\n📌 Обязательно сообщите лечащему врачу об аллергических реакциях,\n📌 Обсудите с лечащим врачом необходимость отмены, либо продолжения приёма препаратов, которые Вы принимаете,\n📌 Если в перечне принимаемых лекарств есть препараты разжижающие кровь, обязательно сообщите об этом лечащему врачу,\n📌 Накануне операции примите душ,\n📌 Просмотрите обучающее видео и при необходимости задайте вопросы,\n📌 Просмотрите обучающие материалы (Раздел: \"Я готовлюсь к операции\").",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Спасибо!",
+        "next": "traumatology_information"
+      }
+    ]
+  },
+  "operation_day_info": {
+    "id": "operation_day_info",
+    "text": "§NAME§, в день операции обратите внимание на следующее:\n\n❗ Не принимайте пищу за 6 часов до операции,\n❗ Не принимайте воду за 4 часа до операции,\n❗ Проконтролируйте правильность маркировки оперируемой ноги,\n❗ Если у Вас имеются съёмные зубные протезы, оставьте их в палате,\n❗ Украшения и ценности оставьте в палате.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Спасибо!",
+        "next": "traumatology_information"
+      }
+    ]
+  },
+  "post_operation_info": {
+    "id": "post_operation_info",
+    "text": "§NAME§, после операции обратите внимание на следующее:\n\n👋 Если у Вас появилась боль, нажмите незамедлительно кнопку вызова, расположенную в изголовье кровати для вызова медицинской сестры,\n👋 С первого дня после операции мы начнем реабилитацию. Мы будем повторять изложенный материал в обучающих видео,\n👋 Вам проведут перевязку,\n👋 Вам выполнят повторный рентген снимок,\n👋 Вам выполнят исследование УЗИ сосудов нижних конечностей,\n👋 Вам предложат дальнейшее восстановление в реабилитационном центре.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Спасибо!",
+        "next": "traumatology_information"
+      },
+      {
+        "text": "📹 Обучающее видео",
+        "next": "surgery_joint_selection"
+      }
+    ]
+  },
+  "discharge_info": {
+    "id": "discharge_info",
+    "text": "§NAME§, при выписке домой ознакомиться с выписным эпикризом можно ОНЛАЙН в ЕМИАС в Вашей электронной медицинской карте.📃",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏹ Реабилитация в ГКБ №1 им. Н.И. Пирогова",
+        "next": "rehabilitation_info"
+      },
+      {
+        "text": "✅ Заполните анкету",
+        "next": "feedback_survey"
+      },
+      {
+        "text": "⏹ Правила поведения",
+        "next": "surgery_joint_selection"
+      },
+      {
+        "text": "⏹ Завершить",
+        "next": "goodbye_message"
+      }
+    ]
+  },
+  "rehabilitation_info": {
+    "id": "rehabilitation_info",
+    "text": "§NAME§, 👋 Вы можете пройти курс реабилитации в ГКБ №1 им. Н.И. Пирогова.\n\nℹ️ Уточнить информацию Вы можете в колл-центре платных медицинских услуг ГКБ №1 им. Н.И. Пирогова:\n📞 8 (495) 120-06-05",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏪ В главное меню",
+        "next": "stage_selection"
+      },
+      {
+        "text": "◀️ Назад",
+        "next": "discharge_info"
+      }
+    ]
+  },
+  "surgery_joint_selection": {
+    "id": "surgery_joint_selection",
+    "text": "§NAME§, операция на каком суставе Вам выполнена?",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏹ Коленный сустав",
+        "next": "educational_video_list"
+      },
+      {
+        "text": "⏹ Тазобедренный сустав",
+        "next": "educational_video_menu"
+      },
+      {
+        "text": "⏪ Назад",
+        "next": "discharge_info"
+      }
+    ]
+  },
+  "planned_surgery_joint": {
+    "id": "planned_surgery_joint",
+    "text": "§NAME§, операцию на каком суставе Вы планируете?",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏹ Коленный сустав",
+        "next": "educational_video_list"
+      },
+      {
+        "text": "⏹ Тазобедренный сустав",
+        "next": "educational_video_menu"
+      },
+      {
+        "text": "⏪ Назад",
+        "next": "pre_operation_materials"
+      }
+    ]
+  },
+  "feedback_survey": {
+    "id": "feedback_survey",
+    "text": "§NAME§, нам важно Ваше мнение, пожалуйста, заполните анкету.\n🤝",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Заполнить анкету",
+        "next": "feedback_iris_help"
+      },
+      {
+        "text": "🤝 Нет, спасибо",
+        "next": "goodbye_message"
+      },
+      {
+        "text": "⏪ В главное меню",
+        "next": "stage_selection"
+      }
+    ]
+  },
+  "feedback_iris_help": {
+    "id": "feedback_iris_help",
+    "text": "§NAME§, скажите, помог ли Вам ИРИС в получении информации по направлению травматология-ортопедия?",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Да, спасибо",
+        "next": "support_feedback"
+      },
+      {
+        "text": "Нет",
+        "next": "support_feedback"
+      }
+    ]
+  },
+  "support_feedback": {
+    "id": "support_feedback",
+    "text": "§NAME§, насколько полезна была информационная поддержка?\n\n👉 Выберите ответ от 1 до 5, где 1 соответствует — абсолютно неполезна; 5 — максимально полезна.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "1",
+        "next": "overall_satisfaction_1"
+      },
+      {
+        "text": "2",
+        "next": "overall_satisfaction_2"
+      },
+      {
+        "text": "3",
+        "next": "overall_satisfaction_3"
+      },
+      {
+        "text": "4",
+        "next": "overall_satisfaction_4"
+      },
+      {
+        "text": "5",
+        "next": "overall_satisfaction_5"
+      }
+    ]
+  },
+  "overall_satisfaction": {
+    "id": "overall_satisfaction",
+    "text": "§NAME§, ❓ Оцените, насколько в целом Вы довольны оказанием помощи в ГКБ №1 им. Н.И. Пирогова?\n\n👉 Выберите ответ от 1 до 5, где 1 соответствует — абсолютно не доволен; 5 — максимально доволен.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "1",
+        "next": "feedback_text_1"
+      },
+      {
+        "text": "2",
+        "next": "feedback_text_2"
+      },
+      {
+        "text": "3",
+        "next": "feedback_text_3"
+      },
+      {
+        "text": "4",
+        "next": "feedback_text_4"
+      },
+      {
+        "text": "5",
+        "next": "feedback_text_5"
+      }
+    ]
+  },
+  "feedback_text": {
+    "id": "feedback_text",
+    "text": "§NAME§, напишите свои пожелания, предложения или отзыв о работе ГКБ №1 им. Н.И. Пирогова!",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "✅ Закончить",
+        "next": "goodbye_message"
+      }
+    ]
+  },
+  "educational_video_list": {
+    "id": "educational_video_list",
+    "text": "§NAME§, у меня для Вас есть обучающие видео. Ознакомьтесь, пожалуйста! 👇",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏹ Правила послеоперационного периода",
+        "next": "post_surgery_restrictions"
+      },
+      {
+        "text": "⏹ Упражнения",
+        "next": "exercises_guidelines"
+      },
+      {
+        "text": "⏹ Как встать с кровати и ложиться",
+        "next": "getting_in_out_bed"
+      },
+      {
+        "text": "⏹ Как встать со стула и садиться",
+        "next": "getting_in_out_chair"
+      },
+      {
+        "text": "⏹ Как ходить с костылями",
+        "next": "walking_with_crutches"
+      },
+      {
+        "text": "⏹ Как ходить с ходунками",
+        "next": "walking_with_walkers"
+      },
+      {
+        "text": "⏹ Как ходить по лестнице",
+        "next": "walking_on_stairs"
+      },
+      {
+        "text": "⏹ Как сесть в машину и выйти из нее",
+        "next": "getting_in_out_car"
+      },
+      {
+        "text": "⏪ Назад",
+        "next": "planned_surgery_joint"
+      }
+    ]
+  },
+  "post_surgery_restrictions": {
+    "id": "post_surgery_restrictions",
+    "text": "❗ НЕ держите ноги вместе и не перекрещивайте их,\n❗ НЕ подкладывайте под колено подушку,\n❗ НЕ сгибайте прооперированную ногу в коленном суставе более 90 градусов.",
+    "caption": "Правила послеоперационного периода\n👇",
+    "video": "Posle operatsii.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_list"
+      }
+    ]
+  },
+  "exercise_guidelines": {
+    "id": "exercise_guidelines",
+    "text": "❗ Выполняйте упражнения без резких движений, в медленном/среднем темпе, всегда занимайтесь плавно,\n❗ Занимайтесь постоянно по несколько раз в день, чередуя ходьбу и упражнения с отдыхом,\n❗ Тренировать нужно не только ту ногу, которую прооперировали (все упражнения начинают выполнять со здоровой ноги),\n❗ Лучше заниматься несколько раз в день по 10-15 минут, чем за 30-40 минут довести себя до изнеможения.",
+    "caption": "Упражнения до операции и первого периода реабилитации.\n👇",
+    "video": "Uprajneniya.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_list"
+      }
+    ]
+  },
+  "getting_in_out_bed": {
+    "id": "getting_in_out_bed",
+    "text": "❗ При выполнении движения следите, чтобы большой палец прооперированной ноги был направлен к потолку, а сама нога была выпрямлена,\n❗ Высота кровати находится на уровне, обеспечивающем расположение тазобедренных суставов выше коленных.",
+    "caption": "Как вставать с кровати и ложиться?\n👇",
+    "video": "Vstat s Krovati.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_list"
+      }
+    ]
+  },
+  "getting_in_out_chair": {
+    "id": "getting_in_out_chair",
+    "text": "❗ Высота стула находится на уровне, обеспечивающем расположение тазобедренных суставов выше коленных,\n❗ При выполнении движения следите, чтобы большой палец прооперированной ноги был направлен к потолку, а сама нога была выпрямлена.",
+    "caption": "Как вставать со стула и садиться?\n👇",
+    "video": "Vstat so stula.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_list"
+      }
+    ]
+  },
+  "walking_with_crutches": {
+    "id": "walking_with_crutches",
+    "text": "❗ Не делайте слишком больших шагов,\n❗ Держите голову прямо, старайтесь не смотреть под ноги.",
+    "caption": "Как ходить с костылями?\n👇",
+    "video": "Kostili.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_list"
+      }
+    ]
+  },
+  "walking_with_walkers": {
+    "id": "walking_with_walkers",
+    "text": "❗ Не делайте слишком больших шагов, стоя близко к ходункам,\n❗ Держите голову прямо, старайтесь не смотреть на ноги.",
+    "caption": "Как ходить с ходунками?\n👇",
+    "video": "Hodunki.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_list"
+      }
+    ]
+  },
+  "walking_on_stairs": {
+    "id": "walking_on_stairs",
+    "text": "❗ При подъеме и ходьбе по лестнице вниз обязательна двухсторонняя опора,\n❗ Поднимайтесь и спускайтесь с каждым шагом на одну ступень,\n❗ Используйте приставной шаг.",
+    "caption": "Как ходить по лестнице?\n👇",
+    "video": "Po lestnitse.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_list"
+      }
+    ]
+  },
+  "getting_in_out_car": {
+    "id": "getting_in_out_car",
+    "text": "❗ Мы рекомендуем вам путешествовать на переднем пассажирском сидении,\n❗ Отодвиньте сидение максимально назад и отклоните спинку сидения для удобно расположения в машине,\n❗ Если сидение низкое, используйте подушку,\n❗ Пластиковый пакет может помочь вам легче развернуться на автомобильном сидении. Не забудьте снять его перед тем, как автомобиль начнет движение.",
+    "caption": "Как сесть в машину и выйти из нее?\n👇",
+    "video": "Iz mashini.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_list"
+      }
+    ]
+  },
+  "educational_video_menu": {
+    "id": "educational_video_menu",
+    "text": "§NAME§, у меня для Вас есть обучающие видео. Ознакомьтесь, пожалуйста! 👇",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "⏹ Правила послеоперационного периода",
+        "next": "after_surgery_guidelines"
+      },
+      {
+        "text": "⏹ Упражнения",
+        "next": "exercises_guidelines"
+      },
+      {
+        "text": "⏹ Как встать с кровати и ложиться",
+        "next": "getting_in_out_bed_guidelines"
+      },
+      {
+        "text": "⏹ Как встать со стула и садиться",
+        "next": "getting_in_out_chair_guidelines"
+      },
+      {
+        "text": "⏹ Как ходить с костылями",
+        "next": "walking_with_crutches_guidelines"
+      },
+      {
+        "text": "⏹ Как ходить с ходунками",
+        "next": "walking_with_walkers_guidelines"
+      },
+      {
+        "text": "⏹ Как ходить по лестнице",
+        "next": "walking_on_stairs_guidelines"
+      },
+      {
+        "text": "⏹ Как сесть в машину и выйти из нее",
+        "next": "getting_in_out_car_guidelines"
+      },
+      {
+        "text": "⏪ Назад",
+        "next": "planned_surgery_joint"
+      }
+    ]
+  },
+  "after_surgery_guidelines": {
+    "id": "after_surgery_guidelines",
+    "text": "❗ НЕ держите ноги вместе и не перекрещивайте их,\n❗ НЕ отводите прооперированную ногу в сторону более 15 градусов,\n❗ НЕ сгибайте прооперированную ногу в тазобедренном суставе менее 90 градусов.",
+    "caption": "Правила послеоперационного периода\n👇",
+    "video": "Posle operatsii.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_menu"
+      }
+    ]
+  },
+  "exercises_guidelines": {
+    "id": "exercises_guidelines",
+    "text": "❗ Выполняйте упражнения без резких движений, в медленном/среднем темпе, всегда занимайтесь плавно,\n❗ Занимайтесь постоянно по несколько раз в день, чередуя ходьбу и упражнения с отдыхом,\n❗ Тренировать нужно не только ту ногу, которую прооперировали (все упражнения начинают выполнять со здоровой ноги),\n❗ Лучше заниматься несколько раз в день по 10-15 минут, чем за 30-40 минут довести себя до изнеможения.",
+    "caption": "Упражнения до операции и первого периода реабилитации\n👇",
+    "video": "Uprajneniya.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_menu"
+      }
+    ]
+  },
+  "getting_in_out_bed_guidelines": {
+    "id": "getting_in_out_bed_guidelines",
+    "text": "❗ Высота кровати находится на уровне, обеспечивающем расположение тазобедренных суставов выше коленных,\n❗ При выполнении движения следите, чтобы большой палец прооперированной ноги был направлен к потолку, а сама нога была выпрямлена,\n❗ При выполнении движения следите, чтобы ноги были слегка разведены, для исключения ротации в прооперированной ноге (можно использовать подушку),\n❗ Нельзя наклоняться вперед, чтобы нога сгибалась в тазобедренном суставе менее чем на 90 градусов.",
+    "caption": "Как вставать с кровати и ложиться?\n👇",
+    "video": "Vstat s Krovati.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_menu"
+      }
+    ]
+  },
+  "getting_in_out_chair_guidelines": {
+    "id": "getting_in_out_chair_guidelines",
+    "text": "❗ Высота стула находится на уровне, обеспечивающем расположение тазобедренных суставов выше коленных,\n❗ Чтобы приподнять стул, можно использовать маленькую подушечку,\n❗ При выполнении движения следите, чтобы большой палец прооперированной ноги был направлен к потолку, а сама нога была выпрямлена,\n❗ Нельзя наклоняться вперед, чтобы нога сгибалась в тазобедренном суставе менее чем на 90 градусов.",
+    "caption": "Как вставать со стула и садиться?\n👇",
+    "video": "Vstat so stula.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_menu"
+      }
+    ]
+  },
+  "walking_with_crutches_guidelines": {
+    "id": "walking_with_crutches_guidelines",
+    "text": "❗ Не делать слишком больших шагов,\n❗ Держите голову прямо, старайтесь не смотреть на ноги.",
+    "caption": "Как ходить с костылями?\n👇",
+    "video": "Kostili.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_menu"
+      }
+    ]
+  },
+  "walking_with_walkers_guidelines": {
+    "id": "walking_with_walkers_guidelines",
+    "text": "❗ Не делать слишком больших шагов, стоя близко к ходункам,\n❗ Держите голову прямо, старайтесь не смотреть на ноги.",
+    "caption": "Как ходить с ходунками?\n👇",
+    "video": "Hodunki.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_menu"
+      }
+    ]
+  },
+  "walking_on_stairs_guidelines": {
+    "id": "walking_on_stairs_guidelines",
+    "text": "❗ При подъеме и ходьбе по лестнице вниз обязательна двухсторонняя опора,\n❗ Поднимайтесь и спускайтесь с каждым шагом на одну ступень,\n❗ Используйте приставной шаг.",
+    "caption": "Как ходить по лестнице?\n👇",
+    "video": "Po lestnitse.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_menu"
+      }
+    ]
+  },
+  "getting_in_out_car_guidelines": {
+    "id": "getting_in_out_car_guidelines",
+    "text": "❗ Мы рекомендуем вам путешествовать на переднем пассажирском сидении,\n❗ Отодвиньте сидение максимально назад и отклоните спинку сидения для удобного расположения в машине,\n❗ Если сидение низкое, используйте подушку,\n❗ Пластиковый пакет может помочь вам легче развернуться на автомобильном сидении. Не забудьте снять его перед тем, как автомобиль начнет движение.",
+    "caption": "Как сесть в машину и выйти из нее?\n👇",
+    "video": "Iz mashini.mp4",
+    "buttons": [
+      {
+        "text": "✅ Спасибо",
+        "next": "educational_video_menu"
+      }
+    ]
+  },
+  "goodbye_message": {
+    "id": "goodbye_message",
+    "text": "§NAME§, мне было приятно Вам помочь!\n\nЖелаю Вам здоровья и благополучия!\n\nИРИС,\nИнформационный Ресурс Инновационного Стационара ГКБ №1 имени Н.И. Пирогова.",
+    "caption": null,
+    "video": null,
+    "buttons": [
+      {
+        "text": "🔄 Начать сначала",
+        "next": "restart"
+      }
+    ]
+  },
+  "thank_you_message": {
+    "id": "thank_you_message",
+    "text": "Спасибо, §NAME§! Если понадобится ещё помощь, я всегда рядом.",
+    "caption": null,
+    "video": null,
+    "buttons": []
+  },
+  "unknown_command": {
+    "id": "unknown_command",
+    "text": "Извините, я не понял эту команду. Попробуйте снова.",
+    "caption": null,
+    "video": null,
+    "buttons": []
+  }
+}

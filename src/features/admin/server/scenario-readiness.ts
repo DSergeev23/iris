@@ -5,12 +5,16 @@ export type ScenarioReader = Pick<Prisma.TransactionClient, "scenario">;
 export async function scenarioPublicationReadiness(scenarioId: string, client: ScenarioReader) {
   const scenario = await client.scenario.findUniqueOrThrow({
     where: { id: scenarioId },
-    select: { steps: { orderBy: { sortOrder: "asc" }, select: { id: true, title: true, actions: { select: { kind: true, targetStepId: true, targetMedia: { select: { status: true } } } } } } },
+    select: { steps: { orderBy: { sortOrder: "asc" }, select: { id: true, title: true, resumeOnReentry: true, mediaItemId: true, mediaItem: { select: { status: true } }, actions: { select: { kind: true, targetStepId: true, targetMedia: { select: { status: true } } } } } } },
   });
   if (!scenario.steps.length) return "добавьте хотя бы один этап";
   if (scenario.steps.some((step) => !step.actions.length)) return "добавьте хотя бы одну кнопку в каждый этап";
+  if (scenario.steps.filter((step) => step.resumeOnReentry).length > 1) return "выберите только один этап для повторного входа";
   if (scenario.steps.some((step) => step.actions.some((action) => action.kind === ScenarioActionKind.MEDIA && action.targetMedia?.status !== PublicationStatus.PUBLISHED))) {
     return "опубликуйте все материалы, выбранные для кнопок сценария";
+  }
+  if (scenario.steps.some((step) => step.mediaItemId && step.mediaItem?.status !== PublicationStatus.PUBLISHED)) {
+    return "опубликуйте все материалы, выбранные для этапов сценария";
   }
 
   const stepsById = new Map(scenario.steps.map((step) => [step.id, step]));
