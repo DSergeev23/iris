@@ -45,7 +45,6 @@ const scenarioSchema = z.object({
   scenarioId: idSchema,
   title: z.string().trim().min(2).max(180),
   description: z.string().trim().max(2000),
-  welcomeText: z.string().trim().max(2000),
   emergencyTitle: z.string().trim().min(2).max(180),
   emergencyBody: z.string().trim().max(3000),
 });
@@ -53,11 +52,7 @@ const stepSchema = z.object({
   scenarioId: idSchema,
   stepId: idSchema.optional(),
   title: z.string().trim().min(2).max(180),
-  displayTitle: z.string().trim().max(180),
   description: z.string().trim().max(2000),
-  feedbackInput: z.preprocess((value) => value === "on", z.boolean()),
-  resumeOnReentry: z.preprocess((value) => value === "on", z.boolean()),
-  mediaItemId: z.preprocess((value) => value === "" ? undefined : value, idSchema.optional()),
 });
 const actionSchema = z.object({
   stepId: idSchema,
@@ -532,21 +527,12 @@ export async function deleteScenarioAction(formData: FormData) {
   }
 }
 
-async function validateStepMedia(scenario: { departmentId: string; status: PublicationStatus }, mediaItemId: string) {
-  const media = await db.mediaItem.findUnique({ where: { id: mediaItemId }, select: { departmentId: true, status: true } });
-  if (!media || media.departmentId !== scenario.departmentId) throw new ValidationError("Материал не относится к выбранному отделению.");
-  if (scenario.status === PublicationStatus.PUBLISHED && media.status !== PublicationStatus.PUBLISHED) {
-    throw new ValidationError("В опубликованном сценарии можно выбрать только опубликованный материал.");
-  }
-}
-
 export async function addScenarioStepAction(formData: FormData) {
   const admin = await requireAdmin();
   const parsed = stepSchema.omit({ stepId: true }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) adminRedirect(undefined, "error", "Укажите название этапа.", "scenario");
   try {
     const scenario = await requireScenarioWrite(admin, parsed.data.scenarioId);
-    if (parsed.data.mediaItemId) await validateStepMedia(scenario, parsed.data.mediaItemId);
     const createdStep = await db.$transaction(async (tx) => {
       const maxOrder = await tx.scenarioStep.aggregate({ where: { scenarioId: scenario.id }, _max: { sortOrder: true } });
       const step = await tx.scenarioStep.create({ data: { ...parsed.data, sortOrder: (maxOrder._max.sortOrder ?? -1) + 1 } });
@@ -567,11 +553,7 @@ export async function updateScenarioStepAction(formData: FormData) {
   try {
     const step = await requireScenarioStepWrite(admin, parsed.data.stepId);
     if (step.scenarioId !== parsed.data.scenarioId) throw new ValidationError("Этап не относится к выбранному сценарию.");
-    if (parsed.data.mediaItemId) await validateStepMedia(step.scenario, parsed.data.mediaItemId);
-    await db.$transaction(async (tx) => {
-      await tx.scenarioStep.update({ where: { id: step.id }, data: { title: parsed.data.title, displayTitle: parsed.data.displayTitle, description: parsed.data.description, feedbackInput: parsed.data.feedbackInput, resumeOnReentry: parsed.data.resumeOnReentry, mediaItemId: parsed.data.mediaItemId ?? null } });
-      await ensurePublishedScenarioReadiness(step.scenario, tx);
-    });
+    await db.scenarioStep.update({ where: { id: step.id }, data: { title: parsed.data.title, description: parsed.data.description } });
     refreshContent();
     adminRedirect(step.scenario.departmentId, "notice", "Этап сохранён.", "scenario", `step:${step.id}`, step.id);
   } catch (error) {
@@ -777,8 +759,7 @@ export async function toggleMediaPublicationAction(formData: FormData) {
       if (status.data === PublicationStatus.PUBLISHED && current.department.status !== PublicationStatus.PUBLISHED) throw new ValidationError("Сначала опубликуйте отделение. После этого можно опубликовать материал.");
       if (status.data !== PublicationStatus.PUBLISHED) {
         const incomingPublishedActions = await tx.scenarioAction.count({ where: { targetMediaId: media.id, step: { scenario: { status: PublicationStatus.PUBLISHED } } } });
-        const incomingPublishedSteps = await tx.scenarioStep.count({ where: { mediaItemId: media.id, scenario: { status: PublicationStatus.PUBLISHED } } });
-        if (incomingPublishedActions || incomingPublishedSteps) throw new ValidationError("Материал используется в опубликованном сценарии. Сначала скройте сценарий или уберите материал из этапа и кнопок.");
+        if (incomingPublishedActions) throw new ValidationError("На этот материал ведёт опубликованный сценарий. Сначала скройте сценарий или перенастройте кнопку.");
       }
       await tx.mediaItem.update({ where: { id: media.id }, data: { status: status.data } });
       await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: media.id, action: "publication", payload: { status: status.data } } });
@@ -803,8 +784,7 @@ export async function archiveMediaItemAction(formData: FormData) {
     const restoring = media.status === PublicationStatus.ARCHIVED;
     if (!restoring) {
       const incomingActions = await db.scenarioAction.count({ where: { targetMediaId: media.id } });
-      const incomingSteps = await db.scenarioStep.count({ where: { mediaItemId: media.id } });
-      if (incomingActions || incomingSteps) throw new ValidationError("Материал используется в сценарии. Сначала уберите его из этапов и кнопок.");
+      if (incomingActions) throw new ValidationError("На этот материал ведёт кнопка сценария. Сначала удалите или перенастройте её.");
     }
     await db.mediaItem.update({ where: { id: media.id }, data: { status: restoring ? PublicationStatus.DRAFT : PublicationStatus.ARCHIVED } });
     await db.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: media.id, action: restoring ? "restore" : "archive" } });
@@ -830,15 +810,13 @@ export async function deleteMediaItemAction(formData: FormData) {
       if (!current) throw new ValidationError("Материал не найден.");
       if (current.status === PublicationStatus.DRAFT) await requireDeletableDepartment(tx, current.departmentId);
       else if (current.status !== PublicationStatus.ARCHIVED) throw new ValidationError("Сначала переместите материал в архив.");
-      const actionReferences = await tx.scenarioAction.count({ where: { targetMediaId: mediaId.data } });
-      const stepReferences = await tx.scenarioStep.count({ where: { mediaItemId: mediaId.data } });
-      const references = actionReferences + stepReferences;
+      const references = await tx.scenarioAction.count({ where: { targetMediaId: mediaId.data } });
       await tx.scenarioAction.deleteMany({ where: { targetMediaId: mediaId.data } });
       const result = await tx.mediaItem.deleteMany({ where: { id: mediaId.data, departmentId: current.departmentId, status: current.status } });
       if (!result.count) throw new ValidationError("Материал уже изменён. Обновите страницу.");
       const scenario = references ? await tx.scenario.updateMany({ where: { departmentId: current.departmentId, status: PublicationStatus.PUBLISHED }, data: { status: PublicationStatus.DRAFT } }) : { count: 0 };
       const keys = [current.storageObjectKey, current.posterObjectKey].filter((key): key is string => Boolean(key));
-      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: mediaId.data, action: "delete", payload: { status: current.status, storageObjectKeys: keys, removedActions: actionReferences, clearedSteps: stepReferences } } });
+      await tx.auditLog.create({ data: { adminUserId: admin.id, entityType: "media_item", entityId: mediaId.data, action: "delete", payload: { status: current.status, storageObjectKeys: keys, removedActions: references } } });
       return { keys, references, demoted: Boolean(scenario.count) };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     const failed = await removeStoredFiles(keys);

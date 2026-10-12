@@ -46,14 +46,10 @@ test("публикация сохраняет только достижимый 
       sortOrder: 0,
     },
   });
-  await db.scenarioStep.update({ where: { id: secondStep.id }, data: { mediaItemId: media.id } });
-  assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), "опубликуйте все материалы, выбранные для этапов сценария");
-  await db.scenarioStep.update({ where: { id: secondStep.id }, data: { mediaItemId: null } });
   await db.scenarioAction.create({ data: { stepId: firstStep.id, title: "Материал", actionLabel: "Открыть", kind: ScenarioActionKind.MEDIA, targetMediaId: media.id, sortOrder: 1 } });
   assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), "опубликуйте все материалы, выбранные для кнопок сценария");
 
   await db.mediaItem.update({ where: { id: media.id }, data: { status: PublicationStatus.PUBLISHED } });
-  await db.scenarioStep.update({ where: { id: secondStep.id }, data: { mediaItemId: media.id } });
   assert.equal(await scenarioPublicationReadiness(department.scenario!.id, db), null);
 
   await db.scenario.update({ where: { id: department.scenario!.id }, data: { status: PublicationStatus.PUBLISHED } });

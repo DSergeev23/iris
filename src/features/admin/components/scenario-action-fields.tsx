@@ -27,7 +27,6 @@ export function ScenarioActionFields({
         <option value="STEP">Переходит к следующему этапу</option>
         <option value="MEDIA">Открывает видео или памятку</option>
         <option value="EMERGENCY">Открывает срочную помощь</option>
-        <option value="RESTART">Начинает сценарий заново</option>
       </select></label>
     </div>
     {kind === "STEP" && <label>Следующий этап<select name="targetStepId" defaultValue={defaults?.targetStepId ?? ""} required>

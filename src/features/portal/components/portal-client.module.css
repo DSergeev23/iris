@@ -108,7 +108,7 @@
 .doctorPhoto img { width:100%; height:100%; border-radius:inherit; object-fit:cover; }
 .doctorRole { margin-bottom: 12px; color: var(--medical); font-size: 13px; font-weight: 800; text-transform: uppercase; }
 .doctorCard h2, .referenceCard h2 { margin: 0 0 10px; font-size: clamp(28px,3vw,42px); line-height: 1.08; font-weight: 650; }
-.doctorCard p, .referenceCard p { margin: 0; color: var(--muted); font-size: 19px; line-height: 1.55; white-space: pre-line; }
+.doctorCard p, .referenceCard p { margin: 0; color: var(--muted); font-size: 19px; line-height: 1.55; }
 .referenceList { display: grid; gap: 12px; margin-top: 18px; }
 .referenceItem { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; padding: 12px; border-radius: 18px; background: rgba(255,255,255,.68); border: 1px solid rgba(12,111,120,.1); }
 .referenceIcon { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--medical-2); background: rgba(33,166,166,.12); }
@@ -124,11 +124,8 @@
 .navTitle { margin-left: auto; color: var(--muted); font-size: 17px; }
 .screen { border-radius: 30px; padding: 24px; background: rgba(255,255,255,.82); border: 1px solid var(--line); color: var(--ink); }
 .screen h2 { max-width: 680px; margin: 0 0 12px; font-size: clamp(30px,7vw,44px); line-height: 1.08; font-weight: 650; }
-.screen > p { margin: 0 0 20px; color: var(--muted); font-size: 20px; line-height: 1.55; white-space: pre-line; }
+.screen > p { margin: 0 0 20px; color: var(--muted); font-size: 20px; line-height: 1.55; }
 .stepGrid { display: grid; gap: 14px; }
-.feedbackForm { display: grid; gap: 8px; margin: 0 0 20px; font-size: 18px; font-weight: 700; }
-.feedbackForm textarea { min-height: 120px; border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; color: var(--ink); background: rgba(255,255,255,.9); font: inherit; resize: vertical; }
-.feedbackForm small { color: var(--muted); font-size: 15px; font-weight: 400; }
 .panelAction { color: var(--ink); background: rgba(255,255,255,.84); border: 1px solid rgba(12,111,120,.12); box-shadow: 0 12px 30px rgba(15,84,91,.1); }
 .panelActionIcon { color: var(--medical-2); background: linear-gradient(145deg,rgba(33,166,166,.16),rgba(111,91,214,.12)); }
 .lightMediaRow { color: var(--ink); background: rgba(255,255,255,.84); border-color: rgba(12,111,120,.12); box-shadow: 0 12px 30px rgba(15,84,91,.1); }
@@ -144,7 +141,7 @@
 .warn svg { flex: none; margin-top: 2px; }
 .scenarioStart { display: grid; gap: 18px; }
 .scenarioStart h2 { margin-bottom: 12px; }
-.scenarioStart p { margin: 0; color: var(--muted); font-size: 20px; line-height: 1.55; white-space: pre-line; }
+.scenarioStart p { margin: 0; color: var(--muted); font-size: 20px; line-height: 1.55; }
 .nameField { display: grid; gap: 8px; font-size: 18px; font-weight: 700; }
 .nameField input { min-height: 56px; border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; color: var(--ink); background: rgba(255,255,255,.9); font: inherit; }
 .consent { display: flex; gap: 12px; align-items: flex-start; color: var(--ink); font-size: 17px; line-height: 1.4; cursor: pointer; }

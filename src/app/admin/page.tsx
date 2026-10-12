@@ -199,7 +199,6 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                   <input type="hidden" name="scenarioId" value={selected.scenario.id} />
                   <label>Заголовок сценария<input name="title" defaultValue={selected.scenario.title} required /></label>
                   <label>Подсказка<textarea name="description" defaultValue={selected.scenario.description} /></label>
-                  <label>Приветствие перед вводом имени<textarea name="welcomeText" defaultValue={selected.scenario.welcomeText} placeholder="Например, Здравствуйте, меня зовут ИРИС!" /></label>
                   <label>Заголовок срочного блока<input name="emergencyTitle" defaultValue={selected.scenario.emergencyTitle} required /></label>
                   <label>Текст срочного блока<textarea name="emergencyBody" defaultValue={selected.scenario.emergencyBody} /></label>
                   <div className="form-actions"><SubmitButton className="button-icon-text" trackChanges savedEvent={savedEvent("scenario")}><Save size={18} />Сохранить сценарий</SubmitButton><CancelButton /></div>
@@ -229,11 +228,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                     <form action={updateScenarioStepAction}>
                       <input type="hidden" name="scenarioId" value={selected.scenario!.id} /><input type="hidden" name="stepId" value={step.id} />
                       <label>Название этапа<input name="title" defaultValue={step.title} required /></label>
-                      <label>Заголовок для пациента<input name="displayTitle" defaultValue={step.displayTitle} placeholder="Если пусто, показывается название этапа" /></label>
                       <label>Пояснение<textarea name="description" defaultValue={step.description} /></label>
-                      <label>Видео или памятка внутри этапа<select name="mediaItemId" defaultValue={step.mediaItemId ?? ""}><option value="">Без материала</option>{mediaOptions.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
-                      <label><input type="checkbox" name="feedbackInput" defaultChecked={step.feedbackInput} />Показать поле для локального отзыва без отправки</label>
-                      <label><input type="checkbox" name="resumeOnReentry" defaultChecked={step.resumeOnReentry} />Открывать этот этап при повторном входе</label>
                       <div className="form-actions"><SubmitButton className="button-icon-text" trackChanges savedEvent={savedEvent(`step:${step.id}`)}><Save size={17} />Сохранить этап</SubmitButton><CancelButton /></div>
                     </form>
 
@@ -270,11 +265,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               <details className="add-editor"><summary><Plus size={18} />Добавить этап</summary><form action={addScenarioStepAction}>
                 <input type="hidden" name="scenarioId" value={selected.scenario.id} />
                 <label>Название этапа<input name="title" placeholder="Например, Что вас беспокоит?" required /></label>
-                <label>Заголовок для пациента<input name="displayTitle" placeholder="Если пусто, показывается название этапа" /></label>
                 <label>Пояснение<textarea name="description" placeholder="Помогите пациенту сделать понятный выбор" /></label>
-                <label>Видео или памятка внутри этапа<select name="mediaItemId" defaultValue=""><option value="">Без материала</option>{mediaOptions.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>
-                <label><input type="checkbox" name="feedbackInput" />Показать поле для локального отзыва без отправки</label>
-                <label><input type="checkbox" name="resumeOnReentry" />Открывать этот этап при повторном входе</label>
                 <div className="form-actions"><SubmitButton pendingLabel="Добавляем..."><Plus size={17} />Добавить этап</SubmitButton><CancelButton label="Очистить" /></div>
               </form></details>
             </> : <div className="empty-state"><Workflow size={28} /><strong>Сценарий не создан</strong><span>{selected.status === PublicationStatus.ARCHIVED ? "Сначала восстановите отделение из архива." : "Создайте новый черновик сценария для отделения."}</span>{selected.status !== PublicationStatus.ARCHIVED && <form action={createScenarioAction}><input type="hidden" name="departmentId" value={selected.id} /><SubmitButton pendingLabel="Создаём...">Создать сценарий</SubmitButton></form>}</div>}
@@ -294,7 +285,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <form action={updateMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><label>Название<input name="title" defaultValue={item.title} required /></label><label>Описание<textarea name="description" defaultValue={item.description} /></label><div className="form-actions"><SubmitButton className="button-icon-text" trackChanges savedEvent={savedEvent(`media:${item.id}`)}><Save size={17} />Сохранить материал</SubmitButton><CancelButton /></div></form>
                 {item.status !== PublicationStatus.ARCHIVED && <form action={toggleMediaPublicationAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><input type="hidden" name="status" value={item.status === PublicationStatus.PUBLISHED ? PublicationStatus.DRAFT : PublicationStatus.PUBLISHED} /><ConfirmPublicationButton label={`Материал ${item.title}`} publish={item.status !== PublicationStatus.PUBLISHED} blockedReason={selected.status !== PublicationStatus.PUBLISHED ? "Сначала опубликуйте отделение. После этого можно опубликовать материал." : undefined} /></form>}
                 <form action={archiveMediaItemAction} className="publication-inline"><input type="hidden" name="mediaId" value={item.id} /><ConfirmArchiveButton label={item.title} restore={item.status === PublicationStatus.ARCHIVED} /></form>
-                {(item.status === PublicationStatus.ARCHIVED || (item.status === PublicationStatus.DRAFT && selected.status !== PublicationStatus.PUBLISHED)) && <details className="danger-menu"><summary>Удаление материала</summary><p>Удалит материал и его файл; ссылки из этапов будут очищены.</p><form action={deleteMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><ConfirmDeleteButton label={`материал ${item.title}`} description={`Файл и связанные кнопки (${scenarioActions.filter((action) => action.targetMediaId === item.id).length}) будут удалены; ссылки из этапов (${selected.scenario?.steps.filter((step) => step.mediaItemId === item.id).length ?? 0}) очищены. Проверьте маршрут перед публикацией.`} /></form></details>}
+                {(item.status === PublicationStatus.ARCHIVED || (item.status === PublicationStatus.DRAFT && selected.status !== PublicationStatus.PUBLISHED)) && <details className="danger-menu"><summary>Удаление материала</summary><p>Удалит материал, его файл и связанные кнопки сценария.</p><form action={deleteMediaItemAction}><input type="hidden" name="mediaId" value={item.id} /><ConfirmDeleteButton label={`материал ${item.title}`} description={`Файл и связанные кнопки (${scenarioActions.filter((action) => action.targetMediaId === item.id).length}) будут удалены. Если сценарий был опубликован, он станет черновиком; проверьте маршрут.`} /></form></details>}
               </div>
             </details>)}</div>
             {!selected.media.length && <div className="inline-empty">Загруженных материалов пока нет.</div>}
@@ -339,7 +330,7 @@ function FactIconOptions() {
 }
 
 function actionKindLabel(kind: string) {
-  return { STEP: "Переход к этапу", MEDIA: "Видео или памятка", EMERGENCY: "Срочная помощь", INFORMATION: "Пояснение", RESTART: "Начать заново" }[kind] ?? kind;
+  return { STEP: "Переход к этапу", MEDIA: "Видео или памятка", EMERGENCY: "Срочная помощь", INFORMATION: "Пояснение" }[kind] ?? kind;
 }
 
 function statusClass(status: PublicationStatus) {

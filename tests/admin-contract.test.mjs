@@ -214,7 +214,7 @@ test("структурные изменения не ломают опублик
 });
 
 test("сценарий начинается с согласия на обработку персональных данных", () => {
-  assert.match(portalClient, /Я даю согласие на обработку персональных данных/);
+  assert.match(portalClient, /Согласен на обработку персональных данных/);
   assert.match(portalClient, /hasPersonalDataConsent/);
   assert.match(portalClient, /disabled=\{!patientName\.trim\(\) \|\| !hasPersonalDataConsent\}/);
 });

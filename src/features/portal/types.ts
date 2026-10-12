@@ -10,17 +10,12 @@ export type PortalDepartment = {
   scenario: {
     title: string;
     description: string;
-    welcomeText?: string;
     emergencyTitle: string;
     emergencyBody: string;
     steps: Array<{
       id: string;
       title: string;
-      displayTitle?: string;
       description: string;
-      feedbackInput?: boolean;
-      resumeOnReentry?: boolean;
-      mediaItemId?: string | null;
       actions: Array<{
         id: string;
         title: string;
