@@ -216,7 +216,9 @@ test("структурные изменения не ломают опублик
 test("сценарий начинается с согласия на обработку персональных данных", () => {
   assert.match(portalClient, /Согласен на обработку персональных данных/);
   assert.match(portalClient, /hasPersonalDataConsent/);
-  assert.match(portalClient, /disabled=\{!patientName\.trim\(\) \|\| !hasPersonalDataConsent\}/);
+  assert.match(portalClient, /if \(!isScenarioStarted\) return <ScenarioStart/);
+  assert.match(portalClient, /if \(isValidName && hasPersonalDataConsent\) onStart\(trimmedName\)/);
+  assert.match(portalClient, /disabled=\{!isValidName \|\| !hasPersonalDataConsent\}/);
 });
 
 test("кнопки пациента используют понятную формулировку сценария", () => {

@@ -49,6 +49,7 @@ export function PortalClient({ departments, initialSlug, addressStatus, loadErro
   const [history, setHistory] = useState<View[]>([]);
   const [patientName, setPatientName] = useState("");
   const [hasPersonalDataConsent, setHasPersonalDataConsent] = useState(false);
+  const [isScenarioStarted, setIsScenarioStarted] = useState(false);
   const [mediaExpanded, setMediaExpanded] = useState(false);
   const department = departments[departmentIndex] ?? departments[0];
   const view = history.at(-1) ?? null;
@@ -99,6 +100,7 @@ export function PortalClient({ departments, initialSlug, addressStatus, loadErro
     setHistory([]);
     setPatientName("");
     setHasPersonalDataConsent(false);
+    setIsScenarioStarted(false);
     setMediaExpanded(false);
     const selected = departments[index];
     if (selected) {
@@ -116,6 +118,7 @@ export function PortalClient({ departments, initialSlug, addressStatus, loadErro
     setHistory([]);
     setPatientName("");
     setHasPersonalDataConsent(false);
+    setIsScenarioStarted(false);
   }
 
   function goBack() {
@@ -174,7 +177,7 @@ export function PortalClient({ departments, initialSlug, addressStatus, loadErro
               <p>{department.scenario ? "ИРИС не пытается быть врачом. Он показывает памятки отделения, видео и помогает быстро найти следующий шаг." : "Сценарий пока недоступен. Вы можете посмотреть справку об отделении и при необходимости позвать персонал."}</p>
             </article>
             <article className={cx(styles.card, styles.emergencyCard, styles.glass, styles.noise)}>
-              <div className={styles.leftCardTitle}>Если стало плохо</div>
+              <div className={styles.leftCardTitle}><CircleAlert aria-hidden="true" />Если стало плохо</div>
               <p className={styles.emergencyTitle}>{department.scenario?.emergencyTitle || "Сразу позовите медсестру"}</p>
               <p className={styles.mutedLight}>{department.scenario?.emergencyBody || "Боль, одышка, головокружение, кровотечение, онемение или падение."}</p>
               <button className={styles.emergencyButton} onClick={() => open({ type: "emergency" })}>Что считать срочным</button>
@@ -228,18 +231,18 @@ export function PortalClient({ departments, initialSlug, addressStatus, loadErro
           <button className={styles.navButton} onClick={close}>В начало</button>
           <span className={styles.navTitle}>ИРИС · {department.name}</span>
         </nav>
-        <div className={cx(styles.screen, styles.glass, styles.noise)}><PanelContent department={department} view={view} open={open} onAction={handleAction} patientName={patientName} setPatientName={setPatientName} hasPersonalDataConsent={hasPersonalDataConsent} setHasPersonalDataConsent={setHasPersonalDataConsent} onStart={() => setHasPersonalDataConsent(true)} /></div>
+        <div className={cx(styles.screen, styles.glass, styles.noise)}><PanelContent department={department} view={view} open={open} onAction={handleAction} patientName={patientName} setPatientName={setPatientName} hasPersonalDataConsent={hasPersonalDataConsent} setHasPersonalDataConsent={setHasPersonalDataConsent} isScenarioStarted={isScenarioStarted} onStart={(name) => { setPatientName(name); setIsScenarioStarted(true); }} /></div>
       </div>
     </section>}
   </main>;
 }
 
-function PanelContent({ department, view, open, onAction, patientName, setPatientName, hasPersonalDataConsent, setHasPersonalDataConsent, onStart }: { department: PortalDepartment; view: View; open: (view: View) => void; onAction: (action: ScenarioAction) => void; patientName: string; setPatientName: (name: string) => void; hasPersonalDataConsent: boolean; setHasPersonalDataConsent: (hasConsent: boolean) => void; onStart: () => void }) {
+function PanelContent({ department, view, open, onAction, patientName, setPatientName, hasPersonalDataConsent, setHasPersonalDataConsent, isScenarioStarted, onStart }: { department: PortalDepartment; view: View; open: (view: View) => void; onAction: (action: ScenarioAction) => void; patientName: string; setPatientName: (name: string) => void; hasPersonalDataConsent: boolean; setHasPersonalDataConsent: (hasConsent: boolean) => void; isScenarioStarted: boolean; onStart: (name: string) => void }) {
   const scenario = department.scenario;
   const firstStep = scenario?.steps[0];
 
   if (view.type === "steps") {
-    if (!hasPersonalDataConsent) return <ScenarioStart patientName={patientName} setPatientName={setPatientName} hasPersonalDataConsent={hasPersonalDataConsent} setHasPersonalDataConsent={setHasPersonalDataConsent} onStart={onStart} />;
+    if (!isScenarioStarted) return <ScenarioStart patientName={patientName} setPatientName={setPatientName} hasPersonalDataConsent={hasPersonalDataConsent} setHasPersonalDataConsent={setHasPersonalDataConsent} onStart={onStart} />;
     return <><h2>{patientName ? `${patientName}, ${firstStep?.title || "что сейчас важно?"}` : firstStep?.title || `${department.name}: что сейчас важно?`}</h2><p>{firstStep?.description || "Сценарий пока не опубликован."}</p><div className={styles.stepGrid}>{firstStep?.actions.map((action) => <PanelAction key={action.id} action={action} onClick={() => onAction(action)} />)}</div></>;
   }
 
@@ -289,12 +292,18 @@ function HeadPhoto({ photoUrl, name, initials }: { photoUrl?: string | null; nam
   return <div className={styles.doctorPhoto}>{photoUrl && !failed ? <img src={photoUrl} alt={`Заведующий отделением ${name}`} onError={() => setFailed(true)} /> : initials}</div>;
 }
 
-function ScenarioStart({ patientName, setPatientName, hasPersonalDataConsent, setHasPersonalDataConsent, onStart }: { patientName: string; setPatientName: (name: string) => void; hasPersonalDataConsent: boolean; setHasPersonalDataConsent: (hasConsent: boolean) => void; onStart: () => void }) {
-  return <form className={styles.scenarioStart} onSubmit={(event) => { event.preventDefault(); if (patientName.trim() && hasPersonalDataConsent) onStart(); }}>
+function ScenarioStart({ patientName, setPatientName, hasPersonalDataConsent, setHasPersonalDataConsent, onStart }: { patientName: string; setPatientName: (name: string) => void; hasPersonalDataConsent: boolean; setHasPersonalDataConsent: (hasConsent: boolean) => void; onStart: (name: string) => void }) {
+  const [hasTriedConsent, setHasTriedConsent] = useState(false);
+  const trimmedName = patientName.trim();
+  const isValidName = /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u.test(trimmedName);
+  const showNameError = (patientName.length > 0 || hasTriedConsent) && !isValidName;
+
+  return <form className={styles.scenarioStart} onSubmit={(event) => { event.preventDefault(); if (isValidName && hasPersonalDataConsent) onStart(trimmedName); }}>
     <div><h2>Давайте познакомимся</h2><p>Напишите, как к Вам обращаться, чтобы начать.</p></div>
-    <label className={styles.nameField}>Ваше имя<input value={patientName} onChange={(event) => setPatientName(event.target.value)} autoComplete="name" maxLength={100} required /></label>
-    <label className={styles.consent}><input type="checkbox" checked={hasPersonalDataConsent} onChange={(event) => setHasPersonalDataConsent(event.target.checked)} required /><span>Согласен на обработку персональных данных</span></label>
-    <button className={styles.startButton} type="submit" disabled={!patientName.trim() || !hasPersonalDataConsent}>Начать</button>
+    <label className={styles.nameField}>Ваше имя<input value={patientName} onChange={(event) => setPatientName(event.target.value)} autoComplete="name" maxLength={100} aria-invalid={showNameError} aria-describedby={showNameError ? "patient-name-error" : undefined} required /></label>
+    {showNameError && <p className={styles.nameError} id="patient-name-error" role="alert">{trimmedName ? "Введите имя буквами. Можно использовать пробел, дефис или апостроф." : "Введите имя, чтобы продолжить."}</p>}
+    <label className={styles.consent}><input type="checkbox" checked={hasPersonalDataConsent} onChange={(event) => { if (event.target.checked && !isValidName) setHasTriedConsent(true); setHasPersonalDataConsent(event.target.checked); }} required /><span>Согласен на обработку персональных данных</span></label>
+    <button className={styles.startButton} type="submit" disabled={!isValidName || !hasPersonalDataConsent}>Далее</button>
   </form>;
 }
 
